@@ -1,0 +1,24 @@
+---
+// Una consulta en curso del médico (sobre el bloque azul). La usan el servidor y el <template> que clona el script (sin `c`).
+// «Finalizar» pide confirmación con un <dialog> si hay JS; sin JS envía directo.
+import { u } from '../../lib/entorno';
+
+interface Props { c?: { id: number; paciente: string; edad: number | null; motivo: string; enlace: string }; actual?: boolean }
+const { c, actual = false } = Astro.props;
+---
+<li class="t-encurso" data-id={c?.id} aria-current={actual ? 'true' : undefined}>
+  <div class="t-encurso__quien">
+    <h3 data-campo="paciente">{c?.paciente}</h3>
+    <p data-campo="edad">{c ? (c.edad == null ? 'Edad sin registrar' : `${c.edad} años`) : ''}</p>
+    <p>Motivo: <span data-campo="motivo">{c ? c.motivo || 'sin motivo indicado' : ''}</span></p>
+  </div>
+  <div class="t-encurso__acciones">
+    <a class="btn btn--white" data-campo="enlace" href={c?.enlace} target="_blank" rel="noopener">Abrir videollamada<span class="sr-only"> (se abre en otra pestaña)</span></a>
+    <button type="button" class="btn t-borde" data-copiar={c?.enlace ?? ''}><span data-txt aria-live="polite">Copiar enlace</span></button>
+    <form method="post" action={u('/api/cola')}>
+      <input type="hidden" name="accion" value="finalizar" />
+      <input type="hidden" name="consulta" value={c?.id} />
+      <button type="submit" class="btn t-borde" data-finalizar aria-label={c ? `Finalizar consulta con ${c.paciente}` : undefined}>Finalizar consulta</button>
+    </form>
+  </div>
+</li>

@@ -1,6 +1,7 @@
 // Ayudas de los paneles de telemedicina (cliente y médico): sondeo, aviso de la URL y «Copiar enlace».
 // La API (espera, cola, alCambiar) y la simulación de la demo viven en src/scripts/api.js; aquí no se hace fetch a mano.
 import { alCambiar } from '../../scripts/api.js';
+import { errorConocido } from './avisos.ts';
 
 /** Corre `tarea` ya y luego cada 4 s con la pestaña visible (15 s oculta; al volver a verla, de inmediato).
  *  `enLinea(true|false)` avisa si la última vuelta salió bien. En la demo, `alCambiar` la adelanta cuando otra pestaña toca la simulación. */
@@ -19,14 +20,16 @@ export function sondear(tarea, enLinea = () => {}) {
   vuelta();
 }
 
-/** ?error=… de la URL en su aviso. En servidor el HTML ya lo trae; en la demo (página estática) lo pone el navegador. */
+/** ?error=… de la URL en su aviso (solo mensajes conocidos, ver avisos.ts). En servidor el HTML ya lo trae; en la demo (página estática) lo pone el navegador.
+ *  Devuelve el texto mostrado. Nunca lanza: un aviso no puede tumbar el sondeo que viene después. */
 export function errorDeUrl(el) {
-  const v = (new URLSearchParams(location.search).get('error') ?? '').slice(0, 200);
-  if (!el || !v) return;
-  const p = el.querySelector('p');
+  const v = errorConocido(new URLSearchParams(location.search).get('error'));
+  if (!el || !v) return '';
+  const p = el.querySelector('p') ?? el;
   if (!p.textContent.trim()) p.textContent = v;
   el.hidden = false;
   el.focus();
+  return p.textContent.trim();
 }
 
 /** Valida que sea una videollamada https antes de ponerla en un href (defensa en profundidad: el servidor ya lo exige). */

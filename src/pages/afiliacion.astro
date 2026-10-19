@@ -1,0 +1,65 @@
+---
+// Afiliación: qué incluye, cómo funciona la telemedicina en tres pasos reales y el precio por WhatsApp (POR CONFIRMAR).
+// Estática: no lee la base.
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import { u } from '../lib/entorno';
+import { afiliacion, clinica } from '../data/site';
+import { citasFrase } from '../components/inner/texto';
+
+const pasos = [
+  'Entra a tu panel con tu usuario y tu clave.',
+  'Pulsa «Entrar a la videollamada» y espera en la sala de espera.',
+  'Cuando un médico te atienda, se abre la videollamada.',
+];
+---
+<Layout titulo={afiliacion.titulo} descripcion={`${afiliacion.idea} Consulta el precio por WhatsApp.`}>
+  <PageHero titulo={afiliacion.titulo} lead={afiliacion.idea} migas={[{ texto: 'Afiliación' }]} />
+
+  <section class="section">
+    <div class="wrap grid">
+      <div class="bloque">
+        <h2 class="h-xl">Qué incluye</h2>
+        <ul class="incluye">{afiliacion.incluye.map((i) => <li>{i}</li>)}</ul>
+      </div>
+      <div class="bloque">
+        <h2 class="h-xl">Cómo funciona la telemedicina</h2>
+        <ol class="pasos">{pasos.map((p) => <li>{p}</li>)}</ol>
+        <p class="nota">En la sala de espera ves tu lugar en la fila. Mantén abierta la página hasta que te atiendan. Para entrar a la videollamada, tu afiliación debe estar vigente.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section precio">
+    <div class="grid-bg" aria-hidden="true"></div>
+    <div class="wrap precio__in">
+      <h2 class="h-xl">Consulta el precio por WhatsApp</h2>
+      <p>Escríbenos {citasFrase}, al <span class="num">{clinica.whatsapp.texto}</span>.</p>
+      <div class="cta-row">
+        <a class="btn btn--white" href={afiliacion.cta.href} target="_blank" rel="noopener">{afiliacion.cta.texto}</a>
+        <a class="acceso" href={u('/acceso/')}>Ya soy afiliado: entrar a mi panel</a>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 6rem); align-items: start; }
+  .bloque { display: grid; gap: 1.4rem; align-content: start; }
+  .incluye, .pasos { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .incluye li { padding-block: 1rem; border-bottom: 1px solid var(--line); font-size: 1.125rem; color: var(--navy); font-weight: 500; }
+  .pasos { counter-reset: paso; }
+  .pasos li { counter-increment: paso; display: grid; grid-template-columns: 3.5rem 1fr; align-items: baseline; padding-block: 1rem; border-bottom: 1px solid var(--line); font-size: 1.125rem; color: var(--navy); font-weight: 500; }
+  .pasos li::before { content: counter(paso); font: 300 2.4rem / 1 var(--font-head); letter-spacing: -.04em; color: var(--blue); }
+  .nota { font-size: 1rem; max-width: 52ch; }
+
+  /* degradado azul de marca, como el bloque de afiliación de la portada */
+  .precio { overflow: hidden; isolation: isolate; background: linear-gradient(135deg, var(--blue) 0%, #12306f 55%, var(--navy) 100%); color: #dfe8fb; padding-block: clamp(3.5rem, 7vw, 5.5rem); }
+  .precio h2 { color: #fff; }
+  .precio__in { display: grid; gap: 1.2rem; justify-items: start; }
+  .precio p { font-size: 1.125rem; max-width: 52ch; }
+  .num { white-space: nowrap; font-weight: 600; color: #fff; }
+  .acceso { color: #fff; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--sky); display: inline-flex; align-items: center; min-height: 44px; }
+
+  @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+</style>

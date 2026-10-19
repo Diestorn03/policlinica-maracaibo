@@ -1,0 +1,67 @@
+---
+// /admin/especialidades/ · las especialidades del directorio, con cuántos médicos tiene cada una. Solo se borran las que no tienen médicos.
+export const prerender = false;
+import AdminShell from '../../components/admin/AdminShell.astro';
+import { getDB, u, usuarioDe } from '../../lib/entorno';
+import { pl } from '../../components/admin/util';
+import { borrarEspecialidad, crearEspecialidad, especialidades } from '../../lib/db';
+
+const yo = usuarioDe(Astro.locals, 'admin');
+const db = await getDB();
+const aqui = u('/admin/especialidades/');
+const volver = (clave: 'ok' | 'error', texto: string) => Astro.redirect(`${aqui}?${clave}=${encodeURIComponent(texto)}`, 303);
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  if (f.get('accion') === 'borrar') {
+    const error = await borrarEspecialidad(db, Number(f.get('id')) || 0);
+    return error ? volver('error', error) : volver('ok', 'La especialidad se borró.');
+  }
+  const error = await crearEspecialidad(db, String(f.get('nombre') ?? ''));
+  return error ? volver('error', error) : volver('ok', 'La especialidad se agregó.');
+}
+
+const lista = await especialidades(db);
+const vacias = lista.filter((e) => e.total === 0).length;
+const p = Astro.url.searchParams;
+---
+<AdminShell titulo="Especialidades" activa="especialidades" usuario={yo} sub="Las especialidades que se pueden asignar a un médico. Una especialidad se borra solo cuando ya no tiene médicos." ok={p.get('ok')} error={p.get('error')}>
+  <section class="panel" aria-labelledby="nueva-t">
+    <h2 id="nueva-t" class="h-lg">Agregar una especialidad</h2>
+    <form class="nueva" method="post" action={aqui}>
+      <label class="campo"><span>Nombre</span><input class="input" name="nombre" required minlength="3" maxlength="80" autocomplete="off" /></label>
+      <button class="btn btn--primary" type="submit" name="accion" value="crear">Agregar</button>
+    </form>
+  </section>
+
+  <section class="panel" aria-labelledby="lista-t">
+    <div class="panel__head">
+      <h2 id="lista-t">{lista.length} {pl(lista.length, 'especialidad', 'especialidades')}</h2>
+      {vacias > 0 && <p class="note">{vacias} {vacias === 1 ? 'no tiene' : 'no tienen'} médicos todavía.</p>}
+    </div>
+    <ul class="esp-lista">
+      {lista.map((e) => (
+        <li>
+          <span><b class="nombre">{e.nombre}</b></span>
+          <span class="cuantos">{e.total === 0 ? 'Sin médicos' : <a class="link" href={u(`/directorio/?esp=${e.slug}`)}>{e.total} {e.total === 1 ? 'médico' : 'médicos'}</a>}</span>
+          {e.total === 0 && (
+            <details class="borrar">
+              <summary>Borrar <span class="sr-only">{e.nombre}</span></summary>
+              <form method="post" action={aqui}>
+                <input type="hidden" name="id" value={e.id} />
+                <p>¿Borrar la especialidad «{e.nombre}»? No se puede deshacer.</p>
+                <button class="btn btn--navy btn--sm" type="submit" name="accion" value="borrar">Sí, borrar</button>
+              </form>
+            </details>
+          )}
+        </li>
+      ))}
+    </ul>
+  </section>
+</AdminShell>
+
+<style>
+  .nueva { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem 1rem; margin-top: 1rem; }
+  .nueva .campo { flex: 1 1 18rem; max-width: 28rem; }
+  @media (max-width: 640px) { .nueva .btn { width: 100%; } }
+</style>

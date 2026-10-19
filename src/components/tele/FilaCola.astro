@@ -1,7 +1,5 @@
 ---
-// Una fila de la cola del médico (DESIGN.md §7.4). La usan el servidor (filas reales) y el <template> que clona el script (sin `c`).
-// Los chips de espera larga son texto + icono, nunca solo color: ≥ 10 min «Más de 10 min», ≥ 20 min «Más de 20 min».
-import Icono from '../ui/Icono.astro';
+// Una fila de la cola del médico. La usan el servidor (filas reales) y el <template> que clona el script (sin `c`).
 import { esperando } from '../../lib/sitio';
 import { aFecha } from '../../lib/tele';
 
@@ -9,21 +7,11 @@ interface Props { c?: { id: number; paciente: string; edad: number | null; motiv
 const { c, orden = 1 } = Astro.props;
 const seg = c ? (Date.now() - aFecha(c.creada).getTime()) / 1000 : 0;
 ---
-
 <tr data-id={c?.id} data-creada={c?.creada}>
-  <td data-celda="orden" data-etiqueta="Orden"><span data-campo="orden">{c ? orden : ''}</span></td>
-  <td data-celda="paciente">
-    <span data-campo="paciente">{c?.paciente}</span>
-    <span class="chip chip--neutro" data-chip="siguiente" hidden={!c || orden !== 1}>Siguiente</span>
-  </td>
-  <td data-celda="edad" data-etiqueta="Edad"><span data-campo="edad">{c ? (c.edad == null ? '—' : `${c.edad} años`) : ''}</span></td>
-  <td data-celda="espera" data-etiqueta="Esperando">
-    <time data-campo="reloj">{c ? esperando(c.creada) : ''}</time>
-    <span class="chip chip--aviso" data-chip="10" hidden={seg < 600 || seg >= 1200}><Icono nombre="reloj" tam={20} />Más de 10 min</span>
-    <span class="chip chip--aviso" data-chip="20" hidden={seg < 1200}><Icono nombre="alerta" tam={20} />Más de 20 min</span>
-  </td>
-  <td data-celda="motivo" data-etiqueta="Motivo"><span data-campo="motivo">{c ? c.motivo || '—' : ''}</span></td>
-  <td data-celda="accion">
-    <button type="submit" name="consulta" value={c?.id} class="btn btn--lago" aria-label={c ? `Atender a ${c.paciente}` : undefined}>Atender</button>
-  </td>
+  <td data-etiqueta="Turno" data-campo="orden">{c ? orden : ''}</td>
+  <td data-etiqueta="Paciente"><div><b data-campo="paciente">{c?.paciente}</b><small data-campo="siguiente">{c && orden === 1 ? 'Siguiente' : ''}</small></div></td>
+  <td data-etiqueta="Edad" data-campo="edad">{c ? (c.edad == null ? 'Sin registrar' : `${c.edad} años`) : ''}</td>
+  <td data-etiqueta="Esperando"><div><time data-campo="reloj">{c ? esperando(c.creada) : ''}</time><small data-campo="largo">{seg >= 1200 ? 'Más de 20 min' : seg >= 600 ? 'Más de 10 min' : ''}</small></div></td>
+  <td data-etiqueta="Motivo" data-campo="motivo">{c ? c.motivo || 'Sin motivo indicado' : ''}</td>
+  <td><button type="submit" name="consulta" value={c?.id} class="btn btn--primary btn--sm" aria-label={c ? `Atender a ${c.paciente}` : undefined}>Atender</button></td>
 </tr>

@@ -1,0 +1,48 @@
+---
+// Marco común de /admin/*: layout privado + título + pestañas + avisos (?ok= / ?error=).
+// Las pestañas son páginas reales (sin rutas dinámicas): funcionan igual en servidor y en la demo estática de GitHub Pages.
+import Privado from '../../layouts/Privado.astro';
+import './admin.css';
+import { u } from '../../lib/entorno';
+import type { Rol } from '../../lib/auth';
+
+interface Props { titulo: string; activa: string; usuario: { nombre: string; rol: Rol }; sub?: string; ok?: string | null; error?: string | null }
+const { titulo, activa, usuario, sub, ok, error } = Astro.props;
+const PESTANAS = [
+  ['resumen', 'Resumen', '/admin/'], ['medicos', 'Médicos', '/admin/medicos/'], ['clientes', 'Clientes', '/admin/clientes/'],
+  ['usuarios', 'Usuarios', '/admin/usuarios/'], ['especialidades', 'Especialidades', '/admin/especialidades/'], ['consultas', 'Consultas', '/admin/consultas/'],
+];
+---
+<Privado titulo={titulo} zona="Administración" usuario={usuario}>
+  <div class="adm">
+    <header class="adm-cab">
+      <h1>{titulo}</h1>
+      {sub && <p>{sub}</p>}
+    </header>
+    <nav class="adm-tabs" aria-label="Secciones de administración">
+      {PESTANAS.map(([id, texto, href]) => <a href={u(href)} aria-current={id === activa ? 'page' : undefined}>{texto}</a>)}
+    </nav>
+    <div class="adm-aviso" id="aviso" role="status">
+      {error ? <p class="alert alert--error">{error.slice(0, 240)}</p> : ok ? <p class="alert alert--ok">{ok.slice(0, 240)}</p> : null}
+    </div>
+    <slot />
+  </div>
+</Privado>
+
+<script>
+  import './filtrar.ts';
+  // En el teléfono las pestañas se desplazan: la activa se centra para que se vea cuál es y que hay más a los lados
+  document.querySelector('.adm-tabs [aria-current]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  // En la demo la página es estática: el aviso sale de la URL (en servidor el HTML ya lo trae)
+  const caja = document.getElementById('aviso');
+  if (caja && !caja.firstElementChild) {
+    const p = new URLSearchParams(location.search);
+    const [clase, texto] = p.get('error') ? ['alert--error', p.get('error')!] : p.get('ok') ? ['alert--ok', p.get('ok')!] : ['', ''];
+    if (clase) {
+      const el = document.createElement('p');
+      el.className = `alert ${clase}`;
+      el.textContent = texto.slice(0, 240);
+      caja.append(el);
+    }
+  }
+</script>

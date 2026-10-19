@@ -1,0 +1,159 @@
+---
+// /admin/medicos/ · el directorio médico: tabla, alta, edición (con foto) y baja con confirmación.
+// Servidor: POST real (accion=guardar|borrar) y 303 a esta página con ?ok= o ?error=. Demo (estática): ?editar=<id> se rellena
+// en el navegador con los data-* de la fila (edicion.ts) y api.js avisa de que nada se guarda. Sin JS todo sigue funcionando.
+export const prerender = false;
+import AdminShell from '../../components/admin/AdminShell.astro';
+import { getDB, u, usuarioDe } from '../../lib/entorno';
+import { borrarMedico, especialidades, guardarFoto, guardarMedico, medico, medicos, quitarFoto, validarMedico, type Medico } from '../../lib/db';
+import { iniciales, miniatura, ubicacion } from '../../lib/sitio';
+import { ficha } from '../../components/directorio/buscar';
+import { pl } from '../../components/admin/util';
+
+const yo = usuarioDe(Astro.locals, 'admin');
+const db = await getDB();
+const aqui = u('/admin/medicos/');
+const volver = (clave: 'ok' | 'error', texto: string, extra = '') => Astro.redirect(`${aqui}?${clave}=${encodeURIComponent(texto)}${extra}`, 303);
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const id = Number(f.get('id')) || 0;
+  if (id && !(await medico(db, id))) return volver('error', 'Ese médico ya no existe.');
+  if (f.get('accion') === 'borrar') {
+    if (id) await borrarMedico(db, id);
+    return volver('ok', 'El médico se borró del directorio.');
+  }
+  const datos = validarMedico(f);
+  if (typeof datos === 'string') return volver('error', datos, id ? `&editar=${id}` : '');
+  const nuevo = await guardarMedico(db, datos, id || undefined);
+  const foto = f.get('foto');
+  const errorFoto = foto instanceof File && foto.size ? await guardarFoto(db, nuevo, foto) : null;
+  if (!(foto instanceof File && foto.size) && f.get('quitar_foto')) await quitarFoto(db, nuevo);
+  if (errorFoto) return volver('error', `Se guardó el médico, pero la foto no: ${errorFoto}`, `&editar=${nuevo}`);
+  return volver('ok', id ? 'Cambios guardados.' : `${datos.nombre} se agregó al directorio.`);
+}
+
+const [todos, esps] = await Promise.all([medicos(db), especialidades(db)]);
+const p = Astro.url.searchParams;
+const editando = todos.find((m) => String(m.id) === p.get('editar')) ?? null;
+const abierto = !!editando || p.get('nuevo') !== null;
+const fotoUrl = (m: Medico) => (m.foto ? u(miniatura(m.foto)) : '');
+const datosDe = (m: Medico) => JSON.stringify({ id: m.id, nombre: m.nombre, telefono: m.telefono, consultorio: m.consultorio, especialidades: m.especialidades.map((e) => e.id), foto_url: fotoUrl(m) });
+---
+<AdminShell titulo="Médicos" activa="medicos" usuario={yo} sub="El directorio que ven los pacientes. Agrega médicos, cambia su consultorio o su teléfono y sube su foto." ok={p.get('ok')} error={p.get('error')}>
+  <details class="panel ficha" id="ficha" open={abierto} data-editando={editando?.id}>
+    <summary>
+      <h2 class="titulo">
+        <span data-solo-nuevo hidden={!!editando}>Agregar un médico</span>
+        <span data-solo-edicion hidden={!editando}>Editar a <span data-texto="nombre">{editando?.nombre}</span></span>
+      </h2>
+      <i class="mas" aria-hidden="true"></i>
+    </summary>
+    <div class="ficha__cuerpo">
+      <form method="post" action={aqui} enctype="multipart/form-data">
+        <input type="hidden" name="id" value={editando?.id ?? ''} />
+        <div class="form-grid">
+          <label class="campo"><span>Nombre</span><input class="input" name="nombre" required maxlength="120" autocomplete="off" value={editando?.nombre ?? ''} autofocus={abierto} /><small>Con el título, por ejemplo «Dra. Ana Pérez».</small></label>
+          <label class="campo"><span>Teléfono</span><input class="input" name="telefono" type="tel" inputmode="tel" maxlength="40" autocomplete="off" value={editando?.telefono ?? ''} /><small>Opcional. Por ejemplo 0414-1234567.</small></label>
+          <label class="campo full"><span>Consultorio</span><input class="input" name="consultorio" maxlength="80" autocomplete="off" value={editando?.consultorio ?? ''} /><small>Escribe el piso y el número, por ejemplo «2do piso, consultorio 28». Con eso el médico aparece en su piso del edificio y del directorio.</small></label>
+          <fieldset class="full">
+            <legend>Especialidades (elige al menos una)</legend>
+            <div class="checks">
+              {esps.map((e) => <label class="check"><input type="checkbox" name="especialidades" value={e.id} checked={editando?.especialidades.some((x) => x.id === e.id)} />{e.nombre}</label>)}
+            </div>
+          </fieldset>
+          <div class="full foto">
+            <img class="foto__vista" alt="Foto del médico" width="72" height="72" src={editando ? fotoUrl(editando) : undefined} hidden={!editando || !editando.foto} data-si="foto_url" data-src="foto_url" />
+            <div class="campo">
+              <label for="foto">Foto (opcional)</label>
+              <input class="input" id="foto" type="file" name="foto" accept="image/webp,image/jpeg,image/png" />
+              <small>Se reduce a 480 × 480 en tu navegador antes de enviarla.</small>
+              <label class="check" data-si="foto_url" hidden={!editando || !editando.foto}><input type="checkbox" name="quitar_foto" value="1" />Quitar la foto actual</label>
+            </div>
+          </div>
+        </div>
+        <div class="acciones">
+          <button class="btn btn--primary" type="submit" name="accion" value="guardar">Guardar médico</button>
+          <a class="btn btn--outline" href={aqui} data-solo-edicion hidden={!editando}>Cancelar</a>
+        </div>
+      </form>
+
+      <details class="borrar" data-solo-edicion hidden={!editando}>
+        <summary>Borrar este médico</summary>
+        <form method="post" action={aqui}>
+          <input type="hidden" name="id" value={editando?.id ?? ''} />
+          <p>¿Borrar a <b data-texto="nombre">{editando?.nombre}</b>? Se quita del directorio. Si tiene una cuenta de usuario, la cuenta se mantiene pero queda sin ficha vinculada. No se puede deshacer.</p>
+          <button class="btn btn--navy" type="submit" name="accion" value="borrar">Sí, borrar</button>
+        </form>
+      </details>
+    </div>
+  </details>
+
+  <section class="panel" aria-labelledby="lista-t">
+    <div class="panel__head">
+      <h2 id="lista-t"><span data-cuenta-de="#cuerpo">{todos.length}</span> {pl(todos.length, 'médico', 'médicos')} en el directorio</h2>
+      <div class="filtro" role="search">
+        <label class="sr-only" for="buscar">Buscar un médico</label>
+        <input class="input" id="buscar" type="search" data-filtra="#cuerpo" placeholder="Buscar por nombre o especialidad" autocomplete="off" />
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="table adm-tabla">
+        <thead><tr><th scope="col">Médico</th><th scope="col">Especialidades</th><th scope="col">Consultorio</th><th scope="col">Teléfono</th><th scope="col"><span class="sr-only">Acciones</span></th></tr></thead>
+        <tbody id="cuerpo">
+          {todos.map((m) => (
+            <tr data-id={m.id} data-ficha={datosDe(m)} data-clave={ficha(m.nombre, ...m.especialidades.map((e) => e.nombre), m.consultorio)}>
+              <td data-label="Médico"><span class="quien">{m.foto ? <img src={fotoUrl(m)} alt="" width="40" height="40" loading="lazy" decoding="async" /> : <span class="ini" aria-hidden="true">{iniciales(m.nombre)}</span>}{m.nombre}</span></td>
+              <td data-label="Especialidades">{m.especialidades.map((e) => e.nombre).join(', ')}</td>
+              <td data-label="Consultorio">{m.consultorio ? ubicacion(m.consultorio).texto.replace(/^./, (c) => c.toUpperCase()) : <span class="sin">Sin dato</span>}</td>
+              <td data-label="Teléfono">{m.telefono || <span class="sin">Sin dato</span>}</td>
+              <td class="acc"><a href={`${aqui}?editar=${m.id}#ficha`} aria-label={`Editar a ${m.nombre}`}>Editar</a></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="adm-vacio" data-vacio-de="#cuerpo" hidden>Ningún médico coincide con esa búsqueda. Prueba con otra palabra.</p>
+  </section>
+</AdminShell>
+
+<script>
+  import { iniciarEdicion } from '../../components/admin/edicion';
+
+  const panel = document.getElementById('ficha') as HTMLDetailsElement;
+  iniciarEdicion(panel);
+
+  // Al menos una especialidad: se avisa en el propio formulario, sin viajar al servidor ni perder lo escrito (el servidor valida igual)
+  const esps = [...panel.querySelectorAll<HTMLInputElement>('[name=especialidades]')];
+  const revisar = () => esps[0]?.setCustomValidity(esps.some((e) => e.checked) ? '' : 'Elige al menos una especialidad.');
+  esps.forEach((e) => e.addEventListener('change', revisar));
+  revisar();
+
+  // Foto: se recorta al cuadrado (más arriba que al centro, donde están las caras) y se reduce a 480×480 WebP antes de enviarla.
+  const entrada = panel.querySelector<HTMLInputElement>('input[type=file]')!;
+  const vista = panel.querySelector<HTMLImageElement>('.foto__vista')!;
+  entrada.addEventListener('change', async () => {
+    const archivo = entrada.files?.[0];
+    if (!archivo) return;
+    try {
+      const img = await createImageBitmap(archivo);
+      const lado = Math.min(img.width, img.height);
+      const lienzo = document.createElement('canvas');
+      lienzo.width = lienzo.height = 480;
+      lienzo.getContext('2d')!.drawImage(img, (img.width - lado) / 2, (img.height - lado) * 0.2, lado, lado, 0, 0, 480, 480);
+      const blob = await new Promise<Blob | null>((r) => lienzo.toBlob(r, 'image/webp', 0.85));
+      if (blob?.type !== 'image/webp') return; // el navegador no sabe WebP: se envía el original y el servidor lo revisa
+      const lista = new DataTransfer();
+      lista.items.add(new File([blob], 'foto.webp', { type: 'image/webp' }));
+      entrada.files = lista.files;
+      vista.src = URL.createObjectURL(blob);
+      vista.hidden = false;
+    } catch { /* sin reducir: se envía tal cual */ }
+  });
+</script>
+
+<style>
+  .foto { display: flex; align-items: flex-start; gap: 1.2rem; }
+  .foto__vista { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; flex: none; background: var(--mist); }
+  .foto .campo { flex: 1; }
+</style>

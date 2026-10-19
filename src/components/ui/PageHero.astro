@@ -1,21 +1,33 @@
 ---
-// Cabecera de página interna: fondo lavanda del sitio actual, migas, título y entrada.
+// Cabecera de página interna: el mismo azul marino técnico del héroe de la portada (brillos y retícula), migas y título.
 import { u } from '../../lib/entorno';
 
-interface Props { titulo: string; lead?: string; eyebrow?: string; migas?: { href?: string; texto: string }[] }
-const { titulo, lead, eyebrow, migas = [] } = Astro.props;
+interface Props { titulo: string; lead?: string; migas?: { href?: string; texto: string }[] }
+const { titulo, lead, migas = [] } = Astro.props;
 ---
-<section class="page-hero" data-scene>
-  <div class="wrap stack">
+<section class="page-hero">
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="wrap page-hero__in">
     {migas.length > 0 && (
       <nav class="crumbs" aria-label="Migas de pan">
         <a href={u('/')}>Inicio</a>
         {migas.map((m) => <><span aria-hidden="true">/</span>{m.href ? <a href={u(m.href)}>{m.texto}</a> : <span aria-current="page">{m.texto}</span>}</>)}
       </nav>
     )}
-    {eyebrow && <span class="eyebrow" data-reveal="up">{eyebrow}</span>}
-    <h1 class="h-display" data-split="lines">{titulo}</h1>
-    {lead && <p class="lead" data-reveal="up" data-delay=".25">{lead}</p>}
+    <h1 data-split="lines">{titulo}</h1>
+    {lead && <p class="lead">{lead}</p>}
     <slot />
   </div>
 </section>
+
+<style>
+  .page-hero { position: relative; isolation: isolate; overflow: hidden; padding: clamp(3rem, 7vw, 5rem) 0 clamp(2.5rem, 6vw, 4rem); background: #0b1a38; color: #c9d5ee; }
+  .page-hero::before { content: ''; position: absolute; inset: 0; z-index: -2; background: radial-gradient(55% 90% at 90% 0%, rgba(46, 163, 242, .32), transparent 60%), radial-gradient(45% 80% at 0% 100%, rgba(1, 77, 183, .55), transparent 60%); }
+  .page-hero__in { display: grid; gap: 1.1rem; justify-items: start; }
+  h1 { color: #fff; font-size: clamp(2.2rem, 1.4rem + 3vw, 3.6rem); font-weight: 600; line-height: 1.04; letter-spacing: -.045em; max-width: 22ch; }
+  /* la máscara de líneas (overflow: clip) cortaba g, p, y: se amplía hacia abajo sin mover el texto */
+  h1 :global(div) { padding-bottom: .14em; margin-bottom: -.14em; }
+  .lead { color: #c9d5ee; }
+  .crumbs { margin: -9px 0; align-items: center; color: #9fb0d6; }
+  .crumbs a { color: #fff; display: inline-flex; align-items: center; min-height: 44px; }
+</style>

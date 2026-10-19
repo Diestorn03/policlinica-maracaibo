@@ -1,0 +1,121 @@
+/* Administración: hojas planas sobre el fondo lavanda de los paneles, tablas con líneas, sin tarjetas ni píldoras salvo botones.
+   Solo azules y blancos; el rojo queda para los avisos de error. Se apoya en privado.css (.panel .table .table-wrap .form-grid). */
+.adm { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; align-content: start; } /* minmax(0…): una celda larga no ensancha la página, la tabla se desplaza dentro de su marco */
+.adm-cab h1 { font-size: clamp(1.8rem, 1.2rem + 1.8vw, 2.5rem); letter-spacing: -.04em; line-height: 1.05; }
+.adm-cab p { margin-top: .5rem; max-width: 62ch; }
+.adm .panel { box-shadow: none; }
+.adm .panel + .panel { margin-top: 0; }
+.adm .panel__head h2 { font-size: 1.25rem; letter-spacing: -.02em; }
+.adm .note { color: var(--muted); }
+
+/* pestañas: texto con raya inferior, no botones */
+.adm-tabs { display: flex; gap: 0 1.75rem; overflow-x: auto; border-bottom: 1px solid #cfd6ec; scrollbar-width: thin; }
+/* sombra suave en el borde por el que se puede seguir desplazando (las «tapas» locales la tapan al llegar al final) */
+.adm-tabs { background:
+  linear-gradient(to right, var(--mist), var(--mist)) left center / 20px 100% no-repeat local,
+  linear-gradient(to left, var(--mist), var(--mist)) right center / 20px 100% no-repeat local,
+  linear-gradient(to right, rgba(36, 52, 95, .18), transparent) left center / 14px 100% no-repeat scroll,
+  linear-gradient(to left, rgba(36, 52, 95, .18), transparent) right center / 14px 100% no-repeat scroll; }
+.adm-tabs a { display: inline-flex; align-items: center; min-height: 48px; white-space: nowrap; color: var(--navy); font-weight: 600; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.adm-tabs a:hover { color: var(--blue); }
+.adm-tabs a:focus-visible { outline-offset: -3px; } /* dentro de la pestaña: el contenedor con scroll recortaría el aro por fuera */
+.adm-tabs a[aria-current='page'] { color: var(--blue); border-bottom-color: var(--blue); }
+
+.adm-aviso:empty { display: none; }
+
+/* formularios */
+.adm .campo { display: grid; gap: .35rem; align-content: start; min-width: 0; }
+.adm .campo > span, .adm .campo > label:not(.check), .adm legend { font-size: .9375rem; font-weight: 600; color: var(--navy); }
+.adm small { color: var(--muted); font-size: .875rem; line-height: 1.45; font-weight: 400; }
+.adm .campo[hidden], .adm [hidden] { display: none; }
+.adm fieldset { border: 1px solid var(--line); border-radius: var(--radius); padding: .8rem 1rem 1rem; margin: 0; min-width: 0; }
+.adm legend { padding-inline: .4rem; }
+.adm .check { display: flex; align-items: flex-start; gap: .65rem; min-height: 44px; padding-block: .5rem; font-weight: 500; break-inside: avoid; }
+.adm .check input { width: 20px; height: 20px; flex: none; margin: .1rem 0 0; accent-color: var(--blue); }
+.adm .checks { columns: 3 15rem; column-gap: 1.5rem; max-height: 17rem; overflow: auto; padding: .2rem .4rem; }
+.adm .acciones { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; margin-top: 1.4rem; }
+.btn--navy { background: var(--navy); color: #fff; }
+.btn--navy:hover { background: var(--navy-deep); }
+
+/* hoja desplegable: «Agregar…» o «Editar a…» */
+.adm .ficha { padding: 0; }
+.adm .ficha > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 1rem; min-height: 64px; padding: .6rem clamp(1.25rem, 3vw, 2rem); border-radius: var(--radius); }
+.adm .ficha > summary::-webkit-details-marker { display: none; }
+.adm .ficha > summary:hover .titulo { color: var(--blue); }
+.adm .ficha .titulo { font: 600 1.25rem var(--font-head); letter-spacing: -.02em; color: var(--navy); }
+.adm .ficha__cuerpo { padding: .4rem clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2rem); border-top: 1px solid var(--line); padding-top: 1.4rem; }
+.mas { width: 16px; height: 16px; position: relative; transition: transform .3s var(--ease-out); }
+.mas::before, .mas::after { content: ''; position: absolute; inset: 0; margin: auto; background: var(--blue); border-radius: 2px; }
+.mas::before { width: 16px; height: 2.5px; }
+.mas::after { width: 2.5px; height: 16px; }
+details[open] > summary > .mas { transform: rotate(45deg); }
+
+/* confirmar un borrado sin ventana: un segundo paso dentro de la misma hoja */
+.adm .borrar { margin-top: 1.6rem; padding-top: 1.1rem; border-top: 1px solid var(--line); }
+.adm .borrar > summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 44px; color: var(--blue); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.adm .borrar form { display: grid; gap: .9rem; justify-items: start; margin-top: .4rem; }
+
+/* tablas */
+.adm .filtro { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.2rem; flex: 1 1 18rem; justify-content: flex-end; }
+.adm .filtro > [role='search'] { flex: 1 1 14rem; max-width: 24rem; }
+.adm .filtro .input { width: 100%; }
+.adm .filtro[role='search'] { max-width: 24rem; }
+.adm-tabla td { overflow-wrap: anywhere; }
+@media (min-width: 761px) { /* fechas, teléfonos, cédulas, roles y correos no se parten a media palabra; si no caben, la tabla se desplaza dentro de su marco */
+  .adm-tabla td:is([data-label='Fecha'], [data-label='Nacimiento'], [data-label='Teléfono'], [data-label='Cédula'], [data-label='Rol']) { white-space: nowrap; }
+  .adm-tabla td[data-label='Correo'] { overflow-wrap: normal; }
+}
+.adm-tabla .apila { display: grid; gap: .1rem; }
+.adm a.link, .esp-lista .cuantos a { display: inline-flex; align-items: center; min-height: 44px; } /* zona táctil de 44px */
+.adm-tabla td.acc { text-align: right; white-space: nowrap; }
+.adm-tabla td.acc a { display: inline-flex; align-items: center; min-height: 44px; padding-inline: .4rem; color: var(--blue); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.adm-tabla .quien { display: flex; align-items: center; gap: .75rem; font-weight: 600; color: var(--navy); }
+.adm-tabla .quien img, .adm .ini { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; flex: none; }
+.adm .ini { display: grid; place-items: center; background: var(--navy); color: #fff; font-size: .8rem; font-weight: 600; }
+.adm .sin { color: var(--muted); }
+.adm-vacio { padding: 1.4rem 1rem; color: var(--text); }
+
+/* estados: azul lleno = en marcha, contorno = pendiente, gris = terminado */
+.estado { display: inline-block; padding: .1rem .55rem; border-radius: 2px; font-size: .8125rem; font-weight: 600; line-height: 1.6; border: 1px solid var(--navy); color: var(--navy); background: #fff; white-space: nowrap; }
+.estado--on { background: var(--blue); border-color: var(--blue); color: #fff; }
+.estado--fin { border-color: var(--line); color: var(--text); }
+
+/* resumen: cifras en tipografía grande separadas por líneas */
+.cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cifras > section { padding-inline: clamp(1rem, 3vw, 2.2rem); border-left: 1px solid var(--line); display: grid; gap: 1.1rem; align-content: start; }
+.cifras > section:first-child { padding-left: 0; border-left: 0; }
+.cifras .link { justify-self: start; }
+.cifras dl { margin: 0; display: grid; gap: 1.2rem; }
+.cifras dt { color: var(--muted); font-size: .9375rem; font-weight: 500; }
+.cifras dd { margin: 0; font: 600 clamp(2.3rem, 1.6rem + 2vw, 3.3rem) / 1 var(--font-head); letter-spacing: -.04em; color: var(--blue); font-variant-numeric: tabular-nums; }
+.cifras dd small { display: block; margin-top: .25rem; font: 400 .875rem/1.4 var(--font-body); letter-spacing: 0; }
+
+/* especialidades: lista en dos columnas con el recuento al lado */
+.esp-lista { list-style: none; margin: 0; padding: 0; columns: 2 22rem; column-gap: 2.5rem; }
+.esp-lista li { break-inside: avoid; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 1rem; padding-block: .15rem; border-bottom: 1px solid var(--line); min-height: 52px; }
+.esp-lista .cuantos { color: var(--text); font-size: .9375rem; }
+.esp-lista .borrar { grid-column: 1 / -1; margin: 0 0 .8rem; padding-top: 0; border-top: 0; }
+.esp-lista .borrar > summary { font-size: .9375rem; }
+
+/* tablas en el teléfono: cada fila pasa a ser un bloque con sus rótulos */
+@media (max-width: 760px) {
+  .adm-tabla, .adm-tabla tbody, .adm-tabla tr, .adm-tabla td { display: block; }
+  .adm-tabla thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .adm-tabla tr { padding: .8rem 1rem; border-bottom: 1px solid var(--line); }
+  .adm-tabla tr[hidden] { display: none; }
+  .adm-tabla td { display: grid; grid-template-columns: 6.5rem 1fr; gap: .6rem; padding: .2rem 0; border: 0; }
+  .adm-tabla td::before { content: attr(data-label); color: var(--muted); font-size: .875rem; }
+  .adm-tabla td:first-child:has(.quien, .nombre) { grid-template-columns: 1fr; padding-bottom: .35rem; }
+  .adm-tabla td:first-child:has(.quien, .nombre)::before { content: none; }
+  .adm-tabla td.acc { display: block; text-align: left; }
+  .adm-tabla td.acc::before { content: none; }
+  .adm-tabla td.acc a { padding-left: 0; }
+  .adm-tabla tr:hover td { background: none; }
+  .cifras { grid-template-columns: 1fr; gap: 1.8rem; }
+  .cifras > section, .cifras > section:first-child { padding: 1.4rem 0 0; border-left: 0; border-top: 1px solid var(--line); }
+  .cifras > section:first-child { padding-top: 0; border-top: 0; }
+}
+
+.adm .nombre { color: var(--navy); font-weight: 600; }
+.adm .check small { display: block; }
+.adm .campo :is(.input, .select) { height: 52px; }

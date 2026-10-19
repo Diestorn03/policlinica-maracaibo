@@ -1,239 +1,137 @@
 ---
-// /servicios/[slug]/ (DESIGN §6.2): plantilla de servicio con los textos actuales tal cual (site.ts). Cabecera en el color del servicio,
-// cuerpo, tarjeta de datos (horario + mini dial, o «Para citas y consultas»), especialistas (médicos del directorio) y siguiente servicio.
-//  · Se prerenderiza en los dos modos (getStaticPaths): los médicos relacionados salen de la base EN EL BUILD (en servidor, redesplegar o pasar
-//    esta página a prerender = false y quitar getStaticPaths cuando se quiera en vivo).
-//  · /servicios/especialidades/ no es un servicio: página con meta refresh a /especialidades/ (en servidor, public/_redirects la vuelve 301).
-//  · Cualquier otro slug no genera página (404). Todo enlace interno pasa por u().
-export const prerender = true;
-
-import Layout from '../../layouts/Layout.astro';
-import Migas from '../../components/ui/Migas.astro';
-import Apertura from '../../components/ui/Apertura.astro';
-import Dial from '../../components/ui/Dial.astro';
-import Icono from '../../components/ui/Icono.astro';
-import MedicoCard from '../../components/ui/MedicoCard.astro';
-import Seccion from '../../components/ui/Seccion.astro';
-import CierreCTA from '../../components/inner/CierreCTA.astro';
+// Un servicio: el texto real de site.ts, su foto en tamaño honesto y, si tiene especialidad relacionada, los médicos del directorio.
+//  · prerender = false como la portada: en servidor los médicos salen de la base en vivo; en la demo (todo prerenderizado) getStaticPaths genera una página por servicio.
+//  · /servicios/especialidades/ no es un servicio: página con meta refresh a /especialidades/.
+export const prerender = false;
 import { Image } from 'astro:assets';
-import isotipo from '../../assets/img/isotipo.png';
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/ui/PageHero.astro';
+import MedicoCard from '../../components/ui/MedicoCard.astro';
+import Tareas from '../../components/inner/Tareas.astro';
+import { nb, citasLista } from '../../components/inner/texto';
 import { getDB, u } from '../../lib/entorno';
-import { especialidades, medicos } from '../../lib/db';
-import { waHref } from '../../lib/sitio';
-import { clinica, horarios, indiceServicios, servicios } from '../../data/site';
+import { especialidades, medicos, type Medico } from '../../lib/db';
+import { clinica, indiceServicios, servicios } from '../../data/site';
 
 export function getStaticPaths() {
   return [...servicios.map((s) => ({ params: { slug: s.slug } })), { params: { slug: 'especialidades' } }];
 }
 
-const { slug } = Astro.params;
+const slug = Astro.params.slug;
 const s = servicios.find((x) => x.slug === slug);
-const folio = (n: number) => String(n).padStart(2, '0');
-const hora = (n: number) => `${n % 12 || 12}:00 ${n < 12 || n === 24 ? 'a. m.' : 'p. m.'}`;
-const norm = (t: string) => t.toLowerCase().replace(/[^a-záéíóúñ0-9 ]/g, '').replace(/\blas\b/g, '').replace(/\s+/g, ' ').trim();
-
-// Solo existe cuando es un servicio real (el slug `especialidades` solo redirige)
-let cuerpo: string[] = [], largo = false, uci = false, ancho = 440, h = undefined as (typeof horarios)[number] | undefined;
-let h24 = false, nota = '', total = 0, sig = indiceServicios[0], espNombre = '', lista: Awaited<ReturnType<typeof medicos>> = [];
-if (s) {
-  cuerpo = s.detalle.length ? s.detalle : [s.resumen]; // Video endoscopia no trae detalle: va su resumen
-  largo = cuerpo.join(' ').length > 150;
-  uci = s.slug === 'uci';
-  h = horarios.find((x) => x.servicio === s.slug);
-  h24 = cuerpo.join(' ').includes('24 horas');
-  // la nota del horario solo se repite si el cuerpo no la dice ya
-  nota = h?.nota && !cuerpo.some((p) => norm(p) === norm(h!.nota!)) ? h.nota : '';
-  // Reglas de tamaño de 4.0.2: fuentes pequeñas ≤ 360 px; la vertical (video endoscopia) ≤ 420 px de alto (arco 4:5 → 336 de ancho)
-  const { width, height } = s.imagen;
-  ancho = height > width ? 336 : width <= 720 && height <= 720 ? 360 : 440;
-  sig = indiceServicios[(indiceServicios.findIndex((x) => x.slug === s.slug) + 1) % indiceServicios.length];
-  if (s.especialidad) {
-    const db = await getDB();
-    const [esps, todos] = await Promise.all([especialidades(db), medicos(db, { esp: s.especialidad })]);
-    espNombre = esps.find((e) => e.slug === s.especialidad)?.nombre ?? '';
-    lista = espNombre ? todos : [];
-    total = todos.length;
-  }
-}
-const aTam = `min(80vw, ${ancho}px)`;
+if (!s && slug !== 'especialidades') return new Response(null, { status: 404 }); // en servidor; en la demo getStaticPaths solo genera slugs válidos
 const destino = u('/especialidades/');
+
+// Foto con tamaño honesto: las fuentes pequeñas (UCI, obstétrica) no se estiran; la vertical se recorta a 4:5
+const { width = 0, height = 0 } = s?.imagen ?? {};
+const vertical = height > width * 1.2;
+const cuadrada = !vertical && width < height * 1.15; // UCI y obstétrica: casi cuadradas, se recortan lo mínimo
+const ancho = vertical ? 340 : width <= 720 ? 360 : 560;
+
+// Textos cortos del sitio («Emergencias las 24 horas.») van como nota junto al horario; los largos, como párrafos
+const corto = !!s && s.detalle.join(' ').length <= 60;
+const parrafos = s && !corto ? s.detalle : [];
+const nota = s && corto ? s.detalle.join(' ') : '';
+
+// Especialistas: los del directorio en la especialidad relacionada (hasta 8)
+const MAX = 8;
+let lista: Medico[] = [], total = 0, espNombre = '';
+if (s?.especialidad) {
+  const db = await getDB();
+  const [esps, todos] = await Promise.all([especialidades(db), medicos(db, { esp: s.especialidad })]);
+  espNombre = esps.find((e) => e.slug === s.especialidad)?.nombre ?? '';
+  total = todos.length;
+  lista = todos.slice(0, MAX);
+}
+const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
 ---
 {!s ? (
-  <Layout titulo="Especialidades" descripcion="Las especialidades de la Policlínica Maracaibo están en su propia página." noindex>
+  <Layout titulo="Especialidades" descripcion="Las especialidades tienen su propia página." noindex>
     <meta slot="head" http-equiv="refresh" content={`0;url=${destino}`} />
-    <section class="seccion">
-      <div class="contenedor pila">
-        <h1>Especialidades</h1>
-        <p class="lede">Las especialidades tienen su propia página.</p>
-        <p><a class="btn btn--lago" href={destino}>Ir a Especialidades<Icono nombre="flecha" /></a></p>
-      </div>
-    </section>
+    <PageHero titulo="Las especialidades tienen su propia página" migas={[{ href: '/servicios/', texto: 'Servicios' }, { texto: 'Especialidades' }]}>
+      <a class="btn btn--white" href={destino}>Ir a las especialidades</a>
+    </PageHero>
   </Layout>
 ) : (
-  <Layout titulo={s.nombre} descripcion={`${s.nombre} en la Policlínica Maracaibo. ${s.resumen}`.slice(0, 160)} tema={s.tema}>
-    <section class="servicio-cabecera" data-tema={s.tema} aria-labelledby="srv-h1">
-      <div class="contenedor srv-cab">
-        <div class="srv-cab__txt">
-          <Migas items={[{ texto: 'Inicio', href: '/' }, { texto: 'Servicios', href: '/servicios/' }, { texto: s.nombre }]} />
-          <p class="folio">Servicio {folio(s.num)} de {folio(indiceServicios.length)}</p>
-          <h1 id="srv-h1" data-revelar="linea">{s.nombre}</h1>
-        </div>
-        <div class:list={['srv-cab__foto', { 'srv-cab__foto--oscura': s.slug === 'cirugia' }]} data-vt-img>
-          <Apertura src={s.imagen} alt={s.alt} forma="arco" pos={s.pos} tam={aTam} widths={[560, 960, 1400]} prioridad />
-        </div>
-      </div>
-    </section>
+  <Layout titulo={s.nombre} descripcion={`${s.nombre} en la Policlínica Maracaibo. ${s.resumen}`.slice(0, 160)}>
+    <PageHero titulo={s.nombre} lead={s.resumen} migas={[{ href: '/servicios/', texto: 'Servicios' }, { texto: s.nombre }]} />
 
-    <section class="seccion srv-cuerpo" data-tema="cal" aria-label="Detalle del servicio">
-      <div class="contenedor srv-cuerpo__in">
-        <div class="srv-cuerpo__txt">
-          {uci ? (
-            <ul class="srv-uci" role="list">
-              {cuerpo.map((p, i) => (
-                <li data-revelar="arriba" data-delay={i * 0.08}>
-                  <span class="mas" aria-hidden="true"></span>
-                  <span>{p}</span>
-                  {i === cuerpo.length - 1 && <span class="srv-24" aria-hidden="true">24 h</span>}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            cuerpo.map((p) => <p class:list={['srv-parr', { 'srv-parr--grande': !largo }]} data-revelar="arriba">{p}</p>)
-          )}
+    <section class="section servicio">
+      <div class="wrap servicio__grid" style={`--w:${ancho}px`}>
+        <div class="servicio__texto">
+          {parrafos.length > 1
+            ? <ul class="hechos">{parrafos.map((p) => <li>{p}</li>)}</ul>
+            : parrafos.map((p) => <p class="parrafo">{p}</p>)}
+          <dl class="datos">
+            {s.horario && <div><dt>Horario</dt><dd>{nb(s.horario)}</dd></div>}
+            {nota && <div><dt>Nota</dt><dd>{nota}</dd></div>}
+            <div><dt>Citas</dt><dd>{citasLista}</dd></div>
+            <div><dt>Dónde</dt><dd>{clinica.direccion}, {clinica.ciudad}. <a class="link" href={clinica.mapa} target="_blank" rel="noopener">Cómo llegar</a></dd></div>
+          </dl>
+          <Tareas motivo={`Solicitud de cita - ${s.nombre}`} />
         </div>
-
-        <aside class="srv-datos tarjeta" aria-labelledby="srv-datos-t">
-          {h ? (
-            <>
-              <h2 class="eyebrow" id="srv-datos-t">Horario</h2>
-              <p class="srv-hora"><span>{hora(h.desde)}</span> <span>a {hora(h.hasta)}</span></p>
-              <Dial items={[h]} mini tam={160} />
-              {nota && <p class="srv-nota">{nota}</p>}
-            </>
-          ) : (
-            <>
-              <h2 class="srv-datos__t" id="srv-datos-t">Para citas y consultas</h2>
-              <p class="srv-nota">Escríbenos por WhatsApp o llama a la central.</p>
-            </>
-          )}
-          <div class="srv-datos__btns">
-            <a class="btn btn--sol" href={waHref(`Solicitud de cita - ${s.nombre}`)} target="_blank" rel="noopener" aria-label={`Pedir cita por WhatsApp, ${s.nombre}, ${clinica.whatsapp.texto}`}><Icono nombre="whatsapp" />Pedir cita por WhatsApp</a>
-            <a class="btn btn--lago" href={clinica.telefono.href} aria-label={`Llamar a la central ${clinica.telefono.texto}`}><Icono nombre="llamar" />Llamar a la central</a>
-            {h24 && <a class="btn btn--rojo" href={clinica.emergencias.href} aria-label={`Emergencias 24 horas, llamar al ${clinica.emergencias.texto}`}><Icono nombre="emergencia" />Emergencias 24 h</a>}
-          </div>
-        </aside>
+        <figure class:list={['servicio__foto', { 'servicio__foto--vertical': vertical, 'servicio__foto--cuadrada': cuadrada }]}>
+          <Image src={s.imagen} alt={s.alt} widths={[ancho, Math.min(ancho * 2, width)]} sizes={`(max-width: ${ancho}px) 100vw, ${ancho}px`} loading="eager" style={`object-position:${s.pos}`} />
+        </figure>
       </div>
     </section>
 
     {lista.length > 0 && (
-      <Seccion id="especialistas" tema="brisa" titulo={`Especialistas de ${espNombre}`}>
-        <ul class="srv-med" role="list">
-          {lista.slice(0, 6).map((m) => <li><MedicoCard medico={m} variante="tarjeta" /></li>)}
-        </ul>
-        <p class="srv-med__mas"><a class="btn btn--lago btn--grande" href={u(`/directorio/?esp=${s.especialidad}`)}>{total === 1 ? 'Ver el médico en el directorio' : `Ver los ${total} médicos`}<Icono nombre="flecha" /></a></p>
-      </Seccion>
+      <section class="section especialistas" aria-labelledby="esp-t">
+        <div class="wrap">
+          <h2 class="h-xl" id="esp-t">Especialistas de esta área</h2>
+          <p class="especialistas__sub">{total === 1 ? '1 médico' : `${total} médicos`} de {espNombre} en el directorio.</p>
+          <div class="especialistas__lista">{lista.map((m) => <MedicoCard medico={m} />)}</div>
+          {total > lista.length && <p class="especialistas__mas"><a class="link" href={u(`/directorio/?esp=${s.especialidad}`)}>Ver los {total} médicos de {espNombre}</a></p>}
+        </div>
+      </section>
     )}
 
-    <section class="seccion srv-sig" data-tema="cal" aria-labelledby="srv-sig-t">
-      <div class="contenedor">
-        <h2 class="solo-lectores" id="srv-sig-t">Siguiente servicio</h2>
-        <a class="srv-sig__enlace" href={u(sig.href)}>
-          <span class="srv-sig__txt">
-            <span class="eyebrow">Siguiente servicio · {folio(sig.num)}</span>
-            <span class="srv-sig__nombre">{sig.nombre}</span>
-            <span class="srv-sig__dato">{sig.dato}</span>
-            <span class="btn btn--lago srv-sig__ir" aria-hidden="true">Ver<Icono nombre="flecha" /></span>
-          </span>
-          {sig.imagen ? (
-            <Apertura src={sig.imagen} alt="" forma="arco" pos={sig.pos} tam="min(60vw, 260px)" widths={[400, 800]} revelar clase="srv-sig__arco" />
-          ) : (
-            <span class="srv-sig__sin" aria-hidden="true">
-              <span class="srv-sig__anillo"></span><span class="srv-sig__anillo"></span><span class="srv-sig__anillo"></span>
-              <span class="srv-sig__disco"><Image src={isotipo} alt="" width={96} height={96} densities={[1, 2]} loading="lazy" decoding="async" /></span>
-            </span>
-          )}
-        </a>
+    <nav class="section otros" aria-labelledby="otros-t">
+      <div class="wrap">
+        <h2 class="h-lg" id="otros-t">Otros servicios</h2>
+        <ul>{otros.map((x) => <li><a class="link" href={u(x.href)}>{x.nombre}</a></li>)}</ul>
       </div>
-    </section>
-
-    <CierreCTA tema="brisa" servicio={s.nombre} />
+    </nav>
   </Layout>
 )}
 
 <style>
-  /* ---- cabecera ---- */
-  .srv-cab { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); align-items: center; padding-block: var(--s-4) var(--s-8); }
-  .srv-cab__txt { display: grid; justify-items: start; gap: var(--s-4); }
-  .srv-cab__foto { justify-self: center; margin: 14px; } /* el marco doble sobresale 12 px */
-  /* cirugía.jpg es casi negra: brightness + velo lago (el texto nunca va sobre la foto) */
-  .srv-cab__foto--oscura :global(img) { filter: brightness(1.25) contrast(1.04) saturate(1.05); }
-  .srv-cab__foto--oscura :global(picture) { position: relative; }
-  .srv-cab__foto--oscura :global(picture)::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: rgb(11 79 74 / .3); pointer-events: none; }
-  @media (min-width: 900px) {
-    .srv-cab { grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-8); padding-block-end: var(--s-9); }
-    .srv-cab__foto { margin-inline: 14px 4rem; }
+  .servicio { padding-block: clamp(3rem, 6vw, 5rem); }
+  .servicio__grid { display: grid; grid-template-columns: minmax(0, 1fr) var(--w); gap: clamp(2rem, 6vw, 5rem); align-items: start; }
+  .servicio__texto { display: grid; gap: 2rem; justify-items: start; max-width: 40rem; }
+  .parrafo { font-size: 1.1875rem; line-height: 1.65; }
+  .hechos { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); width: 100%; }
+  .hechos li { padding-block: .9rem; border-bottom: 1px solid var(--line); font-size: 1.125rem; }
+  .datos { margin: 0; width: 100%; border-top: 1px solid var(--line); }
+  .datos > div { display: grid; grid-template-columns: 7rem 1fr; gap: 1rem; padding-block: .85rem; border-bottom: 1px solid var(--line); }
+  .hechos + .datos { border-top: 0; margin-top: -2rem; } /* la regla final de la lista hace de arriba de la tabla */
+  .datos dt { font-weight: 600; color: var(--navy); }
+  .datos dd { margin: 0; }
+  .datos .link { display: inline-flex; align-items: center; min-height: 44px; }
+  .servicio__foto { margin: 0; }
+  .servicio__foto :global(img) { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-foto); }
+  .servicio__foto--vertical :global(img) { aspect-ratio: 4 / 5; }
+  .servicio__foto--cuadrada :global(img) { aspect-ratio: 1; }
+
+  .especialistas { background: var(--mist); }
+  .especialistas__sub { margin-top: .6rem; }
+  .especialistas__lista { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem; margin-top: 2rem; }
+  .especialistas__mas { margin-top: 1.4rem; }
+  .especialistas__mas .link { display: inline-flex; align-items: center; min-height: 44px; }
+
+  .otros { padding-block: clamp(2.5rem, 5vw, 4rem); }
+  .otros ul { list-style: none; margin: 1rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .2rem 1.8rem; }
+  .otros .link { display: inline-flex; align-items: center; min-height: 44px; }
+
+  @media (max-width: 1100px) {
+    .servicio__grid { grid-template-columns: minmax(0, 1fr); }
+    .servicio__foto { width: min(100%, var(--w)); }
+    .especialistas__lista { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
-
-  /* ---- cuerpo ---- */
-  .srv-cuerpo__in { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7); align-items: start; }
-  .srv-cuerpo__txt { display: grid; gap: var(--s-5); align-content: start; }
-  .srv-parr { max-inline-size: var(--medida); font-size: 1.3125rem; line-height: 1.6; }
-  .srv-parr--grande { max-inline-size: 22em; font: 600 clamp(1.75rem, 1.2rem + 2vw, 2.25rem)/1.25 var(--f-display); font-variation-settings: 'SOFT' 50, 'WONK' 0; text-wrap: balance; }
-  .srv-uci { display: grid; margin: 0; padding: 0; list-style: none; }
-  .srv-uci li { display: flex; align-items: flex-start; gap: var(--s-4); padding-block: var(--s-5); border-block-end: 1px solid var(--linea); font: 600 clamp(1.5rem, 1.2rem + 1.2vw, 1.875rem)/1.25 var(--f-display); font-variation-settings: 'SOFT' 50, 'WONK' 0; }
-  .srv-uci li:first-child { border-block-start: 1px solid var(--linea); }
-  .srv-uci .mas { color: var(--lago); font-size: 1.5rem; margin-block-start: .1em; }
-  .srv-uci li > span:nth-child(2) { flex: 1; min-inline-size: 0; }
-  .srv-24 { flex: none; display: grid; place-items: center; inline-size: 5rem; aspect-ratio: 1; border: 3px solid var(--lago); border-radius: 50%; color: var(--lago); font: 700 1.5rem/1 var(--f-display); font-variation-settings: 'SOFT' 100, 'WONK' 0; }
-
-  .srv-datos { container-type: inline-size; display: grid; gap: var(--s-4); padding: var(--s-5); }
-  .srv-datos__t { font: 600 var(--t-xl)/1.15 var(--f-display); font-variation-settings: 'SOFT' 50, 'WONK' 0; }
-  .srv-hora { display: grid; font: 700 clamp(2rem, 15cqi, 3.5rem)/1.05 var(--f-display); font-variation-settings: 'SOFT' 100, 'WONK' 0; font-variant-numeric: lining-nums; }
-  .srv-nota { color: var(--texto-2); }
-  .srv-datos__btns { display: grid; gap: var(--s-3); margin-block-start: var(--s-2); }
-  .srv-datos__btns .btn { min-block-size: 3.5rem; }
-  @media (min-width: 900px) {
-    .srv-cuerpo__in { grid-template-columns: minmax(0, 1fr) 24rem; gap: var(--s-8); }
-    .srv-datos { position: sticky; inset-block-start: calc(var(--header-h) + 1.5rem); }
+  @media (max-width: 900px) { .especialistas__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 640px) {
+    .datos > div { grid-template-columns: 1fr; gap: .1rem; }
+    .especialistas__lista { grid-template-columns: 1fr; }
   }
-
-  /* ---- especialistas ---- */
-  .srv-med { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); margin: 0; padding: 0; list-style: none; }
-  .srv-med > li { display: grid; }
-  .srv-med__mas { margin-block-start: var(--s-6); }
-  @media (min-width: 600px) { .srv-med { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (min-width: 900px) { .srv-med { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-
-  /* ---- siguiente servicio: un solo <a>; el aro de foco va en él ---- */
-  .srv-sig__enlace { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); align-items: center; padding: var(--s-5) 0; color: var(--texto); text-decoration: none; }
-  .srv-sig__txt { display: grid; justify-items: start; gap: var(--s-3); }
-  .srv-sig__nombre { font: 600 clamp(2.25rem, 1.4rem + 4.2vw, 5rem)/1.02 var(--f-display); font-variation-settings: 'SOFT' 50, 'WONK' 0; letter-spacing: -.01em; text-wrap: balance; overflow-wrap: break-word; }
-  .srv-sig__dato { font-size: var(--t-lg); color: var(--texto-2); }
-  .srv-sig__ir { margin-block-start: var(--s-3); transition: transform var(--d-micro) var(--ease-out); }
-  .srv-sig__enlace:hover .srv-sig__ir, .srv-sig__enlace:focus-visible .srv-sig__ir { transform: translateX(8px); }
-  .srv-sig__enlace > :global(.srv-sig__arco), .srv-sig__sin { justify-self: start; margin: 14px; }
-  .srv-sig__sin { position: relative; display: grid; place-items: center; inline-size: min(60vw, 260px); aspect-ratio: 4 / 5; border-radius: var(--arco); background: var(--sol-claro); overflow: hidden; box-shadow: 0 0 0 10px var(--cal), 0 0 0 12px var(--tinta); }
-  .srv-sig__disco { position: relative; z-index: 1; display: grid; place-items: center; inline-size: 52%; aspect-ratio: 1; border-radius: 50%; background: var(--sol); border: 2px solid var(--tinta); }
-  .srv-sig__disco :global(img) { inline-size: 52%; block-size: auto; }
-  .srv-sig__anillo { position: absolute; inset-inline-start: 50%; inset-block-start: 50%; aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--anillo); translate: -50% -50%; }
-  .srv-sig__anillo:nth-child(1) { inline-size: 66%; } .srv-sig__anillo:nth-child(2) { inline-size: 82%; } .srv-sig__anillo:nth-child(3) { inline-size: 98%; }
-  @media (min-width: 900px) { .srv-sig__enlace { grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-8); } .srv-sig__enlace > :global(.srv-sig__arco), .srv-sig__sin { justify-self: end; } }
-  @media (forced-colors: active) { .srv-sig__sin { box-shadow: none; border: 2px solid CanvasText; } }
 </style>
-
-<script>
-  import { scene } from '../../scripts/motion.js';
-
-  // «Window Pane Iris»: la foto de la cabecera se abre de una ventana pequeña al arco completo (1.1 s; 0.8 s en móvil; nada en reducido).
-  // El clip-path va en <picture>; el marco doble es del .apertura (hermano del recorte) y no se corta.
-  scene(({ gsap, qa, mode }) => {
-    if (mode === 'reduced') return;
-    const pic = qa('.srv-cab__foto picture')[0];
-    if (!pic) return;
-    gsap.fromTo(
-      pic,
-      { clipPath: 'inset(40% 30% 40% 30% round 999px 999px 999px 999px)' },
-      { clipPath: 'inset(0% 0% 0% 0% round 999px 999px 0px 0px)', duration: mode === 'mobile' ? 0.8 : 1.1, ease: 'expo.out', clearProps: 'clipPath' },
-    );
-  });
-</script>

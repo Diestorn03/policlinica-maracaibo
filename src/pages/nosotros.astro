@@ -1,0 +1,130 @@
+---
+// Nosotros: desde 1952, misión y visión, instalaciones con su pie y contacto. Texto de site.ts; las cifras salen de la base como en la portada.
+export const prerender = false;
+import { Image } from 'astro:assets';
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import { getDB } from '../lib/entorno';
+import { resumen } from '../lib/db';
+import { anos, clinica, hitosConHoy, instalaciones } from '../data/site';
+import { waHref } from '../lib/sitio';
+import { nb } from '../components/inner/texto';
+
+const res = await resumen(await getDB());
+const historia = hitosConHoy();
+const [fachada, ...resto] = instalaciones;
+---
+<Layout titulo="Nosotros" descripcion={`Policlínica Maracaibo atiende desde ${clinica.desde} en la ${clinica.direccion}. Misión, visión, instalaciones y contacto.`}>
+  <PageHero titulo={`Cuidamos la salud de Maracaibo desde ${clinica.desde}`} lead={`${res.medicos} médicos en ${res.conMedicos} especialidades, laboratorio, estudios por imágenes, cirugía, cuidados intensivos y emergencias las 24 horas.`} migas={[{ texto: 'Nosotros' }]} />
+
+  <section class="section historia">
+    <div class="wrap historia__grid">
+      <h2 class="h-xl">{anos()} años celebrando tu bienestar</h2>
+      <ol class="hitos">
+        {historia.map((h) => <li><b>{h.anio}</b><span>{h.texto}</span></li>)}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section propuesta">
+    <div class="wrap propuesta__grid">
+      <div>
+        <h2 class="h-lg">Misión</h2>
+        <p>{clinica.mision}</p>
+      </div>
+      <div>
+        <h2 class="h-lg">Visión</h2>
+        <p>{clinica.vision}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section instalaciones" aria-labelledby="inst-t">
+    <div class="wrap">
+      <h2 class="h-xl" id="inst-t">Las instalaciones</h2>
+      <p class="instalaciones__sub">Fachada y accesos de la Policlínica, en la {clinica.direccion}.</p>
+      <figure class="portada">
+        <Image src={fachada.src} alt={fachada.alt} widths={[800, 1200]} sizes="(max-width: 1240px) 100vw, 1200px" />
+        <figcaption>{fachada.pie}</figcaption>
+      </figure>
+      <ul class="fotos">
+        {resto.map((f) => (
+          <li>
+            <figure>
+              <Image src={f.src} alt={f.alt} widths={[400, 800]} sizes="(max-width: 640px) 100vw, (max-width: 960px) 50vw, 380px" loading="lazy" />
+              <figcaption>{f.pie}</figcaption>
+            </figure>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section contacto" aria-labelledby="cont-t">
+    <div class="wrap contacto__grid">
+      <h2 class="h-xl" id="cont-t">Cómo contactarnos</h2>
+      <dl class="datos">
+        <div><dt>Emergencias</dt><dd><a class="n n--sos" href={clinica.emergencias.href}>{clinica.emergencias.texto}</a><span>{clinica.horario.emergencias}</span></dd></div>
+        <div><dt>Citas por WhatsApp</dt><dd><a class="n" href={waHref()} target="_blank" rel="noopener">{clinica.whatsapp.texto}</a><span>{nb(clinica.horario.citas)}</span></dd></div>
+        <div><dt>Central</dt><dd><a class="n" href={clinica.telefono.href}>{clinica.telefono.texto}</a></dd></div>
+        <div><dt>Correo</dt><dd><a class="link" href={`mailto:${clinica.correo}`}>{clinica.correo}</a></dd></div>
+        <div><dt>Instagram</dt><dd><a class="link" href={clinica.instagram.href} target="_blank" rel="noopener">{clinica.instagram.texto}</a></dd></div>
+        <div><dt>Dirección</dt><dd><span>{clinica.direccion}, {clinica.ciudad}</span><a class="link" href={clinica.mapa} target="_blank" rel="noopener">Abrir en Google Maps</a></dd></div>
+      </dl>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  /* ---------- historia ---------- */
+  .historia__grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: clamp(2rem, 6vw, 6rem); align-items: start; }
+  .historia h2 { max-width: 12ch; }
+  .hitos { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .hitos li { display: grid; grid-template-columns: 7.5rem 1fr; align-items: baseline; gap: 1rem; padding-block: 1.1rem; border-bottom: 1px solid var(--line); }
+  .hitos b { font: 300 2.6rem / 1 var(--font-head); letter-spacing: -.04em; color: var(--blue); font-variant-numeric: tabular-nums; }
+  .hitos span { font: 500 clamp(1.15rem, 1rem + .6vw, 1.4rem) / 1.35 var(--font-head); letter-spacing: -.02em; color: var(--navy); }
+
+  /* ---------- misión y visión ---------- */
+  .propuesta { background: var(--mist); }
+  .propuesta__grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 6rem); }
+  .propuesta__grid > div { display: grid; gap: .9rem; align-content: start; padding-top: 1.2rem; border-top: 2px solid var(--navy); }
+  .propuesta p { font-size: 1.125rem; line-height: 1.7; max-width: 52ch; }
+
+  /* ---------- instalaciones ---------- */
+  .instalaciones__sub { margin-top: .6rem; }
+  .instalaciones figure { margin: 0; display: grid; gap: .5rem; }
+  .instalaciones :global(img) { width: 100%; height: auto; object-fit: cover; border-radius: var(--r-foto); }
+  .instalaciones figcaption { font-size: .9375rem; color: var(--text); }
+  .instalaciones .portada { margin-top: 2rem; }
+  .portada :global(img) { aspect-ratio: 21 / 9; }
+  .fotos { list-style: none; margin: 1.5rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+  .fotos :global(img) { aspect-ratio: 4 / 3; }
+
+  /* ---------- contacto ---------- */
+  .contacto { background: var(--mist); }
+  .contacto__grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: clamp(2rem, 6vw, 6rem); align-items: start; }
+  .contacto h2 { max-width: 12ch; }
+  .datos { margin: 0; border-top: 1px solid #cfd6ee; }
+  .datos > div { display: grid; grid-template-columns: 11rem 1fr; gap: 1rem; padding-block: 1rem; border-bottom: 1px solid #cfd6ee; align-items: baseline; }
+  .datos dt { font-weight: 600; color: var(--navy); }
+  .datos dd { margin: 0; display: grid; gap: .2rem; justify-items: start; }
+  .n { white-space: nowrap; font: 600 clamp(1.4rem, 1rem + 1.4vw, 2rem) / 1.2 var(--font-head); letter-spacing: -.03em; color: var(--blue); font-variant-numeric: tabular-nums; min-height: 44px; display: inline-flex; align-items: center; }
+  .n--sos { color: var(--red); }
+  .n:hover { text-decoration: underline; text-decoration-thickness: 2px; }
+  .datos .link { display: inline-flex; align-items: center; min-height: 44px; }
+
+  @media (max-width: 1100px) {
+    .historia__grid, .contacto__grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 960px) {
+    .propuesta__grid { grid-template-columns: 1fr; }
+    .fotos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .portada :global(img) { aspect-ratio: 16 / 9; }
+  }
+  @media (max-width: 640px) {
+    .fotos { grid-template-columns: 1fr; }
+    .datos > div { grid-template-columns: 1fr; gap: .2rem; }
+    .hitos li { grid-template-columns: 5.5rem 1fr; }
+    .hitos b { font-size: 2rem; }
+  }
+</style>

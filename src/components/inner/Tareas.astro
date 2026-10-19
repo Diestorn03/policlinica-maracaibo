@@ -1,0 +1,18 @@
+---
+// Los dos botones de tarea de la portada (llamar a emergencias / pedir cita por WhatsApp) para las páginas internas.
+import { clinica } from '../../data/site';
+import { waHref } from '../../lib/sitio';
+import { citasLista } from './texto';
+
+interface Props { motivo?: string }
+const { motivo = 'Solicitud de cita' } = Astro.props;
+---
+<div class="tareas">
+  <a class="btn btn--sos btn--tarea" href={clinica.emergencias.href}>Llamar a emergencias <small>{clinica.emergencias.texto}</small></a>
+  <a class="btn btn--tarea btn--primary" href={waHref(motivo)} target="_blank" rel="noopener">Pedir cita por WhatsApp <small>{citasLista}</small></a>
+</div>
+
+<style>
+  .tareas { display: flex; flex-wrap: wrap; gap: .8rem; }
+  @media (max-width: 640px) { .tareas { display: grid; width: 100%; } .tareas .btn { width: 100%; } }
+</style>

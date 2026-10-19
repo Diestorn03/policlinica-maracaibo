@@ -1,115 +1,83 @@
-/* ==========================================================================
-   tele.css · panel del cliente y panel del médico (DESIGN.md §7.1, §7.3, §7.4)
-   Solo CSS: sin GSAP ni scroll animado. Los destellos y la respiración se anulan con
-   html[data-fx="reduced"] y prefers-reduced-motion (global.css).
-   ========================================================================== */
+/* Paneles de telemedicina (cliente y médico): las mismas reglas de la portada.
+   Manrope 600, solo azules y blancos, líneas de 1 px en lugar de tarjetas. Clases con prefijo t- para no chocar con global.css. */
+.t { width: min(var(--t-ancho, 980px), 100%); margin-inline: auto; display: grid; gap: 1.75rem; }
+.t--medico { --t-ancho: 1100px; }
+.t, .t-hoja, .t-azul { grid-template-columns: minmax(0, 1fr); }   /* una columna que puede encogerse: un texto largo sin espacios no ensancha la página */
+.t [hidden] { display: none !important; }   /* el display:grid de abajo gana al atributo hidden */
+.t h2 { font-size: 1.3125rem; font-weight: 600; letter-spacing: -.015em; }
+html:not(.js) .js-solo { display: none; }
 
-/* ---------- Barra ---------- */
-.tele-barra__in {
-  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem;
-  max-inline-size: var(--max); min-block-size: 4rem; margin-inline: auto; padding: .5rem var(--gutter);
+/* Bloque azul: lo que hay que hacer ahora. Es el mismo degradado de la afiliación de la portada. */
+.t-azul { position: relative; isolation: isolate; overflow: hidden; display: grid; gap: 1.4rem; align-content: start; padding: clamp(1.5rem, 4vw, 3rem); border-radius: var(--radius); color: #dfe8fb; background: linear-gradient(135deg, var(--blue) 0%, #12306f 55%, var(--navy) 100%); }
+.t-azul :is(h1, h2, h3) { color: #fff; }
+.t-azul p { max-width: 52ch; }
+.t-azul .t-aviso { max-width: none; }
+.t-azul :focus-visible { outline-color: #fff; }
+.t .t-titulo { font-size: clamp(2rem, 1.2rem + 2.8vw, 3.2rem); font-weight: 600; line-height: 1.04; letter-spacing: -.045em; max-width: 20ch; }
+.t-azul .t-titulo { color: #fff; }
+
+/* Botones de los bloques azules */
+.t .t-grande { border-radius: 34px; min-height: 68px; padding: 1rem 2rem; font-size: 1.15rem; line-height: 1.25; white-space: normal; text-align: center; max-width: 100%; }
+.t .t-grande svg { width: 28px; height: 28px; }
+.t .t-borde { border-color: rgba(255, 255, 255, .6); color: #fff; background: transparent; }
+.t .t-borde:hover { background: rgba(255, 255, 255, .14); border-color: #fff; }
+.t-azul .btn--white { color: var(--blue); }
+
+/* Campos y avisos */
+.t-campo { display: grid; gap: .4rem; }
+.t-campo label { font: 600 .9375rem var(--font-head); color: var(--navy); }
+.t-azul .t-campo label { color: #fff; }
+.t-campo small { font-size: .875rem; color: var(--muted); }
+.t-azul .t-campo .input { border-color: transparent; }
+.t-azul .t-campo .input:focus { outline: 3px solid #fff; outline-offset: 2px; box-shadow: none; }   /* el halo azul de global.css no se ve sobre fondo azul */
+.t-aviso { display: grid; gap: .6rem; justify-items: start; padding: 1rem 1.2rem; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; color: var(--navy); font-weight: 600; }
+.t-aviso p { max-width: none; color: inherit; }
+
+/* Hoja blanca con filas separadas por líneas */
+.t-hoja { display: grid; gap: 1rem; padding: clamp(1.1rem, 3vw, 1.75rem); border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
+.t-tabla { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.t-tabla th { padding: .5rem .8rem; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; font: 600 .875rem var(--font-head); color: var(--muted); }
+.t-tabla td { padding: .95rem .8rem; border-bottom: 1px solid var(--line); vertical-align: middle; color: var(--text); min-width: 0; overflow-wrap: anywhere; }   /* el motivo lo escribe el paciente: puede venir sin espacios */
+.t-tabla tbody tr:last-child td { border-bottom: 0; }
+.t-tabla b { font: 600 1rem var(--font-head); letter-spacing: -.01em; color: var(--navy); }
+.t-tabla small { display: block; font-size: .875rem; color: var(--navy); font-weight: 600; }
+.t-tabla .btn { min-height: 46px; }
+.t-vacio { padding-block: .6rem; }
+/* La cola con anchos fijos: Paciente y Motivo se reparten lo que sobra y «Atender» nunca se sale de la pantalla */
+.t-tabla--cola { table-layout: fixed; }
+.t-tabla--cola th:nth-child(1) { width: 4.75rem; }
+.t-tabla--cola th:nth-child(3) { width: 7rem; }
+.t-tabla--cola th:nth-child(4) { width: 9.5rem; }
+.t-tabla--cola th:nth-child(6) { width: 8rem; }
+
+.t-emergencia { font-size: .9375rem; color: var(--navy); }   /* --muted no llega a 4.5:1 sobre el lavanda de la zona privada */
+.t-emergencia a { color: var(--red); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Cada consulta en curso del médico: quién es y, al lado, lo que se hace con ella. Una línea fina separa una de otra. */
+.t-encurso { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 2rem; padding-block: 1.2rem; border-top: 1px solid rgba(255, 255, 255, .22); }
+.t-encurso h3 { font-size: 1.5rem; font-weight: 600; letter-spacing: -.03em; }
+.t-encurso p { margin: 0; }
+.t-encurso__quien { flex: 1 1 18rem; min-width: 0; }
+.t-encurso :is(h3, p) { overflow-wrap: anywhere; }
+.t-encurso[aria-current='true'] { padding-left: 1.25rem; border-left: 3px solid #fff; }
+.t-encurso__acciones { display: flex; flex-wrap: wrap; gap: .7rem; }
+.t-encurso__acciones form { display: contents; }
+
+/* Confirmación de «Finalizar» */
+.t-dialogo { border: 0; border-radius: var(--radius); padding: 1.75rem; width: min(28rem, 100% - 2rem); box-shadow: var(--shadow-2); }
+.t-dialogo::backdrop { background: rgba(11, 26, 56, .6); }
+.t-dialogo h2 { margin-bottom: 1.25rem; }
+.t-dialogo form { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .75rem; }
+
+@media (max-width: 720px) {
+  /* en el teléfono cada fila de la tabla es un bloque con sus etiquetas */
+  .t-tabla thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .t-tabla, .t-tabla tbody, .t-tabla tr { display: block; }
+  .t-tabla tr { padding-block: .8rem; border-bottom: 1px solid var(--line); }
+  .t-tabla tbody tr:last-child { border-bottom: 0; }
+  .t-tabla td { display: block; padding: .2rem 0; border: 0; }
+  .t-tabla td[data-etiqueta] { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 0 .8rem; }
+  .t-tabla td[data-etiqueta]::before { content: attr(data-etiqueta); font-size: .875rem; font-weight: 600; color: var(--muted); }
+  .t-tabla td .btn { width: 100%; margin-top: .5rem; }
+  .t-encurso__acciones { display: grid; width: 100%; }
 }
-.tele-barra__logo { display: block; line-height: 0; }
-.tele-barra__nombre { margin-inline-start: auto; min-inline-size: 0; font-weight: 600; overflow-wrap: anywhere; }
-.tele-barra form { margin: 0; }
-@media (max-width: 599.98px) {
-  .tele-barra__nombre { display: none; }
-  .tele-barra form { margin-inline-start: auto; }
-}
-
-.tele { min-block-size: calc(100dvh - 4rem); }
-.tele-col { inline-size: 100%; max-inline-size: 40rem; margin-inline: auto; padding-inline: var(--gutter); }
-.tele--cliente { font-size: 1.1875rem; }
-.tele--cliente h1 { font: 700 clamp(1.875rem, 1.4rem + 2vw, 2.5rem)/1.15 var(--f-display); font-variation-settings: 'SOFT' 50, 'WONK' 0; }
-.tele--cliente h2 { font-size: 1.375rem; }
-.tele h1:focus, .tele h1:focus-visible { outline: none; }   /* el foco por programa al cambiar de pantalla no dibuja aro */
-
-/* ---------- Cliente · pantallas ---------- */
-.estado { padding-block: clamp(1.5rem, 5vw, 3rem); }
-html.js [data-estados][data-cargando] .estado { visibility: hidden; }   /* demo: hasta la primera respuesta de espera() */
-.afiliacion { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; font-weight: 600; }
-.tele-tarjeta { padding: clamp(1.25rem, 4vw, 2rem); border-radius: var(--r-2); }
-.tele-tarjeta > * { margin: 0; }
-.motivo summary { min-block-size: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
-.motivo[open] summary { margin-block-end: .5rem; }
-.btn--entrar { min-block-size: 5.5rem; font-size: 1.375rem; }
-.aviso .btn { flex: none; margin-inline-start: auto; }
-.aviso:has(.btn) { flex-wrap: wrap; }
-
-/* ---------- Cliente · sala de espera (fondo lago, pantalla completa bajo la barra) ---------- */
-.estado--sala { display: grid; align-content: center; min-block-size: calc(100dvh - 7rem); }
-.sala { display: grid; gap: 1.25rem; justify-items: center; text-align: center; }
-.sala > * { margin: 0; max-inline-size: 100%; }
-.sala-visual { --lado: min(19rem, 78vw); --disco: calc(var(--lado) * .4); position: relative; display: grid; place-items: center; inline-size: var(--lado); aspect-ratio: 1; }
-.sala-anillo {
-  position: absolute; inset: 50% auto auto 50%; translate: -50% -50%; aspect-ratio: 1; border-radius: 50%;
-  inline-size: calc(var(--disco) + (var(--lado) - var(--disco)) * var(--i) / 7);
-  border: 2px solid rgb(255 247 232 / .45);
-  transition: opacity .8s var(--ease-out), scale .8s var(--ease-out);
-}
-.sala-anillo.is-fuera { opacity: 0; scale: 1.1; }   /* el anillo exterior se desvanece hacia afuera; nada parpadea */
-.sala-disco { display: grid; place-items: center; inline-size: var(--disco); aspect-ratio: 1; border-radius: 50%; background: var(--sol); color: var(--tinta); }
-.sala-disco span { font: 700 calc(var(--disco) * .52)/1 var(--f-display); font-variation-settings: 'SOFT' 100, 'WONK' 0; font-variant-numeric: tabular-nums lining-nums; }
-.sala-linea { font: 700 clamp(1.5rem, 1.2rem + 1.5vw, 2rem)/1.2 var(--f-texto); }
-.sala-reloj { font-variant-numeric: tabular-nums; color: var(--texto-2); }
-.sala .aviso { text-align: start; }
-.sala-lista { justify-self: stretch; max-inline-size: 28rem; margin-inline: auto; text-align: start; }
-.sala-lista h2 { margin-block-end: .5rem; }
-.sala-lista ol { margin: 0; padding-inline-start: 1.5em; display: grid; gap: .5rem; }
-
-/* ---------- Cliente · te atienden (fondo sol) ---------- */
-.estado--atiende { display: grid; align-content: center; min-block-size: calc(100dvh - 7rem); }
-.estado--atiende p { margin: 0; }
-.enlace-texto { padding: .75rem 1rem; background: var(--papel); border: 2px solid var(--tinta); border-radius: var(--r-1); font-weight: 600; word-break: break-all; user-select: all; }
-
-/* ---------- Franja de emergencias y historial del cliente ---------- */
-.tele-historial { padding-block: 2rem 1rem; }
-.historial h2 { margin-block-end: 1rem; }
-.historial-vacio, .vacio-txt { margin: 0; color: var(--tinta-2); }
-.tele-emergencia-envoltura { padding-block: 1rem 2.5rem; }
-.tele-emergencia {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;
-  padding: 1rem 1.25rem; background: var(--papel); border: 1px solid var(--linea); border-inline-start: 6px solid var(--rojo); border-radius: var(--r-2);
-}
-.tele-emergencia p { margin: 0; }
-
-/* ---------- Médico ---------- */
-.medico { display: grid; gap: 2.5rem; max-inline-size: var(--max); margin-inline: auto; padding: 1.5rem var(--gutter) 4rem; }
-.medico [data-cola] { display: grid; gap: 1.25rem; }
-.medico-cab { display: grid; gap: .75rem; }
-.medico-estado { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
-.en-vivo { display: inline-flex; align-items: center; gap: .5rem; font-weight: 700; color: var(--lago); }
-.actualizado { font-weight: 450; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
-.medico-grid { display: grid; gap: 2rem; align-items: start; }   /* móvil: «En curso» primero (va antes en el HTML) */
-.medico-grid h2 { margin-block-end: 1rem; }
-@media (min-width: 900px) {
-  .medico-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 2.5rem; }
-  .medico-grid > .curso { order: 2; }
-}
-.meet { margin-block-end: .5rem; max-inline-size: 36rem; }
-.cola-tabla td { vertical-align: middle; }
-.cola-tabla [data-celda="paciente"] { font-weight: 700; }
-.cola-tabla [data-celda="paciente"] .chip, .cola-tabla [data-celda="espera"] .chip { margin-inline-start: .5rem; }
-.cola-tabla [data-celda="motivo"] { max-inline-size: 18rem; overflow-wrap: anywhere; }
-.cola-tabla [data-celda="espera"] time { font-variant-numeric: tabular-nums; font-weight: 600; }
-.cola-tabla .btn { white-space: nowrap; }
-.vacio { display: grid; justify-items: center; gap: 1rem; padding: 2rem 1rem; text-align: center; border: 2px dashed var(--linea); border-radius: var(--r-2); }
-.vacio p { margin: 0; font-weight: 600; }
-.vacio-anillos { -webkit-mask: radial-gradient(circle, #000 40%, transparent 72%); mask: radial-gradient(circle, #000 40%, transparent 72%); }
-
-@media (max-width: 899.98px) {
-  .cola-tabla [data-celda="orden"] { display: none; }
-  .cola-tabla [data-celda="paciente"] { justify-content: flex-start; flex-wrap: wrap; font: 600 1.375rem/1.2 var(--f-display); text-align: start; }
-  .cola-tabla [data-celda="motivo"] { max-inline-size: none; }
-  .cola-tabla [data-celda="accion"] { display: block; }
-  .cola-tabla [data-celda="accion"] .btn { inline-size: 100%; }
-}
-
-/* En curso */
-.curso-lista { display: grid; gap: 1rem; margin: 0; }
-.curso-card { display: grid; gap: .75rem; padding: 1.25rem; }
-.curso-card h3 { font: 600 1.375rem/1.2 var(--f-display); }
-.curso-card p { margin: 0; color: var(--tinta-2); }
-.curso-card[aria-current="true"] { border: 3px solid var(--sol); box-shadow: 0 0 0 1px var(--tinta); }
-.dialogo-acciones { justify-content: flex-end; margin-block-start: 1.5rem; }
-.dialogo h2 { margin: 0; }

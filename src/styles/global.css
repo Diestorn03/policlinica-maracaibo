@@ -203,7 +203,7 @@ html.js:not(.motion-ready) :is([data-split], [data-lit]) { visibility: hidden; }
 .wa-float svg { width: 22px; height: 22px; }
 
 /* ---------- cabecera de páginas internas ---------- */
-.page-hero { position: relative; padding: clamp(3rem, 7vw, 5rem) 0 clamp(2.5rem, 6vw, 4rem); background: var(--mist); }
+/* .page-hero: estilos en src/components/ui/PageHero.astro */
 .crumbs { display: flex; gap: .5rem; font-size: .9375rem; color: var(--muted); margin-bottom: 1rem; flex-wrap: wrap; }
 .crumbs a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
 

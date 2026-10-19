@@ -1,18 +1,25 @@
-# Estado · 19-oct-2026, 17:15
+# Estado · 19-oct-2026
 
-## Listo y probado
-- Backend (`npm test` pasa): D1 con 125 médicos / 50 especialidades, usuarios con roles, sesión, telemedicina (sala de espera,
-  cola del médico, historial), modo demo estático para GitHub Pages (`npm run build:demo`) — ver `docs/BACKEND.md`.
-- Repo público https://github.com/Diestorn03/policlinica-maracaibo · GitHub Pages activado (Actions): cada push a `main` publica la demo.
-- Base visual v2 con la marca actual (ver `docs/DESIGN.md`): global.css, privado.css, Layout, Privado, Header, Footer,
-  Icon, PageHero, MedicoCard, motion.js (motor de ExpertsDDT).
+## Publicado
+- Demo para revisión: https://diestorn03.github.io/policlinica-maracaibo/ (GitHub Pages, `npm run build:demo`, se publica sola con cada push a `main`).
+- Repo: https://github.com/Diestorn03/policlinica-maracaibo
 
-## Pendiente (en este orden)
-1. Portada nueva (`src/pages/index.astro` + `src/components/home/*`) según DESIGN.md §Estructura.
-2. Re-vestir con la base v2 las páginas que quedaron de v1 (importan componentes borrados): `servicios/index`, `servicios/[slug]`,
-   `directorio/index` (+ `components/directorio/*`), `acceso`, `panel`, `medico` (+ `components/tele/*`). Crear: `especialidades`,
-   `nosotros`, `afiliacion`, `404`, `admin/*`.
-3. Verificar los dos builds (`npm run build`, `npm run build:demo`), capturas escritorio/móvil, y fusionar la rama a `main` → se publica la demo.
+## Hecho
+- Portada (aprobada por Diego): Manrope, azules y blancos, héroe técnico, cruz de médicos, el edificio en corte por pisos.
+- Páginas: servicios (índice + 9), especialidades, directorio (filtros por nombre, especialidad y piso), nosotros, afiliación, 404.
+- Admin: resumen, médicos (con foto), clientes, usuarios con roles, especialidades, consultas.
+- Telemedicina: acceso único, panel del paciente con sala de espera, panel del médico con la cola en vivo.
+- Dos modos con el mismo código: servidor (Cloudflare Workers + D1, todo real) y demo estática (datos de ejemplo; la sala de espera se
+  simula entre pestañas: abrir /panel/ y /medico/ a la vez).
+- `npm test` (base de datos, sesión, telemedicina, helpers) y los dos builds pasan.
 
-Trabajo en curso en la rama `rediseno-marca` (main sigue con la base sin páginas, no publica nada roto).
-Servidores locales: `npm run dev` (4330) y `npm run dev:demo` (4331; no corren a la vez: Astro 7 lo impide).
+## Preguntas para el profesor
+1. Precio y periodicidad de la afiliación; qué incluye exactamente; cómo se paga.
+2. Videollamada: ¿Jitsi automático o cada médico pega su enlace de Google Meet?
+3. Sala de espera: ¿cola general o por especialidad/médico?
+4. Datos del cliente: ¿falta alguno (sexo, contacto de emergencia…)?
+5. ¿Hace falta otro rol (recepción)?
+6. Especialidades: el directorio tiene 50 (42 con médicos). ¿Hay una lista oficial?
+7. ¿En qué piso están emergencias, laboratorio, tomografía, rayos X, UCI y pabellón? (el edificio podría mostrarlos)
+8. En el 2do piso aparecen consultorios 16, 17 y 20, que chocan con el 1er piso: ¿errores del sitio viejo?
+9. ¿Cuándo pasamos a Cloudflare (y apuntamos el dominio)?

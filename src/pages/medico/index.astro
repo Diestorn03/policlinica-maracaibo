@@ -1,23 +1,239 @@
 ---
-// Panel del médico (DESIGN.md §7.4): cola de espera en vivo, consultas en curso e historial. Rol médico (lo exige el middleware).
-// En la demo (GitHub Pages) es estático y vacío: src/components/tele/Cola.astro lo llena con la simulación de api.js.
+// Panel del médico: la sala de espera en vivo, sus consultas en curso y su historial.
+// El servidor pinta lo que hay; el script sondea cola() de api.js cada 4 s y reconcilia por id (no reconstruye: no se pierde el foco).
+// En la demo (GitHub Pages) la página es estática y nace vacía: se llena con la primera respuesta de la simulación.
 export const prerender = false;
-import TeleShell from '../../components/tele/TeleShell.astro';
-import Cola from '../../components/tele/Cola.astro';
+import Privado from '../../layouts/Privado.astro';
+import EnCurso from '../../components/tele/EnCurso.astro';
+import FilaCola from '../../components/tele/FilaCola.astro';
 import Historial from '../../components/tele/Historial.astro';
-import { DEMO, getDB, usuarioDe } from '../../lib/entorno';
+import { errorConocido } from '../../components/tele/avisos';
+import '../../components/tele/tele.css';
+import { DEMO, getDB, u, usuarioDe } from '../../lib/entorno';
 import { cola, historial } from '../../lib/tele';
 
 const yo = usuarioDe(Astro.locals, 'medico');
 const db = await getDB();
 const [viva, pasadas] = await Promise.all([DEMO ? { espera: [], enCurso: [] } : cola(db, yo.id), historial(db, { medicoId: yo.id })]);
 const q = Astro.url.searchParams;
+const error = errorConocido(q.get('error'));
+const atendiendo = q.get('atendiendo') ?? '';
+const tomado = viva.enCurso.some((c) => String(c.id) === atendiendo);
+const n = viva.espera.length;
+const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ? 'paciente' : 'pacientes'} en espera`);
 ---
-
-<TeleShell titulo="Sala de espera" rol="medico" nombre={yo.nombre}>
+<Privado titulo="Sala de espera" zona="Panel del médico" usuario={yo}>
   {!DEMO && <noscript slot="head"><meta http-equiv="refresh" content="10" /></noscript>}
-  <div class="medico">
-    <Cola espera={viva.espera} enCurso={viva.enCurso} error={q.get('error') ?? ''} atendiendo={q.get('atendiendo') ?? ''} />
+
+  <div class="t t--medico" data-cola>
+    <header class="medico__cab">
+      <div>
+        <h1 class="t-titulo">Sala de espera</h1>
+        <p class="medico__estado"><b data-contador>{DEMO ? 'Cargando…' : enEspera(n)}</b> <span class="js-solo">Actualizado a las <time data-actualizado>--</time></span></p>
+      </div>
+      <button type="button" class="btn btn--outline btn--sm js-solo" aria-pressed="false" data-sonido><span data-sonido-txt>Sonido de aviso: apagado</span></button>
+    </header>
+
+    <p class="sr-only" role="status" aria-live="polite" data-anuncio></p>
+    <p class="t-aviso" role="status" data-sin-conexion hidden>Sin conexión. Seguimos intentando…</p>
+    <p class="t-aviso" role="alert" tabindex="-1" data-error hidden={!error}>{error}</p>
+
+    <!-- Consultas en curso -->
+    <section class="t-azul" aria-labelledby="t-curso" data-curso-sec hidden={viva.enCurso.length === 0}>
+      <div class="grid-bg" aria-hidden="true"></div>
+      <h2 id="t-curso">En curso</h2>
+      <p class="t-aviso" role="status" data-tomado hidden={!tomado}>Ya es tu paciente. Abre la videollamada para atenderlo.</p>
+      <ul class="medico__curso" data-curso>
+        {viva.enCurso.map((c) => <EnCurso c={c} actual={String(c.id) === atendiendo} />)}
+      </ul>
+    </section>
+
+    <!-- Cola -->
+    <section class="t-hoja" aria-labelledby="t-cola">
+      <h2 id="t-cola">Pacientes en espera</h2>
+      <form id="cola" method="post" action={u('/api/cola')} class="medico__form">
+        <input type="hidden" name="accion" value="atender" />
+        <!-- botón por defecto desactivado: Enter dentro del campo del enlace no atiende al primer paciente por accidente -->
+        <button type="submit" disabled hidden tabindex="-1" aria-hidden="true"></button>
+        <div class="t-campo medico__meet">
+          <label for="enlace">Tu enlace de Google Meet (opcional)</label>
+          <input class="input" type="url" id="enlace" name="enlace" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://meet.google.com/abc-defg-hij" pattern="https://meet\.google\.com/[a-z]{3}-[a-z]{4}-[a-z]{3}|https://meet\.jit\.si/[\w\-]{6,}" title="Un enlace de Google Meet (https://meet.google.com/abc-defg-hij) o de Jitsi" />
+          <small>Usa un enlace distinto para cada paciente. Si lo dejas vacío, se crea una sala nueva y privada.</small>
+        </div>
+        <table class="t-tabla t-tabla--cola" data-tabla hidden={n === 0}>
+          <caption class="sr-only">Pacientes en espera, por orden de llegada</caption>
+          <thead><tr><th scope="col">Turno</th><th scope="col">Paciente</th><th scope="col">Edad</th><th scope="col">Esperando</th><th scope="col">Motivo</th><th scope="col"><span class="sr-only">Acción</span></th></tr></thead>
+          <tbody data-filas>
+            {viva.espera.map((c, i) => <FilaCola c={c} orden={i + 1} />)}
+          </tbody>
+        </table>
+        <p class="t-vacio" data-vacio hidden={n > 0 || DEMO}>Cuando llegue alguien, aparecerá aquí. Esta página se actualiza sola.</p>
+      </form>
+    </section>
+
     <Historial items={pasadas} rol="medico" />
+
+    <template id="pl-fila"><FilaCola /></template>
+    <template id="pl-curso"><EnCurso /></template>
+
+    <dialog class="t-dialogo" id="dialogo-fin" aria-labelledby="dialogo-fin-t">
+      <h2 id="dialogo-fin-t">¿Finalizar la consulta con <span data-dialogo-paciente></span>?</h2>
+      <form method="dialog">
+        <button class="btn btn--outline" value="no" autofocus>Cancelar</button>
+        <button class="btn btn--primary" value="si">Sí, finalizar</button>
+      </form>
+    </dialog>
   </div>
-</TeleShell>
+
+  <script>
+    import { cola } from '../../scripts/api.js';
+    import { sondear, errorDeUrl, enlaceSeguro } from '../../components/tele/tele.js';
+    import { esperando } from '../../lib/sitio.ts';
+    import { aFecha } from '../../lib/tele.ts';
+
+    const raiz = document.querySelector<HTMLElement>('[data-cola]');
+    if (raiz) {
+      const $ = <T extends HTMLElement = HTMLElement>(s: string, r: ParentNode = raiz) => r.querySelector<T>(s)!;
+      const guardado = (k: string, v?: string) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch {} return null; };
+      const base = document.title;
+      const cuerpo = $('[data-filas]'), lista = $('[data-curso]');
+      const plFila = $<HTMLTemplateElement>('#pl-fila'), plCurso = $<HTMLTemplateElement>('#pl-curso');
+      const filas = new Map<string, HTMLElement>(), cards = new Map<string, HTMLElement>();
+      const atendiendo = new URLSearchParams(location.search).get('atendiendo') ?? '';
+      let primera = true, enfocado = false, audio: AudioContext | null = null, sonido = guardado('pm-aviso') === '1';
+      cuerpo.querySelectorAll<HTMLElement>('tr[data-id]').forEach((tr) => filas.set(tr.dataset.id!, tr));
+      lista.querySelectorAll<HTMLElement>('li[data-id]').forEach((li) => cards.set(li.dataset.id!, li));
+      const poner = (el: ParentNode, campo: string, v: string) => { const n = el.querySelector(`[data-campo="${campo}"]`); if (n) n.textContent = v; };
+
+      errorDeUrl($('[data-error]'));
+
+      // Sonido de aviso (apagado por defecto): un tono corto cuando llega alguien, una vez que el usuario tocó la página
+      const btnSonido = $('[data-sonido]');
+      const pintarSonido = () => { btnSonido.setAttribute('aria-pressed', String(sonido)); $('[data-sonido-txt]').textContent = `Sonido de aviso: ${sonido ? 'encendido' : 'apagado'}`; };
+      const abrirAudio = () => { if (sonido && !audio) audio = new AudioContext(); };
+      const tono = () => {
+        if (!sonido || !audio) return;
+        const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+        o.frequency.value = 880; g.gain.setValueAtTime(.15, t); g.gain.exponentialRampToValueAtTime(.001, t + .25);
+        o.connect(g).connect(audio.destination); o.start(t); o.stop(t + .25);
+      };
+      pintarSonido();
+      addEventListener('pointerdown', abrirAudio, { once: true });
+      addEventListener('keydown', abrirAudio, { once: true });
+      btnSonido.addEventListener('click', () => { sonido = !sonido; guardado('pm-aviso', sonido ? '1' : '0'); pintarSonido(); abrirAudio(); audio?.resume(); tono(); });
+
+      // Finalizar con confirmación (sin JS el formulario se envía directo)
+      const dialogo = $<HTMLDialogElement>('#dialogo-fin');
+      let pendiente: HTMLFormElement | null = null;
+      raiz.addEventListener('click', (e) => {
+        const b = (e.target as HTMLElement).closest<HTMLElement>('[data-finalizar]');
+        if (!b || typeof dialogo.showModal !== 'function') return;
+        e.preventDefault();
+        pendiente = b.closest('form');
+        $('[data-dialogo-paciente]').textContent = b.closest('li')?.querySelector('h3')?.textContent ?? 'este paciente';
+        dialogo.showModal();
+      });
+      dialogo.addEventListener('close', () => { if (dialogo.returnValue === 'si') pendiente?.requestSubmit(); dialogo.returnValue = ''; pendiente = null; });
+
+      // El reloj de cada fila (cada segundo) y su aviso de espera larga
+      const reloj = () => {
+        const ahora = new Date();
+        for (const tr of Array.from(cuerpo.children) as HTMLElement[]) {
+          const seg = (ahora.getTime() - aFecha(tr.dataset.creada!).getTime()) / 1000;
+          poner(tr, 'reloj', esperando(tr.dataset.creada!, ahora));
+          poner(tr, 'largo', seg >= 1200 ? 'Más de 20 min' : seg >= 600 ? 'Más de 10 min' : '');
+        }
+      };
+      setInterval(reloj, 1000);
+
+      const crear = (pl: HTMLTemplateElement, c: any) => {
+        const el = pl.content.firstElementChild!.cloneNode(true) as HTMLElement;
+        el.dataset.id = c.id;
+        poner(el, 'paciente', c.paciente);
+        return el;
+      };
+      // Pone `el` en la posición `i` de `padre` sin mover los demás (conserva foco y selección)
+      const colocar = (padre: HTMLElement, el: HTMLElement, i: number) => { if (padre.children[i] !== el) padre.insertBefore(el, padre.children[i] ?? null); };
+
+      function reconciliar(datos: { espera: any[]; enCurso: any[] }) {
+        // --- cola
+        const llegaron: string[] = [];
+        const ids = new Set(datos.espera.map((c) => String(c.id)));
+        for (const [id, tr] of filas) if (!ids.has(id)) { tr.remove(); filas.delete(id); }
+        datos.espera.forEach((c, i) => {
+          let tr = filas.get(String(c.id));
+          if (!tr) {
+            tr = crear(plFila, c);
+            tr.dataset.creada = c.creada;   // solo al verla por primera vez: así el reloj no se reinicia en cada sondeo
+            poner(tr, 'edad', c.edad == null ? 'Sin registrar' : `${c.edad} años`);
+            poner(tr, 'motivo', c.motivo || 'Sin motivo indicado');
+            const b = $<HTMLButtonElement>('button', tr);
+            b.value = c.id; b.setAttribute('aria-label', `Atender a ${c.paciente}`);
+            if (!primera) llegaron.push(c.paciente);
+            filas.set(String(c.id), tr);
+          }
+          colocar(cuerpo, tr, i);
+          poner(tr, 'orden', String(i + 1));
+          poner(tr, 'siguiente', i === 0 ? 'Siguiente' : '');
+        });
+        reloj();
+        const n = datos.espera.length;
+        $('[data-tabla]').hidden = n === 0;
+        $('[data-vacio]').hidden = n > 0;
+        $('[data-contador]').textContent = n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ? 'paciente' : 'pacientes'} en espera`;
+
+        // --- en curso
+        const idsCurso = new Set(datos.enCurso.map((c) => String(c.id)));
+        for (const [id, li] of cards) if (!idsCurso.has(id)) { li.remove(); cards.delete(id); }
+        datos.enCurso.forEach((c, i) => {
+          let li = cards.get(String(c.id));
+          if (!li) {
+            li = crear(plCurso, c);
+            poner(li, 'edad', c.edad == null ? 'Edad sin registrar' : `${c.edad} años`);
+            poner(li, 'motivo', c.motivo || 'sin motivo indicado');
+            $('[name="consulta"]', li).setAttribute('value', c.id);
+            $('[data-finalizar]', li).setAttribute('aria-label', `Finalizar consulta con ${c.paciente}`);
+            const url = enlaceSeguro(c.enlace);
+            if (url) li.querySelector('[data-campo="enlace"]')!.setAttribute('href', url);
+            $('[data-copiar]', li).dataset.copiar = url;
+            cards.set(String(c.id), li);
+          }
+          colocar(lista, li, i);
+        });
+        $('[data-curso-sec]').hidden = datos.enCurso.length === 0;
+
+        // --- ?atendiendo=<id>: resalta esa consulta, avisa y lleva el foco a «Abrir videollamada» (una sola vez)
+        const actual = cards.get(atendiendo);
+        cards.forEach((li) => (li === actual ? li.setAttribute('aria-current', 'true') : li.removeAttribute('aria-current')));
+        $('[data-tomado]').hidden = !actual;
+        if (actual && !enfocado) { enfocado = true; $<HTMLElement>('[data-campo="enlace"]', actual).focus(); }
+
+        // --- llegadas nuevas: aviso para lectores de pantalla, título de la pestaña y tono
+        if (llegaron.length) { $('[data-anuncio]').textContent = `Llegó un paciente: ${llegaron.join(', ')}`; tono(); }
+        document.title = n ? `(${n}) Sala de espera` : base;
+        $('[data-actualizado]').textContent = new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', hour: 'numeric', minute: '2-digit', second: '2-digit' }).format(new Date());
+        primera = false;
+      }
+
+      sondear(
+        async () => { const d = await cola(); if (d) reconciliar(d); },
+        (ok) => { $('[data-sin-conexion]').hidden = ok; },
+      );
+    }
+  </script>
+</Privado>
+
+<style>
+  .medico__cab { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem 2rem; }
+  .medico__cab .t-titulo { font-size: clamp(1.8rem, 1.2rem + 2vw, 2.6rem); }
+  .medico__estado { display: flex; flex-wrap: wrap; gap: .1rem 1.25rem; margin-top: .5rem; }
+  .medico__estado b { font: 600 1.15rem var(--font-head); color: var(--navy); }
+  .medico__estado span { color: var(--navy); font-variant-numeric: tabular-nums; }
+  .medico__curso { list-style: none; margin: 0; padding: 0; }
+  .medico__form { display: grid; gap: 1.25rem; }
+  .medico__meet { max-width: 34rem; }
+
+  @media (max-width: 640px) {
+    .medico__cab .btn { width: 100%; }
+  }
+</style>

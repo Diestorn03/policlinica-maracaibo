@@ -1,0 +1,64 @@
+---
+// /admin/ · resumen: las cifras de la clínica (resumenAdmin) y las afiliaciones que vencen pronto.
+export const prerender = false;
+import AdminShell from '../../components/admin/AdminShell.astro';
+import { getDB, u, usuarioDe } from '../../lib/entorno';
+import { resumenAdmin } from '../../lib/usuarios';
+import { telHref } from '../../lib/sitio';
+import { dmy } from '../../components/admin/util';
+
+const yo = usuarioDe(Astro.locals, 'admin');
+const r = await resumenAdmin(await getDB());
+const p = Astro.url.searchParams;
+---
+<AdminShell titulo="Resumen" activa="resumen" usuario={yo} sub="Así está la Policlínica ahora. Las cifras son las del momento en que abriste la página." ok={p.get('ok')} error={p.get('error')}>
+  <div class="panel cifras">
+    <section aria-labelledby="c-dir">
+      <h2 class="h-lg" id="c-dir">Directorio</h2>
+      <dl>
+        <div><dt>Médicos</dt><dd>{r.medicos}</dd></div>
+        <div><dt>Especialidades</dt><dd>{r.especialidades}{r.sinMedicos > 0 && <small>{r.sinMedicos} sin médicos todavía</small>}</dd></div>
+      </dl>
+      <a class="link" href={u('/admin/medicos/')}>Administrar los médicos</a>
+    </section>
+    <section aria-labelledby="c-tele">
+      <h2 class="h-lg" id="c-tele">Telemedicina</h2>
+      <dl>
+        <div><dt>En la sala de espera</dt><dd>{r.enEspera}</dd></div>
+        <div><dt>En videollamada</dt><dd>{r.atendiendo}</dd></div>
+        <div><dt>Consultas de hoy</dt><dd>{r.consultasHoy}</dd></div>
+      </dl>
+      <a class="link" href={u('/admin/consultas/')}>Ver las consultas</a>
+    </section>
+    <section aria-labelledby="c-af">
+      <h2 class="h-lg" id="c-af">Afiliaciones</h2>
+      <dl>
+        <div><dt>Vigentes</dt><dd>{r.vigentes}</dd></div>
+        <div><dt>Vencen en 30 días</dt><dd>{r.porVencer.length}</dd></div>
+      </dl>
+      <a class="link" href={u('/admin/clientes/')}>Ver los clientes</a>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="vencen-t">
+    <div class="panel__head"><h2 id="vencen-t">Afiliaciones que vencen en los próximos 30 días</h2></div>
+    {r.porVencer.length === 0 ? <p class="adm-vacio">Ninguna afiliación vence en los próximos 30 días.</p> : (
+      <div class="table-wrap">
+        <table class="table adm-tabla">
+          <thead><tr><th scope="col">Cliente</th><th scope="col">Cédula</th><th scope="col">Teléfono</th><th scope="col">Vence</th><th scope="col"><span class="sr-only">Acciones</span></th></tr></thead>
+          <tbody>
+            {r.porVencer.map((c) => (
+              <tr>
+                <td data-label="Cliente"><b class="nombre">{c.nombre}</b></td>
+                <td data-label="Cédula">{c.cedula ?? <span class="sin">Sin cédula</span>}</td>
+                <td data-label="Teléfono">{c.telefono ? <a class="link" href={telHref(c.telefono)}>{c.telefono}</a> : <span class="sin">Sin dato</span>}</td>
+                <td data-label="Vence">{dmy(c.afiliacion_vence!)}</td>
+                <td class="acc"><a href={u(`/admin/usuarios/?editar=${c.id}#ficha`)} aria-label={`Renovar la afiliación de ${c.nombre}`}>Renovar</a></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </section>
+</AdminShell>

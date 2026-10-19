@@ -1,0 +1,43 @@
+---
+// /admin/consultas/ · las últimas consultas de telemedicina de toda la clínica (historial() sin cliente ni médico).
+export const prerender = false;
+import AdminShell from '../../components/admin/AdminShell.astro';
+import { getDB, usuarioDe } from '../../lib/entorno';
+import { historial } from '../../lib/tele';
+import { duracion } from '../../lib/sitio';
+import { ESTADOS, cuando } from '../../components/admin/util';
+
+const yo = usuarioDe(Astro.locals, 'admin');
+const consultas = await historial(await getDB());
+const p = Astro.url.searchParams;
+---
+<AdminShell titulo="Consultas" activa="consultas" usuario={yo} sub="Las videollamadas de toda la clínica, de la más reciente a la más antigua." ok={p.get('ok')} error={p.get('error')}>
+  <section class="panel" aria-label="Consultas">
+    {consultas.length === 0 ? <p class="adm-vacio">Todavía no hay consultas. Aparecerán aquí cuando un cliente entre a la sala de espera.</p> : (<>
+      <div class="panel__head">
+        <h2>{consultas.length === 1 ? 'Última consulta' : `Últimas ${consultas.length} consultas`}</h2>
+        <p class="note">La lista muestra como máximo las últimas 50.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="table adm-tabla">
+          <thead><tr><th scope="col">Fecha</th><th scope="col">Paciente</th><th scope="col">Médico</th><th scope="col">Motivo</th><th scope="col">Estado</th><th scope="col">Duración</th></tr></thead>
+          <tbody>
+            {consultas.map((c) => {
+              const min = c.atendida ? duracion(c.atendida, c.finalizada) : null;
+              return (
+                <tr>
+                  <td data-label="Fecha">{cuando(c.creada)}</td>
+                  <td data-label="Paciente"><b class="nombre">{c.paciente}</b></td>
+                  <td data-label="Médico">{c.medico ?? <span class="sin">Sin atender</span>}</td>
+                  <td data-label="Motivo">{c.motivo || <span class="sin">Sin motivo</span>}</td>
+                  <td data-label="Estado"><span class:list={['estado', { 'estado--on': c.estado === 'atendiendo', 'estado--fin': c.estado === 'finalizada' || c.estado === 'cancelada' }]}>{ESTADOS[c.estado]}</span></td>
+                  <td data-label="Duración">{min !== null ? `${min} min` : <span class="sin">Sin dato</span>}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>)}
+  </section>
+</AdminShell>

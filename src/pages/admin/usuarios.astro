@@ -1,0 +1,135 @@
+---
+// /admin/usuarios/ · todas las cuentas (administradores, médicos y clientes): alta, edición, desactivar y borrar.
+// Mismo esquema que /admin/medicos/: POST real en servidor (303 con ?ok=/?error=); en la demo ?editar=<id> se rellena en el navegador.
+// ?nuevo=cliente|medico|admin abre el formulario vacío con ese rol.
+export const prerender = false;
+import AdminShell from '../../components/admin/AdminShell.astro';
+import { getDB, u, usuarioDe } from '../../lib/entorno';
+import { medicos } from '../../lib/db';
+import { ROLES, borrarUsuario, guardarUsuario, usuarios, validarUsuario, type Usuario } from '../../lib/usuarios';
+import { ficha } from '../../components/directorio/buscar';
+import { pl } from '../../components/admin/util';
+
+const yo = usuarioDe(Astro.locals, 'admin');
+const db = await getDB();
+const aqui = u('/admin/usuarios/');
+const volver = (clave: 'ok' | 'error', texto: string, extra = '') => Astro.redirect(`${aqui}?${clave}=${encodeURIComponent(texto)}${extra}`, 303);
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const id = Number(f.get('id')) || 0;
+  const otra = id ? `&editar=${id}` : '';
+  if (f.get('accion') === 'borrar') {
+    const error = await borrarUsuario(db, id, yo.id);
+    return error ? volver('error', error, otra) : volver('ok', 'El usuario se borró.');
+  }
+  const datos = validarUsuario(f, !id);
+  if (typeof datos === 'string') return volver('error', datos, otra);
+  const r = await guardarUsuario(db, datos, id || undefined);
+  if (typeof r === 'string') return volver('error', r, otra);
+  return volver('ok', id ? 'Cambios guardados.' : `${datos.nombre} ya tiene su usuario.`);
+}
+
+const [todos, directorio] = await Promise.all([usuarios(db), medicos(db)]);
+const p = Astro.url.searchParams;
+const editando = todos.find((x) => String(x.id) === p.get('editar')) ?? null;
+const nuevo = p.get('nuevo');
+const abierto = !!editando || nuevo !== null;
+const rolInicial = editando?.rol ?? (nuevo && nuevo in ROLES ? nuevo : 'cliente');
+const nombreMedico = new Map(directorio.map((m) => [m.id, m.nombre]));
+const datosDe = (x: Usuario) => JSON.stringify({ id: x.id, rol: x.rol, nombre: x.nombre, correo: x.correo, cedula: x.cedula ?? '', telefono: x.telefono, nacimiento: x.nacimiento ?? '', direccion: x.direccion, afiliacion_vence: x.afiliacion_vence ?? '', medico_id: x.medico_id ?? '', activo: x.activo });
+---
+<AdminShell titulo="Usuarios" activa="usuarios" usuario={yo} sub="Quién puede entrar al sitio y con qué rol: administradores, médicos que atienden la telemedicina y clientes afiliados." ok={p.get('ok')} error={p.get('error')}>
+  <details class="panel ficha" id="ficha" open={abierto} data-editando={editando?.id}>
+    <summary>
+      <h2 class="titulo">
+        <span data-solo-nuevo hidden={!!editando}>Agregar un usuario</span>
+        <span data-solo-edicion hidden={!editando}>Editar a <span data-texto="nombre">{editando?.nombre}</span></span>
+      </h2>
+      <i class="mas" aria-hidden="true"></i>
+    </summary>
+    <div class="ficha__cuerpo">
+      <form method="post" action={aqui}>
+        <input type="hidden" name="id" value={editando?.id ?? ''} />
+        <div class="form-grid">
+          <label class="campo"><span>Rol</span>
+            <select class="select" name="rol" required autofocus={abierto}>
+              {Object.entries(ROLES).map(([v, nombre]) => <option value={v} selected={v === rolInicial}>{nombre}</option>)}
+            </select>
+          </label>
+          <label class="campo"><span>Nombre completo</span><input class="input" name="nombre" required maxlength="120" autocomplete="off" value={editando?.nombre ?? ''} /></label>
+          <label class="campo"><span>Correo electrónico</span><input class="input" name="correo" type="email" required maxlength="120" autocomplete="off" value={editando?.correo ?? ''} /><small>Con el correo o la cédula entra a su panel.</small></label>
+          <label class="campo"><span>Cédula</span><input class="input" name="cedula" maxlength="20" autocomplete="off" value={editando?.cedula ?? ''} /><small>Por ejemplo V-12345678. Obligatoria para los clientes.</small></label>
+          <label class="campo"><span>Teléfono</span><input class="input" name="telefono" type="tel" inputmode="tel" maxlength="40" autocomplete="off" value={editando?.telefono ?? ''} /></label>
+          <label class="campo"><span>Fecha de nacimiento</span><input class="input" name="nacimiento" type="date" value={editando?.nacimiento ?? ''} /></label>
+          <label class="campo full"><span>Dirección</span><input class="input" name="direccion" maxlength="200" autocomplete="off" value={editando?.direccion ?? ''} /></label>
+          <label class="campo" data-rol="cliente"><span>Afiliación vigente hasta</span><input class="input" name="afiliacion_vence" type="date" value={editando?.afiliacion_vence ?? ''} /><small>Solo clientes. Si la fecha pasó, no puede entrar a la videollamada.</small></label>
+          <label class="campo" data-rol="medico"><span>Ficha en el directorio</span>
+            <select class="select" name="medico_id">
+              <option value="">Sin vincular</option>
+              {directorio.map((m) => <option value={m.id} selected={m.id === editando?.medico_id}>{m.nombre}</option>)}
+            </select>
+            <small>Solo médicos. Une su cuenta con su ficha del directorio.</small>
+          </label>
+          <label class="campo"><span>Contraseña</span><input class="input" name="clave" type="password" minlength="8" autocomplete="new-password" required={!editando} data-req-nuevo /><small>Mínimo 8 caracteres. Al editar, déjala en blanco para no cambiarla. Si cambias tu propia contraseña, tendrás que volver a entrar.</small></label>
+          <label class="check" data-solo-edicion hidden={!editando}><input type="checkbox" name="activo" value="1" checked={editando ? !!editando.activo : true} /><span>Usuario activo<small> Si lo desmarcas, no podrá iniciar sesión. Si es tu propia cuenta, saldrás de inmediato.</small></span></label>
+        </div>
+        <div class="acciones">
+          <button class="btn btn--primary" type="submit" name="accion" value="guardar">Guardar usuario</button>
+          <a class="btn btn--outline" href={aqui} data-solo-edicion hidden={!editando}>Cancelar</a>
+        </div>
+      </form>
+
+      <details class="borrar" data-solo-edicion hidden={!editando}>
+        <summary>Borrar este usuario</summary>
+        <form method="post" action={aqui}>
+          <input type="hidden" name="id" value={editando?.id ?? ''} />
+          <p>¿Borrar a <b data-texto="nombre">{editando?.nombre}</b>? Pierde el acceso. Si es un cliente, su historial de consultas también se borra. No se puede deshacer. Para quitarle el acceso sin borrarlo, desmarca «Usuario activo».</p>
+          <button class="btn btn--navy" type="submit" name="accion" value="borrar">Sí, borrar</button>
+        </form>
+      </details>
+    </div>
+  </details>
+
+  <section class="panel" aria-labelledby="lista-t">
+    <div class="panel__head">
+      <h2 id="lista-t"><span data-cuenta-de="#cuerpo">{todos.length}</span> {pl(todos.length, 'usuario', 'usuarios')}</h2>
+      <div class="filtro" role="search">
+        <label class="sr-only" for="buscar">Buscar un usuario</label>
+        <input class="input" id="buscar" type="search" data-filtra="#cuerpo" placeholder="Nombre, correo, cédula o rol" autocomplete="off" />
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="table adm-tabla">
+        <thead><tr><th scope="col">Usuario</th><th scope="col">Rol</th><th scope="col">Correo</th><th scope="col">Cédula</th><th scope="col">Estado</th><th scope="col">Ficha del directorio</th><th scope="col"><span class="sr-only">Acciones</span></th></tr></thead>
+        <tbody id="cuerpo">
+          {todos.map((x) => (
+            <tr data-id={x.id} data-ficha={datosDe(x)} data-clave={ficha(x.nombre, x.correo, x.cedula ?? '', ROLES[x.rol])}>
+              <td data-label="Usuario"><b class="nombre">{x.nombre}</b></td>
+              <td data-label="Rol">{ROLES[x.rol]}</td>
+              <td data-label="Correo">{x.correo}</td>
+              <td data-label="Cédula">{x.cedula ?? <span class="sin">Sin cédula</span>}</td>
+              <td data-label="Estado">{x.activo ? 'Activo' : <span class="estado">Inactivo</span>}</td>
+              <td data-label="Ficha">{x.rol !== 'medico' ? <span class="sin">No aplica</span> : x.medico_id ? nombreMedico.get(x.medico_id) : <span class="sin">Sin vincular</span>}</td>
+              <td class="acc"><a href={`${aqui}?editar=${x.id}#ficha`} aria-label={`Editar a ${x.nombre}`}>Editar</a></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="adm-vacio" data-vacio-de="#cuerpo" hidden>Ningún usuario coincide con esa búsqueda.</p>
+  </section>
+</AdminShell>
+
+<script>
+  import { iniciarEdicion } from '../../components/admin/edicion';
+
+  const panel = document.getElementById('ficha') as HTMLDetailsElement;
+  const rol = panel.querySelector<HTMLSelectElement>('[name=rol]')!;
+  const { editando, nuevo } = iniciarEdicion(panel);
+  if (!editando && nuevo && [...rol.options].some((o) => o.value === nuevo)) rol.value = nuevo; // demo: el HTML no trae el rol de ?nuevo=
+  // Cada rol usa sus campos: afiliación para clientes, ficha del directorio para médicos (el servidor valida todo igual)
+  const ver = () => panel.querySelectorAll<HTMLElement>('[data-rol]').forEach((e) => (e.hidden = e.dataset.rol !== rol.value));
+  rol.addEventListener('change', ver);
+  ver();
+</script>

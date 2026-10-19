@@ -1,0 +1,53 @@
+---
+// /admin/clientes/ · afiliados con telemedicina: sus datos y si la afiliación está vigente. Se editan en Usuarios (mismo formulario).
+export const prerender = false;
+import AdminShell from '../../components/admin/AdminShell.astro';
+import { getDB, u, usuarioDe } from '../../lib/entorno';
+import { edad, usuarios } from '../../lib/usuarios';
+import { telHref } from '../../lib/sitio';
+import { afiliacion, dmy, pl } from '../../components/admin/util';
+import { ficha } from '../../components/directorio/buscar';
+
+const yo = usuarioDe(Astro.locals, 'admin');
+const clientes = await usuarios(await getDB(), { rol: 'cliente' });
+const filas = clientes.map((c) => ({ c, af: afiliacion(c.afiliacion_vence), anos: edad(c.nacimiento) }));
+const vigentes = filas.filter((f) => f.c.activo && f.af.clase === 'vigente').length; // igual que el Resumen: un cliente inactivo no cuenta
+const p = Astro.url.searchParams;
+---
+<AdminShell titulo="Clientes" activa="clientes" usuario={yo} sub="Los afiliados que usan la telemedicina. Con la afiliación vencida no pueden entrar a la videollamada." ok={p.get('ok')} error={p.get('error')}>
+  <section class="panel" aria-labelledby="lista-t">
+    <div class="panel__head">
+      <div>
+        <h2 id="lista-t"><span data-cuenta-de="#cuerpo">{clientes.length}</span> {pl(clientes.length, 'cliente', 'clientes')}</h2>
+        <p class="note">{vigentes} con la afiliación vigente</p>
+      </div>
+      <div class="filtro">
+        <div role="search">
+          <label class="sr-only" for="buscar">Buscar un cliente</label>
+          <input class="input" id="buscar" type="search" data-filtra="#cuerpo" placeholder="Nombre, cédula o correo" autocomplete="off" />
+        </div>
+        <a class="btn btn--primary btn--sm" href={u('/admin/usuarios/?nuevo=cliente#ficha')}>Agregar un cliente</a>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="table adm-tabla">
+        <thead><tr><th scope="col">Cliente</th><th scope="col">Nacimiento</th><th scope="col">Teléfono</th><th scope="col">Correo</th><th scope="col">Dirección</th><th scope="col">Afiliación</th><th scope="col"><span class="sr-only">Acciones</span></th></tr></thead>
+        <tbody id="cuerpo">
+          {filas.map(({ c, af, anos }) => (
+            <tr data-clave={ficha(c.nombre, c.cedula ?? '', c.correo, c.telefono)}>
+              <td data-label="Cliente"><div class="apila"><b class="nombre">{c.nombre}</b><span>{c.cedula ?? <span class="sin">Sin cédula</span>}{!c.activo && <> <span class="estado">Inactivo</span></>}</span></div></td>
+              <td data-label="Nacimiento">{c.nacimiento ? <div class="apila"><span>{dmy(c.nacimiento)}</span>{anos !== null && <span class="sin">{anos} años</span>}</div> : <span class="sin">Sin dato</span>}</td>
+              <td data-label="Teléfono">{c.telefono ? <a class="link" href={telHref(c.telefono)}>{c.telefono}</a> : <span class="sin">Sin dato</span>}</td>
+              <td data-label="Correo">{c.correo}</td>
+              <td data-label="Dirección">{c.direccion || <span class="sin">Sin dato</span>}</td>
+              <td data-label="Afiliación"><span class:list={['estado', { 'estado--on': c.activo && af.clase === 'vigente', 'estado--fin': !c.activo }]}>{af.texto}</span></td>
+              <td class="acc"><a href={u(`/admin/usuarios/?editar=${c.id}#ficha`)} aria-label={`Editar a ${c.nombre}`}>Editar</a></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="adm-vacio" data-vacio-de="#cuerpo" hidden>Ningún cliente coincide con esa búsqueda.</p>
+    {clientes.length === 0 && <p class="adm-vacio">Todavía no hay clientes. Agrega el primero con el botón de arriba.</p>}
+  </section>
+</AdminShell>

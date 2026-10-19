@@ -1,0 +1,49 @@
+---
+// Página no encontrada: lleva a lo que se busca (médico, servicios, citas) y recuerda el número de emergencias.
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import Icon from '../components/ui/Icon.astro';
+import Tareas from '../components/inner/Tareas.astro';
+import { u } from '../lib/entorno';
+import { nav } from '../data/site';
+---
+<Layout titulo="Página no encontrada" descripcion="La página que buscas no existe o cambió de dirección." noindex>
+  <PageHero titulo="No encontramos esa página" lead="Puede que el enlace esté mal escrito o que la página ya no exista." />
+
+  <section class="section">
+    <div class="wrap grid">
+      <div class="bloque">
+        <h2 class="h-lg">Buscar un médico</h2>
+        <form class="buscador" action={u('/directorio/')} method="get" role="search">
+          <label class="sr-only" for="q404">Nombre del médico o especialidad</label>
+          <Icon name="search" />
+          <input id="q404" name="q" type="search" placeholder="Médico o especialidad" autocomplete="off" />
+          <button class="btn btn--sm btn--primary" type="submit">Buscar</button>
+        </form>
+        <h2 class="h-lg">O ir a</h2>
+        <ul class="destinos">
+          <li><a href={u('/')}>Inicio</a></li>
+          {nav.map((n) => <li><a href={u(n.href)}>{n.texto}</a></li>)}
+        </ul>
+      </div>
+      <div class="bloque">
+        <h2 class="h-lg">¿Necesitas atención ahora?</h2>
+        <Tareas />
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; }
+  .bloque { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.2rem; align-content: start; }
+  .buscador { display: flex; align-items: center; gap: .6rem; width: min(440px, 100%); padding: .35rem .35rem .35rem 1rem; border-radius: 999px; background: #fff; color: var(--muted); border: 1.5px solid var(--line); margin-bottom: 1rem; }
+  .buscador input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; min-height: 46px; color: var(--ink); }
+  .buscador:focus-within { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(1, 77, 183, .12); }
+  .destinos { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); max-width: 26rem; }
+  .destinos li { border-bottom: 1px solid var(--line); }
+  .destinos a { display: flex; align-items: center; min-height: 48px; padding-inline: .4rem; font-weight: 600; color: var(--blue); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
+  .destinos a:hover { background: var(--mist); }
+
+  @media (max-width: 960px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+</style>

@@ -1,24 +1,224 @@
 ---
-// Panel del cliente (DESIGN.md §7.3): botón grande «Entrar a la videollamada», sala de espera en vivo e historial. Rol cliente (lo exige el middleware).
-// En la demo (GitHub Pages) es estático: nace en «inicio» y src/components/tele/Estados.astro toma el control con la simulación de api.js.
+// Panel del cliente: tres momentos en el mismo bloque azul, según estado(): inicio · sala de espera · te atienden.
+// El servidor pinta el que toca; el script lo cambia sin recargar sondeando espera() de api.js cada 4 s.
+// Al terminar la consulta o dejar de estar en la sala (la pantalla se apagó, se perdió la conexión) recarga con ?fin=… para mostrar el aviso y refrescar el historial.
+// En la demo (GitHub Pages) la página es estática: nace en «inicio», oculta hasta la primera respuesta de la simulación.
 export const prerender = false;
-import TeleShell from '../../components/tele/TeleShell.astro';
-import Estados from '../../components/tele/Estados.astro';
+import Privado from '../../layouts/Privado.astro';
+import Icon from '../../components/ui/Icon.astro';
 import Historial from '../../components/tele/Historial.astro';
-import { DEMO, getDB, usuarioDe } from '../../lib/entorno';
+import { errorConocido, esDeAfiliacion } from '../../components/tele/avisos';
+import '../../components/tele/tele.css';
+import { clinica } from '../../data/site';
+import { DEMO, getDB, u, usuarioDe } from '../../lib/entorno';
 import { estado, historial } from '../../lib/tele';
 import { usuario } from '../../lib/usuarios';
+import { esperando, waHref } from '../../lib/sitio';
 
 const yo = usuarioDe(Astro.locals, 'cliente');
 const db = await getDB();
-const [consulta, pasadas, ficha] = await Promise.all([estado(db, yo.id), historial(db, { clienteId: yo.id }), usuario(db, yo.id)]);
-const error = Astro.url.searchParams.get('error') ?? '';
----
+const [consulta, pasadas, ficha] = await Promise.all([DEMO ? null : estado(db, yo.id), historial(db, { clienteId: yo.id }), usuario(db, yo.id)]);
+const q = Astro.url.searchParams;
+const error = errorConocido(q.get('error'));
+const fin = q.get('fin');
+const inicial = !consulta ? 'inicio' : consulta.estado === 'espera' ? 'espera' : 'atiende';
+const primer = yo.nombre.split(/\s+/)[0];
 
-<TeleShell titulo="Mi panel" rol="cliente" nombre={yo.nombre}>
+const delante = (n: number) => (n <= 0 ? 'Eres el siguiente.' : `Hay ${n} ${n === 1 ? 'persona' : 'personas'} antes que tú.`);
+const enlace = consulta?.enlace ?? '';
+
+// Afiliación contra el día de hoy en Caracas (el último día aún vale)
+const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Caracas' }).format(new Date());
+const vence = ficha?.afiliacion_vence ?? null;
+const dias = vence ? Math.round((Date.parse(vence) - Date.parse(hoy)) / 864e5) : null;
+const fechaVence = vence ? new Intl.DateTimeFormat('es-VE', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(vence)) : '';
+const afiliacion = dias == null ? '' : dias < 0 ? `Tu afiliación venció el ${fechaVence}.` : dias <= 30 ? `Tu afiliación vence el ${fechaVence}.` : `Tu afiliación está vigente hasta el ${fechaVence}.`;
+---
+<Privado titulo="Mi panel" zona="Panel del paciente" usuario={yo}>
   {!DEMO && consulta?.estado === 'espera' && <noscript slot="head"><meta http-equiv="refresh" content="10" /></noscript>}
-  <Estados consulta={consulta} nombre={yo.nombre} vence={ficha?.afiliacion_vence ?? null} error={error} />
-  <div class="tele-col tele-historial">
+
+  <div class="t" data-estados data-actual={inicial} data-cargando={DEMO ? '' : undefined}>
+    <p class="t-aviso" role="status" data-sin-conexion hidden>Sin conexión. Seguimos intentando…</p>
+
+    <!-- Inicio -->
+    <section class="t-azul" data-estado="inicio" aria-labelledby="t-inicio" hidden={inicial !== 'inicio'}>
+      <div class="grid-bg" aria-hidden="true"></div>
+      <h1 class="t-titulo" id="t-inicio" tabindex="-1">Hola, {primer}</h1>
+      <p class="t-aviso" role="status" data-fin="termino" hidden={fin !== 'termino'}>La consulta terminó. Gracias por conectarte.</p>
+      <p class="t-aviso" role="status" data-fin="fuera" hidden={fin !== 'fuera'}>Ya no estás en la sala de espera. Pasa cuando la pantalla se apaga o se pierde la conexión por varios minutos. Pulsa «Entrar a la videollamada» para volver a entrar.</p>
+      <div class="t-aviso" role="alert" tabindex="-1" data-error hidden={!error}>
+        <p>{error}</p>
+        <a class="link" data-renovar href={waHref('Renovar mi afiliación')} target="_blank" rel="noopener" hidden={!esDeAfiliacion(error)}>Escribir por WhatsApp</a>
+      </div>
+      <p>Habla con un médico por videollamada. Pulsa el botón y espera tu turno en la sala de espera: te atienden por orden de llegada.</p>
+      <form class="panel__entrar" method="post" action={u('/api/espera')} data-entrar>
+        <input type="hidden" name="accion" value="entrar" />
+        <div class="t-campo">
+          <label for="motivo">Motivo de la consulta (opcional)</label>
+          <input class="input" id="motivo" name="motivo" maxlength="200" autocomplete="off" />
+        </div>
+        <button class="btn btn--white t-grande" type="submit"><Icon name="video" /><span>Entrar a la videollamada</span></button>
+      </form>
+    </section>
+
+    <!-- Sala de espera -->
+    <section class="t-azul" data-estado="espera" aria-labelledby="t-espera" hidden={inicial !== 'espera'}>
+      <div class="grid-bg" aria-hidden="true"></div>
+      <h1 class="t-titulo" id="t-espera" tabindex="-1">Estás en la sala de espera</h1>
+      <dl class="panel__cifras">
+        <div>
+          <dt>Tu turno</dt>
+          <dd class="panel__n" data-posicion>{consulta?.posicion ?? 1}</dd>
+          <dd data-linea>{delante((consulta?.posicion ?? 1) - 1)}</dd>
+        </div>
+        <div>
+          <dt>Esperando</dt>
+          <dd class="panel__n"><time data-reloj data-creada={consulta?.creada}>{consulta ? esperando(consulta.creada) : '00:00'}</time></dd>
+        </div>
+      </dl>
+      <p>No cierres esta página. Cuando un médico te atienda, aquí aparecerá el botón para entrar a la videollamada.</p>
+      <div class="t-aviso" data-largo hidden>
+        <p>Está tardando más de lo normal. Puedes seguir esperando o escribirnos por WhatsApp.</p>
+        <a class="link" href={waHref('Consulta de telemedicina')} target="_blank" rel="noopener">Escribir por WhatsApp</a>
+      </div>
+      <h2 class="panel__sub">Mientras esperas</h2>
+      <ul class="panel__tips">
+        <li>Permite el uso de la cámara y el micrófono si tu navegador te lo pide.</li>
+        <li>Busca un lugar con buena luz y poco ruido.</li>
+        <li>Ten a mano tus informes o estudios, si los tienes.</li>
+      </ul>
+      <form method="post" action={u('/api/espera')}>
+        <input type="hidden" name="accion" value="cancelar" />
+        <button class="btn t-borde" type="submit">Salir de la sala</button>
+      </form>
+      <p class="sr-only" role="status" aria-live="polite" data-anuncio></p>
+    </section>
+
+    <!-- Te atienden -->
+    <section class="t-azul" data-estado="atiende" aria-labelledby="t-atiende" hidden={inicial !== 'atiende'}>
+      <div class="grid-bg" aria-hidden="true"></div>
+      <h1 class="t-titulo" id="t-atiende" tabindex="-1"><span data-medico>{consulta?.medico || 'Un médico'}</span> te está esperando</h1>
+      <a class="btn btn--white t-grande panel__ir" data-enlace href={enlace || undefined} target="_blank" rel="noopener">
+        <Icon name="video" /><span>Entrar a la videollamada con <span data-medico>{consulta?.medico || 'tu médico'}</span><span class="sr-only"> (se abre en otra pestaña)</span></span>
+      </a>
+      <div class="panel__copia">
+        <p>Si no se abre, copia este enlace.</p>
+        <p class="panel__enlace" data-enlace-texto>{enlace}</p>
+        <button class="btn t-borde btn--sm" type="button" data-copiar={enlace}><span data-txt aria-live="polite">Copiar enlace</span></button>
+      </div>
+    </section>
+
+    {afiliacion && <p class="panel__afiliacion">{afiliacion}{dias != null && dias <= 30 && <> <a class="link" href={waHref('Renovar mi afiliación')} target="_blank" rel="noopener">Renovar por WhatsApp</a></>}</p>}
+
     <Historial items={pasadas} rol="cliente" />
+
+    <p class="t-emergencia">¿Es una emergencia? No uses la videollamada: llama al <a href={clinica.emergencias.href}>{clinica.emergencias.texto}</a>, a toda hora.</p>
   </div>
-</TeleShell>
+
+  <script>
+    import { espera } from '../../scripts/api.js';
+    import { sondear, errorDeUrl, enlaceSeguro } from '../../components/tele/tele.js';
+    import { esperando } from '../../lib/sitio.ts';
+    import { aFecha } from '../../lib/tele.ts';
+
+    const raiz = document.querySelector<HTMLElement>('[data-estados]');
+    if (raiz) {
+      const $ = <T extends HTMLElement = HTMLElement>(s: string, r: ParentNode = raiz) => r.querySelector<T>(s)!;
+      const secc = Object.fromEntries(['inicio', 'espera', 'atiende'].map((e) => [e, $(`[data-estado="${e}"]`)]));
+      const base = document.title;
+      let actual = raiz.dataset.actual!;
+      let posicion = Number($('[data-posicion]').textContent) || 0;
+      let candado: WakeLockSentinel | null = null;
+
+      // ?error=… y ?fin=…: el servidor ya los pinta; en la demo (página estática) los pone el navegador
+      const textoError = errorDeUrl($('[data-error]'));
+      $('[data-renovar]').hidden = !textoError.includes('afiliación');
+      const fin = new URLSearchParams(location.search).get('fin');
+      raiz.querySelectorAll<HTMLElement>('[data-fin]').forEach((p) => { if (p.dataset.fin === fin) p.hidden = false; });
+
+      // «Entrando…» al pulsar el botón grande (y se restablece si vuelven con «atrás»)
+      const btn = $('[data-entrar] .btn'), etiqueta = btn.querySelector('span')!;
+      $('[data-entrar]').addEventListener('submit', () => { btn.setAttribute('aria-busy', 'true'); etiqueta.textContent = 'Entrando…'; });
+      addEventListener('pageshow', (e) => { if (e.persisted) { btn.removeAttribute('aria-busy'); etiqueta.textContent = 'Entrar a la videollamada'; } });
+
+      // La pantalla del teléfono no se apaga mientras esperas (si se apaga, el móvil congela la pestaña y te sacan de la cola)
+      const pedirCandado = async () => { try { if (!candado || candado.released) candado = (await navigator.wakeLock?.request('screen')) ?? null; } catch {} };
+      const soltarCandado = () => { candado?.release().catch(() => {}); candado = null; };
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && actual === 'espera') pedirCandado(); });
+
+      const ir = (e: string) => {
+        const antes = actual;
+        actual = e;
+        for (const [k, s] of Object.entries(secc)) s.hidden = k !== e;
+        document.title = e === 'atiende' ? '¡Te están esperando!' : base;
+        if (e === 'espera') pedirCandado(); else soltarCandado();
+        if (antes === e) return;
+        $(e === 'atiende' ? '[data-enlace]' : 'h1', secc[e]).focus();
+        if (e === 'atiende') navigator.vibrate?.([200, 100, 200]);
+      };
+
+      const pintar = (c: any) => {
+        if (!c) {
+          // la consulta terminó o saliste de la sala: se recarga con el aviso y el historial al día
+          if (actual !== 'inicio') location.replace(`${location.pathname}?fin=${actual === 'atiende' ? 'termino' : 'fuera'}`);
+          return;
+        }
+        if (c.estado === 'espera') {
+          const antes = Math.max(0, c.posicion - 1);
+          $('[data-posicion]').textContent = c.posicion;
+          $('[data-linea]').textContent = antes === 0 ? 'Eres el siguiente.' : `Hay ${antes} ${antes === 1 ? 'persona' : 'personas'} antes que tú.`;
+          $('[data-reloj]').dataset.creada = c.creada;
+          if (posicion && c.posicion !== posicion) $('[data-anuncio]').textContent = `Tu turno cambió: ${antes === 0 ? 'eres el siguiente' : `ahora hay ${antes} ${antes === 1 ? 'persona' : 'personas'} antes que tú`}.`;
+          posicion = c.posicion;
+          if (actual !== 'espera') ir('espera');
+        } else {
+          const url = enlaceSeguro(c.enlace);
+          secc.atiende.querySelectorAll('[data-medico]').forEach((n) => (n.textContent = c.medico || (n.closest('a') ? 'tu médico' : 'Un médico')));
+          const a = $<HTMLAnchorElement>('[data-enlace]');
+          if (url) a.href = url; else a.removeAttribute('href');
+          $('[data-enlace-texto]').textContent = url;
+          $('[data-copiar]').dataset.copiar = url;
+          if (actual !== 'atiende') ir('atiende');
+        }
+      };
+
+      // Reloj de la espera (cada segundo) y aviso de «tarda más de lo normal» pasados 10 minutos
+      setInterval(() => {
+        const t = $('[data-reloj]');
+        if (actual !== 'espera' || !t.dataset.creada) return;
+        t.textContent = esperando(t.dataset.creada);
+        if (Date.now() - aFecha(t.dataset.creada).getTime() > 10 * 6e4) $('[data-largo]').hidden = false;
+      }, 1000);
+
+      sondear(
+        async () => {
+          try { const r = await espera(); if (r) pintar(r.consulta); } finally { raiz.removeAttribute('data-cargando'); }
+        },
+        (ok) => { $('[data-sin-conexion]').hidden = ok; },
+      );
+    }
+  </script>
+</Privado>
+
+<style>
+  /* Mientras la demo averigua en qué paso está el paciente, el bloque azul espera oculto (con JS; sin JS nunca se oculta) */
+  :global(html.js) [data-cargando] [data-estado] { visibility: hidden; }
+  .panel__entrar { display: grid; gap: 1.25rem; max-width: 34rem; justify-items: start; }
+  .panel__entrar .t-campo { width: 100%; }
+  .panel__entrar .input { min-height: 54px; }
+  .panel__cifras { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, max-content)); gap: 1rem 4.5rem; }
+  .panel__cifras dt { font-size: .9375rem; font-weight: 600; color: #bcd0f3; }
+  .panel__cifras dd { margin: 0; }
+  .panel__n { font: 300 clamp(3.4rem, 2rem + 6vw, 5.5rem) / 1 var(--font-head); letter-spacing: -.05em; color: #fff; font-variant-numeric: tabular-nums; }
+  .panel__sub { font-size: 1.15rem; margin-bottom: -.6rem; }
+  .panel__tips { list-style: none; margin: 0; padding: 0; max-width: 40rem; }
+  .panel__tips li { padding-block: .7rem; border-top: 1px solid rgba(255, 255, 255, .22); }
+  .panel__tips li:last-child { border-bottom: 1px solid rgba(255, 255, 255, .22); }
+  .panel__ir { justify-self: start; }
+  .panel__copia { display: grid; gap: .6rem; justify-items: start; }
+  .panel__enlace { overflow-wrap: anywhere; font-weight: 600; color: #fff; }
+  .panel__afiliacion { font-size: .9375rem; color: var(--navy); }
+  @media (max-width: 640px) {
+    .panel__entrar .btn, .panel__ir { width: 100%; }
+  }
+</style>

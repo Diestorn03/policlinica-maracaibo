@@ -1,0 +1,73 @@
+---
+// Especialidades de la A a la Z, cada una enlazada a su lista de médicos en el directorio, con su cuenta.
+// prerender = false como la portada: en servidor las cuentas son en vivo; en la demo se fijan al compilar.
+export const prerender = false;
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import { getDB, u } from '../lib/entorno';
+import { especialidades, resumen } from '../lib/db';
+
+const db = await getDB();
+const [esps, res] = await Promise.all([especialidades(db), resumen(db)]);
+
+// Agrupa por inicial, sin acentos
+const inicial = (n: string) => n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').charAt(0).toUpperCase();
+const grupos = new Map<string, typeof esps>();
+for (const e of esps) {
+  const l = inicial(e.nombre);
+  grupos.set(l, [...(grupos.get(l) ?? []), e]);
+}
+const letras = [...grupos.keys()].sort();
+const medicosTxt = (n: number) => `${n} ${n === 1 ? 'médico' : 'médicos'}`;
+---
+<Layout titulo="Especialidades" descripcion={`${res.especialidades} especialidades médicas de la Policlínica Maracaibo, de la A a la Z, con sus médicos en el directorio.`}>
+  <PageHero titulo="Especialidades" lead={`${res.especialidades} especialidades, ${res.conMedicos} de ellas con médicos en el directorio. Elige una para ver sus médicos.`} migas={[{ texto: 'Especialidades' }]} />
+
+  <nav class="letras" aria-label="Ir a una letra">
+    <ul class="wrap">{letras.map((l) => <li><a href={`#letra-${l}`}>{l}</a></li>)}</ul>
+  </nav>
+
+  <section class="section lista">
+    <div class="wrap">
+      <div class="abc">
+        {letras.map((l) => (
+          <section class="grupo" id={`letra-${l}`}>
+            <h2>{l}</h2>
+            <ul>
+              {grupos.get(l)!.map((e) => (
+                <li>
+                  {e.total > 0
+                    ? <a href={u(`/directorio/?esp=${e.slug}`)}><span>{e.nombre}</span><small>{medicosTxt(e.total)}</small></a>
+                    : <p><span>{e.nombre}</span><small>Sin médicos</small></p>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+      <p class="mas">¿Buscas a un médico por su nombre? <a class="link" href={u('/directorio/')}>Ir al directorio</a></p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .letras { border-bottom: 1px solid var(--line); background: #fff; }
+  .letras ul { list-style: none; margin-block: 0; padding: .5rem 0; display: flex; flex-wrap: wrap; gap: 0 .2rem; }
+  .letras a { display: grid; place-items: center; min-width: 44px; min-height: 44px; border-radius: 2px; font: 600 1.05rem var(--font-head); color: var(--blue); }
+  .letras a:hover { background: var(--mist); text-decoration: underline; text-underline-offset: 4px; }
+
+  .lista { padding-top: clamp(2.5rem, 5vw, 4rem); }
+  .abc { columns: 3 19rem; column-gap: 3.5rem; }
+  .grupo { break-inside: avoid; margin-bottom: 2.5rem; scroll-margin-top: calc(var(--nav-h) + 16px); }
+  .grupo h2 { font: 300 3rem / 1 var(--font-head); letter-spacing: -.04em; color: var(--blue); margin-bottom: .6rem; }
+  .grupo ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .grupo li { border-bottom: 1px solid var(--line); }
+  .grupo :is(a, p) { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; min-height: 48px; padding: .6rem .4rem; margin: 0; }
+  .grupo a { transition: background .2s; }
+  .grupo a:hover { background: var(--mist); }
+  .grupo a span { font-weight: 600; color: var(--navy); }
+  .grupo a:hover span { color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
+  .grupo p span { color: var(--text); }
+  .grupo small { flex: none; font-size: .9375rem; color: var(--text); text-align: right; }
+  .mas { margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: 1.0625rem; }
+</style>

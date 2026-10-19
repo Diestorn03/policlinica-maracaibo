@@ -61,7 +61,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
     <div class="wrap hero__grid">
       <div class="hero__texto">
         <h1 class="h-display">Atención médica en Maracaibo desde {clinica.desde}</h1>
-        <p class="lead">{res.medicos} médicos de {res.especialidades} especialidades, laboratorio, estudios por imágenes y emergencias las 24 horas, en la {clinica.direccion}.</p>
+        <p class="lead">{res.medicos} médicos de {res.conMedicos} especialidades, laboratorio, estudios por imágenes y emergencias las 24 horas, en la {clinica.direccion}.</p>
         <div class="hero__tareas">
           <a class="btn btn--sos btn--tarea" href={clinica.emergencias.href}>Llamar a emergencias <small>{clinica.emergencias.texto}</small></a>
           <a class="btn btn--white btn--tarea" href={waHref()} target="_blank" rel="noopener">Pedir cita por WhatsApp <small>Lunes a viernes, 8:00 a. m. a 4:00 p. m.</small></a>
@@ -175,7 +175,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
           </li>
         ))}
       </ul>
-      <p class="servicios__esp"><b>Especialidades</b> {res.especialidades} especialidades con médicos en el directorio. <a class="link" href={u('/especialidades/')}>Ver las especialidades</a></p>
+      <p class="servicios__esp"><b>Especialidades</b> {res.conMedicos} especialidades con médicos en el directorio. <a class="link" href={u('/especialidades/')}>Ver las especialidades</a></p>
     </div>
   </section>
 

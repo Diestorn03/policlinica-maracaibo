@@ -1,12 +1,11 @@
 ---
-// Inicio de sesión único (DESIGN.md §7.2): los tres roles usan la misma pantalla y cada uno cae en su panel.
-//  · Servidor: formulario real → POST /api/sesion. Si ya hay sesión, va directo a su panel. Mensajes: ?error=datos|limite, ?salio=1, ?volver=.
+// Entrar: una sola pantalla para los tres roles; cada uno cae en su panel.
+//  · Servidor: formulario real → POST /api/sesion. Con sesión abierta va directo a su panel. Mensajes: ?error=datos|limite, ?salio=1, ?volver=.
 //  · Demo (GitHub Pages): no hay cuentas ni servidor; tres botones llevan a los paneles de ejemplo.
 export const prerender = false;
+import { Image } from 'astro:assets';
 import Privado from '../layouts/Privado.astro';
-import Logo from '../components/Logo.astro';
-import Anillos from '../components/ui/Anillos.astro';
-import Icono from '../components/ui/Icono.astro';
+import logo from '../assets/img/logo.png';
 import { clinica } from '../data/site';
 import { DEMO, u } from '../lib/entorno';
 import { inicioDe } from '../lib/auth';
@@ -15,13 +14,12 @@ import { waHref } from '../lib/sitio';
 if (Astro.locals.usuario) return Astro.redirect(inicioDe(Astro.locals.usuario.rol), 303);
 
 const q = Astro.url.searchParams;
-const error = q.get('error');
 const volver = (q.get('volver') ?? '').slice(0, 200);
-// Cada mensaje existe siempre (oculto); el servidor muestra el que toca y el script cubre la página estática / en caché
+// Cada mensaje existe siempre (oculto): el servidor muestra el que toca y el script cubre la página estática o en caché
 const avisos = [
-  { id: 'datos', tipo: 'error', rol: 'alert', texto: 'No pudimos entrar con esos datos. Revisa tu correo o cédula y tu contraseña.', on: error === 'datos' },
-  { id: 'limite', tipo: 'error', rol: 'alert', texto: 'Hiciste demasiados intentos. Espera un minuto e inténtalo de nuevo.', on: error === 'limite' },
-  { id: 'salio', tipo: 'info', rol: 'status', texto: 'Cerraste tu sesión.', on: q.get('salio') === '1' },
+  { id: 'datos', rol: 'alert', texto: 'No pudimos entrar con esos datos. Revisa tu correo o cédula y tu contraseña.', on: q.get('error') === 'datos' },
+  { id: 'limite', rol: 'alert', texto: 'Hiciste demasiados intentos. Espera un minuto e inténtalo de nuevo.', on: q.get('error') === 'limite' },
+  { id: 'salio', rol: 'status', texto: 'Cerraste tu sesión.', on: q.get('salio') === '1' },
 ];
 const roles = [
   { href: '/admin/', titulo: 'Entrar como administrador', sub: 'Directorio médico, usuarios y consultas' },
@@ -29,82 +27,66 @@ const roles = [
   { href: '/panel/', titulo: 'Entrar como cliente', sub: 'Videollamada con un médico' },
 ];
 ---
+<Privado titulo="Entrar">
+  <div class="acceso">
+    <a class="acceso__logo" href={u('/')} aria-label={`${clinica.nombre}, ir al inicio`}><Image src={logo} alt="" height={44} /></a>
 
-<Privado titulo="Acceder" rol="acceso">
-  <a class="skip" href="#contenido">Saltar al contenido</a>
-  <main id="contenido" tabindex="-1" class="acceso">
-    <a class="acceso__logo acceso__logo--movil" href={u('/')} aria-label="Policlínica Maracaibo, ir al inicio"><Logo ancho={170} alt="" /></a>
-    <section class="acceso__lado" data-tema="lago">
-      <Anillos paso={9} tam="min(46rem, 130%)" clase="acceso__anillos" />
-      <span class="mas acceso__mas" aria-hidden="true"></span>
-      <div class="acceso__texto">
-        <h1>Bienvenido de vuelta.</h1>
-        <p class="lede">{DEMO ? 'Elige cómo quieres recorrer la demostración.' : 'Entra con tu correo o tu cédula. Te llevamos a tu panel.'}</p>
-      </div>
-    </section>
-
-    <section class="acceso__tarjeta" aria-label="Datos de acceso">
-      <a class="acceso__logo acceso__logo--escritorio" href={u('/')} aria-label="Policlínica Maracaibo, ir al inicio"><Logo ancho={170} alt="" /></a>
+    <section class="acceso__hoja" aria-labelledby="acceso-t">
+      <h1 id="acceso-t">{DEMO ? 'Elige un panel' : 'Entrar a tu panel'}</h1>
 
       {DEMO ? (
-        <div class="pila acceso__demo">
-          <p class="aviso aviso--info"><span>Esto es una demostración: no hay cuentas reales y nada se guarda. El inicio de sesión con correo o cédula y contraseña funciona en la versión con servidor.</span></p>
-          {roles.map((r) => (
-            <a class="btn btn--lago btn--grande btn--bloque acceso__rol" href={u(r.href)}>
-              <span class="acceso__rol-txt"><strong>{r.titulo}</strong><small>{r.sub}</small></span>
-              <Icono nombre="flecha" tam={28} />
-            </a>
-          ))}
-        </div>
-      ) : (
-        <form class="pila acceso__form" method="post" action={u('/api/sesion')} data-acceso>
-          {avisos.map((a) => (
-            <div class={`aviso aviso--${a.tipo}`} role={a.rol} tabindex="-1" data-aviso={a.id} hidden={!a.on}><p>{a.texto}</p></div>
-          ))}
-          <input type="hidden" name="volver" value={volver} />
-          <div class="campo">
-            <label class="campo__etiqueta" for="usuario">Correo o cédula</label>
-            <input class="entrada entrada--lg" id="usuario" name="usuario" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required />
+        <>
+          <p>Esto es una demostración: los datos son de ejemplo y nada se guarda.</p>
+          <div class="acceso__roles">
+            {roles.map((r) => <a class="btn btn--primary btn--tarea" href={u(r.href)}>{r.titulo}<small>{r.sub}</small></a>)}
           </div>
-          <div class="campo">
-            <label class="campo__etiqueta" for="clave">Contraseña</label>
+        </>
+      ) : (
+        <form class="acceso__form" method="post" action={u('/api/sesion')} data-acceso>
+          {avisos.map((a) => <p class="acceso__aviso" role={a.rol} tabindex="-1" data-aviso={a.id} hidden={!a.on}>{a.texto}</p>)}
+          <input type="hidden" name="volver" value={volver} />
+          <div class="acceso__campo">
+            <label for="usuario">Correo o cédula</label>
+            <input class="input" id="usuario" name="usuario" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required />
+          </div>
+          <div class="acceso__campo">
+            <label for="clave">Contraseña</label>
             <div class="acceso__clave">
-              <input class="entrada entrada--lg" id="clave" name="clave" type="password" autocomplete="current-password" required />
-              <button class="acceso__ver js-solo" type="button" aria-pressed="false" aria-controls="clave">Mostrar</button>
+              <input class="input" id="clave" name="clave" type="password" autocomplete="current-password" required />
+              <button class="acceso__ver js-solo" type="button" aria-controls="clave"><span data-ver>Mostrar</span><span class="sr-only"> la contraseña</span></button>
             </div>
           </div>
-          <button class="btn btn--lago btn--grande btn--bloque" type="submit" data-entrar>Entrar</button>
+          <button class="btn btn--primary" type="submit" data-entrar>Entrar</button>
         </form>
       )}
-
-      <div class="acceso__ayuda">
-        {!DEMO && <p>¿Olvidaste tu contraseña? <a href={waHref('Ayuda con mi acceso')} target="_blank" rel="noopener">Escríbenos por WhatsApp</a> y te ayudamos.</p>}
-        <p>¿Quieres afiliarte? <a href={u('/afiliacion/')}>Conoce el plan</a></p>
-        <p>Emergencias: <a href={clinica.emergencias.href}>{clinica.emergencias.texto}</a></p>
-      </div>
     </section>
-  </main>
+
+    <div class="acceso__ayuda">
+      {!DEMO && <p>¿Olvidaste tu contraseña? <a class="link" href={waHref('Ayuda con mi acceso')} target="_blank" rel="noopener">Escríbenos por WhatsApp</a>.</p>}
+      <p>¿Quieres afiliarte? <a class="link" href={u('/afiliacion/')}>Conoce el plan de afiliación</a>.</p>
+      <p>Emergencias: <a class="acceso__sos" href={clinica.emergencias.href}>{clinica.emergencias.texto}</a></p>
+    </div>
+  </div>
 
   <script>
-    // Mensajes de la URL (?error=…, ?salio=1) también en el navegador: cubre una página en caché; el servidor ya los trae pintados
-    const f = document.querySelector<HTMLElement>('[data-acceso]');
+    // Los mensajes de la URL (?error=…, ?salio=1) también en el navegador; el servidor ya pinta el suyo
+    const f = document.querySelector<HTMLFormElement>('[data-acceso]');
     if (f) {
       const q = new URLSearchParams(location.search);
-      const quien = q.get('salio') === '1' ? 'salio' : q.get('error');
-      const aviso = f.querySelector<HTMLElement>(`[data-aviso="${quien}"]`);
+      const cual = q.get('salio') === '1' ? 'salio' : q.get('error');
+      const aviso = [...f.querySelectorAll<HTMLElement>('[data-aviso]')].find((n) => n.dataset.aviso === cual);   // sin selector: ?error= puede traer comillas
       if (aviso) aviso.hidden = false;
       f.querySelector<HTMLElement>('[data-aviso]:not([hidden])')?.focus();
 
       // «Mostrar» la contraseña
-      const clave = f.querySelector<HTMLInputElement>('#clave')!, ver = f.querySelector<HTMLElement>('.acceso__ver')!;
-      ver.addEventListener('click', () => {
-        const ya = clave.type === 'text';
-        clave.type = ya ? 'password' : 'text';
-        ver.setAttribute('aria-pressed', String(!ya));
-        ver.textContent = ya ? 'Mostrar' : 'Ocultar';
+      const clave = f.querySelector<HTMLInputElement>('#clave')!, ver = f.querySelector<HTMLElement>('[data-ver]')!;
+      ver.closest('button')!.addEventListener('click', () => {
+        const visible = clave.type === 'text';
+        clave.type = visible ? 'password' : 'text';
+        ver.textContent = visible ? 'Mostrar' : 'Ocultar';
       });
 
-      // «Entrando…» (y se restablece si vuelven con «atrás»)
+      // «Entrando…» al enviar (y se restablece si vuelven con «atrás»)
       const entrar = f.querySelector<HTMLElement>('[data-entrar]')!;
       f.addEventListener('submit', () => { entrar.setAttribute('aria-busy', 'true'); entrar.textContent = 'Entrando…'; });
       addEventListener('pageshow', (e) => { if (e.persisted) { entrar.removeAttribute('aria-busy'); entrar.textContent = 'Entrar'; } });
@@ -112,46 +94,27 @@ const roles = [
   </script>
 </Privado>
 
-<style is:global>
-  /* Escritorio: dos paneles. Móvil: tarjeta sobre --cal con el logo arriba y un solo anillo decorativo al 6 % */
-  .acceso { display: grid; align-content: start; min-block-size: 100dvh; }
-  .acceso > .acceso__lado { position: relative; display: grid; align-content: start; padding: 1rem var(--gutter) 0; overflow: hidden; background: transparent; color: var(--tinta); }
-  .acceso__lado > * { position: relative; }
-  .acceso__lado::before {   /* el anillo único de móvil */
-    content: ''; position: absolute; inset-block-start: -9rem; inset-inline-end: -11rem; inline-size: 24rem; aspect-ratio: 1;
-    border: 2px solid var(--tinta); border-radius: 50%; opacity: .06; pointer-events: none;
-  }
-  .acceso__logo { display: block; line-height: 0; padding: 1.5rem var(--gutter) 0; }
-  .acceso__logo--escritorio, .acceso__anillos, .acceso__mas { display: none; }
-  .acceso__texto h1 { font-size: clamp(2rem, 1.5rem + 2.5vw, 2.75rem); font-weight: 700; }
-  .acceso__texto .lede { margin-block-start: .5rem; font-size: 1.1875rem; color: var(--tinta-2); }
-  .acceso__tarjeta { display: grid; gap: 1.5rem; align-content: start; padding: 1.5rem var(--gutter) 3rem; max-inline-size: 36rem; inline-size: 100%; margin-inline: auto; }
-  .acceso__form, .acceso__demo { margin: 0; }
-  .acceso__tarjeta .campo__etiqueta { font-size: 1.1875rem; }
+<style>
+  /* Centrado y sin adorno: el logo, una hoja con el formulario y la ayuda. La barra del layout sobra aquí (el logo ya es el enlace al inicio). */
+  :global(.app-bar) { display: none; }
+  .acceso { width: min(26rem, 100%); margin-inline: auto; display: grid; gap: 1.75rem; justify-items: center; padding-top: clamp(.5rem, 4vh, 3rem); }
+  .acceso__logo { display: block; line-height: 0; border-radius: 2px; }
+  .acceso__logo :global(img) { height: 44px; width: auto; }
+  .acceso__hoja { width: 100%; display: grid; gap: 1.25rem; padding: clamp(1.5rem, 5vw, 2.25rem); border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
+  .acceso__hoja h1 { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.25rem); letter-spacing: -.04em; }
+  .acceso__form { display: grid; gap: 1.25rem; }
+  .acceso__campo { display: grid; gap: .4rem; }
+  .acceso__campo label { font: 600 .9375rem var(--font-head); color: var(--navy); }
+  .acceso__campo .input { min-height: 54px; font-size: 1.0625rem; }
   .acceso__clave { position: relative; }
-  .acceso__clave .entrada { padding-inline-end: 6.5rem; }
-  .acceso__ver {
-    position: absolute; inset-block: .375rem; inset-inline-end: .375rem; min-inline-size: 5.5rem; padding: 0 .75rem;
-    border: 2px solid var(--tinta); border-radius: var(--r-1); background: var(--sol-claro); color: var(--tinta); font: 700 1rem var(--f-texto);
-  }
-  .acceso__ver[aria-pressed="true"] { background: var(--sol); }
-  .acceso__ayuda { display: grid; gap: .5rem; font-size: 1.0625rem; }
-  .acceso__ayuda p { margin: 0; }
-  .acceso__rol { justify-content: space-between; text-align: start; padding-block: .75rem; }
-  .acceso__rol-txt { display: grid; gap: .125rem; min-inline-size: 0; }
-  .acceso__rol-txt small { font-size: 1rem; font-weight: 450; opacity: 1; color: var(--brisa); }
-
-  @media (min-width: 900px) {
-    .acceso { grid-template-columns: minmax(0, 1fr) minmax(30rem, 1fr); grid-template-rows: 1fr; }
-    .acceso > .acceso__lado { align-content: end; padding: 4rem; background: var(--fondo); color: var(--texto); }
-    .acceso__lado::before, .acceso__logo--movil { display: none; }
-    .acceso__anillos, .acceso__mas { display: block; position: absolute; inset-block-start: 40%; inset-inline-start: 50%; translate: -50% -50%; }
-    .acceso__mas { font-size: 6rem; color: var(--sol); }
-    .acceso__texto { position: relative; max-inline-size: 28rem; }
-    .acceso__texto h1 { font-size: clamp(2.75rem, 2rem + 2vw, 3.75rem); }
-    .acceso__texto .lede { color: var(--brisa); }
-    .acceso__tarjeta { align-content: center; justify-self: center; background: var(--papel); max-inline-size: none; padding: 4rem clamp(2rem, 6vw, 5rem); }
-    .acceso__logo--escritorio { display: block; padding: 0; }
-    .acceso__tarjeta > * { inline-size: 100%; max-inline-size: 28rem; margin-inline: auto; }
-  }
+  .acceso__clave .input { padding-right: 6.5rem; }
+  .acceso__ver { position: absolute; top: 5px; right: 5px; bottom: 5px; min-width: 5.5rem; padding: 0 .8rem; border: 0; border-radius: 999px; background: var(--mist); color: var(--navy); font: 600 .9375rem var(--font-head); cursor: pointer; }
+  .acceso__ver:hover { background: #dfe3f6; }
+  .acceso__form .btn { min-height: 56px; font-size: 1.05rem; }
+  .acceso__aviso { margin: 0; text-wrap: wrap; padding: .85rem 1rem; border-radius: var(--radius); background: var(--mist); color: var(--navy); font-weight: 600; }
+  :global(html:not(.js)) .js-solo { display: none; }   /* sin JS «Mostrar» no haría nada */
+  .acceso__roles { display: grid; gap: .8rem; }
+  .acceso__roles .btn { justify-content: center; }
+  .acceso__ayuda { display: grid; gap: .5rem; justify-items: center; text-align: center; font-size: .9375rem; color: var(--navy); }   /* --muted no llega a 4.5:1 sobre el lavanda */
+  .acceso__sos { color: var(--red); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 </style>
