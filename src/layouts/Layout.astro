@@ -1,10 +1,8 @@
 ---
-// Layout público. Fuentes y paleta del sitio actual (Montserrat + Open Sans, azul #014DB7); movimiento con motion.js.
+// Layout público. Manrope (moderna, tecnológica) y los azules del sitio actual (#014DB7, #24345F, #2EA3F2); movimiento con motion.js.
 // Dos modos (docs/BACKEND.md): <html> lleva data-demo y data-base; todo enlace interno pasa por u().
-import '@fontsource-variable/montserrat/index.css';
-import '@fontsource-variable/open-sans/index.css';
-import montserrat from '@fontsource-variable/montserrat/files/montserrat-latin-wght-normal.woff2?url';
-import openSans from '@fontsource-variable/open-sans/files/open-sans-latin-wght-normal.woff2?url';
+import '@fontsource-variable/manrope/index.css';
+import manrope from '@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2?url';
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -56,8 +54,7 @@ const jsonld = {
     <meta property="og:title" content={titular} />
     <meta property="og:description" content={descripcion} />
     <meta property="og:image" content={new URL(u('/og.jpg'), Astro.site).href} />
-    <link rel="preload" as="font" type="font/woff2" href={montserrat} crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href={openSans} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={manrope} crossorigin />
     <script type="application/ld+json" set:html={JSON.stringify(jsonld)} />
     <slot name="head" />
   </head>

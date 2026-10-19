@@ -63,3 +63,12 @@ Una sola apuesta, del mundo real de la clínica: **sus médicos y su edificio**.
   Títulos en marino `#24345F`; el rojo solo para emergencias; el dorado solo para «alguien te atiende» (puertas, cabina, sello, banda).
 - Textos: verbos claros, sentido de frase, desde lo que el paciente necesita («Pedir cita», «Buscar un médico»), nada de eslóganes de relleno.
 - Miniaturas de retratos: `public/medicos/t/*.webp` (160 px) vía `miniatura()`.
+
+## v2.2 · Pedido de Diego tras ver v2.1 (19-oct)
+- Fuente: **Manrope** (moderna, técnica, minimalista) en pesos medios (600 títulos, 400–500 texto) con tracking negativo.
+  Montserrat 800 se veía «caricatura». (La paleta del sitio actual sí se mantiene.)
+- **Sin amarillo** en ningún lado: solo azules (#014DB7, #2EA3F2, #24345F, #677BA5, lavanda #EDEFFA) y blancos. Rojo solo para emergencias.
+- Referencia visual: ExpertsDDT → héroe azul marino con brillos difuminados que derivan lento, retícula técnica (`.grid-bg`),
+  secciones con degradado azul→marino.
+- El edificio es un **corte arquitectónico** (azotea con letrero «+», paredes, ascensor con la cabina, losas, nivel de calle, sótano
+  rayado, cimiento) con los consultorios como **ventanas** rectangulares que se encienden en azul; nada de puertas en arco («butacas»).

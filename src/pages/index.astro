@@ -1,8 +1,9 @@
 ---
 // Portada. Una sola apuesta, sacada del mundo real de la clínica: sus médicos y su edificio.
-//  · Héroe: la cruz del logo armada con retratos reales (único momento orquestado de la página).
-//  · El edificio, piso por piso: dónde atiende cada médico (la cabina del «+» recorre los pisos con el scroll).
-//  · Todo lo demás, quieto y en el tono del sitio actual. Lee la base con getDB() en los dos modos.
+//  · Héroe azul marino (estilo ExpertsDDT): la cruz del logo armada con retratos reales, único momento orquestado al cargar.
+//  · El edificio en corte arquitectónico: azotea, ascensor, losas, nivel de calle y los consultorios como ventanas;
+//    en escritorio la cabina del «+» recorre los pisos con el scroll. Solo azules y blancos.
+//  · Lee la base con getDB() en los dos modos (servidor y demo de GitHub Pages).
 export const prerender = false;
 import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
@@ -22,7 +23,7 @@ const CELDAS = [[1, 2], [1, 3], [2, 4], [3, 4], [4, 3], [4, 2], [3, 1], [2, 1], 
 const cruz = caras.slice(0, CELDAS.length).map((m, i) => ({ m, r: CELDAS[i][0], c: CELDAS[i][1], anillo: i < 8 ? 1 : 2 }));
 const especialidadDe = (m: Medico) => m.especialidades.map((e) => e.nombre).join(', ');
 
-// El edificio: médicos agrupados por piso y puertas (consultorios) de cada piso
+// El edificio: médicos agrupados por piso y consultorios (ventanas) de cada piso
 type Fila = { m: Medico; puertas: string[]; donde: string };
 const porPiso = new Map<Piso, Fila[]>(PISOS.map((p) => [p.id, []]));
 for (const m of todos) {
@@ -35,6 +36,7 @@ const edificio = PISOS.map((p) => {
   const puertas = [...new Set(filas.flatMap((f) => f.puertas))].sort(orden);
   return { ...p, filas, puertas, cuenta: (d: string) => filas.filter((f) => f.puertas.includes(d)).length };
 });
+const medicosTxt = (n: number) => `${n} ${n === 1 ? 'médico' : 'médicos'}`;
 
 const estudios = ['tomografia', 'rayos-x', 'laboratorio', 'video-endoscopia'].map((s) => servicios.find((x) => x.slug === s)!);
 const unidades = [
@@ -54,15 +56,17 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
 <Layout titulo={`${clinica.nombre}, atención médica desde ${clinica.desde}`}>
   <!-- Héroe -->
   <section class="hero" id="hero">
+    <div class="hero__glow" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="grid-bg" aria-hidden="true"></div>
     <div class="wrap hero__grid">
       <div class="hero__texto">
         <h1 class="h-display">Atención médica en Maracaibo desde {clinica.desde}</h1>
         <p class="lead">{res.medicos} médicos de {res.especialidades} especialidades, laboratorio, estudios por imágenes y emergencias las 24 horas, en la {clinica.direccion}.</p>
         <div class="hero__tareas">
           <a class="btn btn--sos btn--tarea" href={clinica.emergencias.href}>Llamar a emergencias <small>{clinica.emergencias.texto}</small></a>
-          <a class="btn btn--primary btn--tarea" href={waHref()} target="_blank" rel="noopener">Pedir cita por WhatsApp <small>Lunes a viernes, 8:00 a. m. a 4:00 p. m.</small></a>
+          <a class="btn btn--white btn--tarea" href={waHref()} target="_blank" rel="noopener">Pedir cita por WhatsApp <small>Lunes a viernes, 8:00 a. m. a 4:00 p. m.</small></a>
         </div>
-        <a class="link hero__buscar" href="#pisos">Buscar un médico</a>
+        <a class="hero__buscar" href="#pisos">Buscar un médico</a>
       </div>
 
       <figure class="cruz">
@@ -80,7 +84,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
     </div>
   </section>
 
-  <!-- El edificio, piso por piso -->
+  <!-- El edificio, en corte -->
   <section class="edificio" id="pisos" aria-labelledby="pisos-t">
     <div class="edificio__escena">
       <div class="wrap edificio__grid">
@@ -91,30 +95,34 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
             <label class="sr-only" for="q">Nombre del médico o especialidad</label>
             <Icon name="search" />
             <input id="q" name="q" type="search" placeholder="Médico o especialidad" autocomplete="off" />
-            <button class="btn btn--sm btn--white" type="submit">Buscar</button>
+            <button class="btn btn--sm btn--primary" type="submit">Buscar</button>
           </form>
         </div>
 
-        <div class="torre">
-          <div class="torre__riel" aria-hidden="true"><span class="torre__cabina"><Icon name="cross" size={22} /></span></div>
-          <ol class="pisos">
-            {edificio.map((p) => (
-              <li class="piso" data-piso={p.id}>
-                <button class="piso__nombre" type="button" aria-controls={`hoja-${p.id}`}>{p.nombre}<small>{p.filas.length} {p.filas.length === 1 ? 'médico' : 'médicos'}</small></button>
-                <ul class="puertas">
-                  {p.puertas.map((d, i) => (
-                    <li><button class="puerta" type="button" data-puerta={d} style={`--i:${i}`} aria-label={`Consultorio ${d}, ${p.nombre}, ${p.cuenta(d)} ${p.cuenta(d) === 1 ? 'médico' : 'médicos'}`}>{d}</button></li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ol>
+        <div class="corte">
+          <div class="corte__techo" aria-hidden="true"><span class="corte__letrero"><Icon name="cross" size={14} /> Policlínica</span></div>
+          <div class="corte__cuerpo">
+            <div class="corte__ascensor" aria-hidden="true"><span class="cabina"><Icon name="cross" size={16} /></span></div>
+            <ol class="pisos">
+              {edificio.map((p) => (
+                <li class="piso" data-piso={p.id}>
+                  <button class="piso__nombre" type="button" aria-controls={`hoja-${p.id}`}><span>{p.nombre}</span><small>{medicosTxt(p.filas.length)}</small></button>
+                  <ul class="salas">
+                    {p.puertas.map((d, i) => (
+                      <li><button class="sala" type="button" data-puerta={d} style={`--i:${i}`} aria-label={`Consultorio ${d}, ${p.nombre}, ${medicosTxt(p.cuenta(d))}`}>{d}</button></li>
+                    ))}
+                  </ul>
+                  {p.id === 'pb' && <span class="corte__calle" aria-hidden="true">Nivel de calle, {clinica.direccion.split(',')[0]}</span>}
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
 
         <div class="hoja" data-lenis-prevent>
           {edificio.map((p) => (
             <details class="hoja__piso" id={`hoja-${p.id}`} data-piso={p.id} open>
-              <summary><span>{p.nombre}</span><small>{p.filas.length} {p.filas.length === 1 ? 'médico' : 'médicos'} en {p.puertas.length} {p.puertas.length === 1 ? 'consultorio' : 'consultorios'}</small><i class="mas" aria-hidden="true"></i></summary>
+              <summary><span>{p.nombre}</span><small>{medicosTxt(p.filas.length)} en {p.puertas.length} {p.puertas.length === 1 ? 'consultorio' : 'consultorios'}</small><i class="mas" aria-hidden="true"></i></summary>
               <ul class="hoja__lista">
                 {p.filas.map(({ m, puertas, donde }) => (
                   <li data-puertas={puertas.join(' ')}>
@@ -173,6 +181,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
 
   <!-- Afiliación -->
   <section class="section afiliacion">
+    <div class="grid-bg" aria-hidden="true"></div>
     <div class="wrap afiliacion__grid">
       <div>
         <h2 class="h-xl">{afiliacion.idea.replace(/\.$/, '')}</h2>
@@ -194,10 +203,10 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
     </div>
   </section>
 
-  <!-- 74 años y testimonios -->
+  <!-- Años y testimonios -->
   <section class="section aniversario">
     <div class="wrap aniversario__grid">
-      <h2 class="aniversario__t">{anos()} años celebrando tu bienestar</h2>
+      <h2 class="aniversario__t"><span>{anos()} años</span> celebrando tu bienestar</h2>
       <div>
         <ul class="citas">{testimonios.map((t) => <li><blockquote>«{t.texto}»</blockquote></li>)}</ul>
         <p class="aniversario__pie">Comentarios de pacientes y doctores.</p>
@@ -267,8 +276,8 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
   if (sec) {
     const pisos = [...sec.querySelectorAll<HTMLElement>('.piso')];
     const hojas = [...sec.querySelectorAll<HTMLDetailsElement>('.hoja__piso')];
-    const cabina = sec.querySelector<HTMLElement>('.torre__cabina')!;
-    const riel = sec.querySelector<HTMLElement>('.torre__riel')!;
+    const cabina = sec.querySelector<HTMLElement>('.cabina')!;
+    const hueco = sec.querySelector<HTMLElement>('.corte__ascensor')!;
     const filas = [...sec.querySelectorAll<HTMLElement>('.hoja__lista li')];
     let act = -1;
     const activar = (i: number) => {
@@ -277,11 +286,11 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
       pisos.forEach((p, j) => p.classList.toggle('is-on', j === i));
       hojas.forEach((h, j) => h.classList.toggle('is-on', j === i));
       const p = pisos[i];
-      const y = p.getBoundingClientRect().top - riel.getBoundingClientRect().top + p.offsetHeight / 2 - cabina.offsetHeight / 2;
-      gsap.to(cabina, { y, duration: 0.7, ease: 'power3.inOut' });
+      const y = p.getBoundingClientRect().top - hueco.getBoundingClientRect().top + p.offsetHeight / 2 - cabina.offsetHeight / 2;
+      gsap.to(cabina, { y, duration: 0.8, ease: 'power3.inOut' });
     };
     const elegirPuerta = (d: string | null) => {
-      sec.querySelectorAll('.puerta').forEach((b) => b.classList.toggle('is-sel', (b as HTMLElement).dataset.puerta === d && b.closest('.piso')!.classList.contains('is-on')));
+      sec.querySelectorAll<HTMLElement>('.sala').forEach((b) => b.classList.toggle('is-sel', b.dataset.puerta === d && b.closest('.piso')!.classList.contains('is-on')));
       filas.forEach((f) => f.classList.toggle('is-tenue', !!d && !(f.dataset.puertas ?? '').split(' ').includes(d)));
     };
 
@@ -310,7 +319,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
       sec.addEventListener('click', onClick);
       return () => { sec.classList.remove('edificio--vivo'); sec.removeEventListener('click', onClick); st.kill(); act = -1; };
     });
-    // móvil o movimiento reducido: un piso abierto a la vez; tocar un piso de la torre abre su hoja
+    // móvil o movimiento reducido: un piso abierto a la vez; tocar un piso del corte abre su hoja
     mm.add('(max-width: 1100px), (prefers-reduced-motion: reduce)', () => {
       hojas.forEach((h) => (h.open = false));
       const onClick = (e: Event) => {
@@ -329,89 +338,109 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
 </script>
 
 <style>
-  /* ---------- héroe ---------- */
-  .hero { background: var(--mist); }
-  .hero__grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: clamp(2rem, 5vw, 5rem); align-items: center; padding-block: clamp(3rem, 6vw, 5rem); }
+  /* ---------- héroe: azul marino técnico (estilo ExpertsDDT) ---------- */
+  .hero { position: relative; isolation: isolate; overflow: hidden; background: #0b1a38; color: #c9d5ee; }
+  .hero::before { content: ''; position: absolute; inset: 0; z-index: -2; background: linear-gradient(110deg, rgba(11, 26, 56, .2) 0%, rgba(36, 52, 95, .25) 50%, rgba(1, 77, 183, .35) 100%); }
+  .hero__glow { position: absolute; inset: 0; z-index: -3; pointer-events: none; }
+  .hero__glow i { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .5; animation: deriva 16s ease-in-out infinite alternate; }
+  .hero__glow i:nth-child(1) { width: 44vw; height: 44vw; left: -14vw; top: -16vw; background: var(--blue); }
+  .hero__glow i:nth-child(2) { width: 30vw; height: 30vw; right: -6vw; top: 8vh; background: var(--sky); opacity: .35; animation-delay: -6s; }
+  .hero__glow i:nth-child(3) { width: 34vw; height: 34vw; left: 34vw; bottom: -20vw; background: var(--navy); animation-delay: -10s; }
+  @keyframes deriva { to { transform: translate3d(4vw, 3vw, 0) scale(1.08); } }
+  .hero__grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: clamp(2rem, 5vw, 5rem); align-items: center; padding-block: clamp(3.5rem, 7vw, 5.5rem); }
   .hero__texto { display: grid; gap: 1.5rem; justify-items: start; }
-  .hero__texto h1 { font-size: clamp(2.5rem, 1.5rem + 3.4vw, 4.1rem); max-width: 15ch; }
+  .hero__texto h1 { color: #fff; font-size: clamp(2.6rem, 1.5rem + 3.6vw, 4.4rem); max-width: 15ch; }
+  .hero__texto .lead { color: #c9d5ee; }
   .hero__tareas { display: flex; flex-wrap: wrap; gap: .8rem; }
-  .hero__buscar { font-size: 1.05rem; }
+  .hero__tareas .btn--white { color: var(--blue); }
+  .hero__tareas .btn--white small { color: var(--navy); }
+  .hero__buscar { color: #fff; font-weight: 600; font-size: 1.05rem; text-decoration: underline; text-underline-offset: 5px; text-decoration-color: var(--sky); text-decoration-thickness: 2px; }
 
   .cruz { margin: 0; width: min(440px, 100%); justify-self: center; display: grid; gap: .9rem; }
   .cruz__grid { display: grid; grid-template: repeat(6, 1fr) / repeat(6, 1fr); gap: clamp(4px, .6vw, 7px); aspect-ratio: 1; }
-  .cruz__t { display: block; border-radius: var(--r-foto); overflow: hidden; background: var(--navy); outline-offset: 2px; }
+  .cruz__t { display: block; border-radius: var(--r-foto); overflow: hidden; background: var(--navy); outline-offset: 2px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); }
   .cruz__t img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; transition: transform .4s var(--ease-out); }
   .cruz__t:hover img, .cruz__t:focus-visible img { transform: scale(1.08); }
-  .cruz__sello { grid-area: 3 / 3 / 5 / 5; display: grid; place-content: center; text-align: center; background: var(--gold); color: var(--navy); border-radius: var(--r-foto); font: 700 clamp(.8rem, 1.3vw, 1rem) / 1 var(--font-head); }
-  .cruz__sello b { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; line-height: .9; }
-  .cruz figcaption { text-align: center; font-size: .9375rem; color: var(--muted); min-height: 1.6em; }
+  .cruz__sello { grid-area: 3 / 3 / 5 / 5; display: grid; place-content: center; text-align: center; background: var(--blue); color: #fff; border-radius: var(--r-foto); font: 600 clamp(.8rem, 1.3vw, 1rem) / 1 var(--font-head); box-shadow: 0 0 0 1px rgba(46, 163, 242, .5), 0 20px 50px -15px rgba(46, 163, 242, .55); }
+  .cruz__sello b { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 600; letter-spacing: -.04em; line-height: .95; }
+  .cruz figcaption { text-align: center; font-size: .9375rem; color: #9fb0d6; min-height: 1.6em; }
   :global(html.js:not(.cruz-lista)) :is(.cruz__t, .cruz__sello) { opacity: 0; }
 
-  /* ---------- el edificio ---------- */
-  .edificio { background: var(--navy-deep); color: #c9d3ea; }
+  /* ---------- el edificio: corte arquitectónico sobre plano técnico ---------- */
+  .edificio { --plano: #f3f6fd; --linea: #9fb3db; background-color: var(--plano); background-image: linear-gradient(rgba(1, 77, 183, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(1, 77, 183, .06) 1px, transparent 1px); background-size: 32px 32px; }
   .edificio__escena { padding-block: clamp(4rem, 8vw, 6rem); }
-  .edificio__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-template-areas: 'head head' 'torre hoja'; gap: 2.5rem 3rem; }
+  .edificio__grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); grid-template-areas: 'head head' 'corte hoja'; gap: 2.5rem 3rem; }
   .edificio__head { grid-area: head; display: grid; gap: 1rem; grid-template-columns: 1fr auto; align-items: end; }
-  .edificio__head h2 { color: #fff; max-width: 18ch; }
+  .edificio__head h2 { max-width: 18ch; }
   .edificio__head p { grid-column: 1; max-width: 52ch; }
-  .buscador { grid-column: 2; grid-row: 1 / 3; align-self: end; display: flex; align-items: center; gap: .6rem; width: min(440px, 100%); padding: .35rem .35rem .35rem 1rem; border-radius: 999px; background: #fff; color: var(--muted); }
+  .buscador { grid-column: 2; grid-row: 1 / 3; align-self: end; display: flex; align-items: center; gap: .6rem; width: min(440px, 100%); padding: .35rem .35rem .35rem 1rem; border-radius: 999px; background: #fff; color: var(--muted); border: 1.5px solid var(--line); }
   .buscador input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; min-height: 46px; color: var(--ink); }
-  .buscador:focus-within { box-shadow: 0 0 0 3px var(--sky); }
-  .buscador .btn--white { background: var(--blue); color: #fff; }
+  .buscador:focus-within { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(1, 77, 183, .12); }
 
-  .torre { grid-area: torre; display: grid; grid-template-columns: 52px 1fr; gap: 1.2rem; align-self: start; }
-  .torre__riel { position: relative; border-left: 2px dashed #3a4a75; margin-left: 25px; }
-  .torre__cabina { position: absolute; left: -24px; top: 0; width: 46px; height: 46px; border-radius: 2px; background: var(--gold); color: var(--navy); display: grid; place-items: center; box-shadow: 0 0 0 6px rgba(255, 179, 66, .15); }
+  .corte { grid-area: corte; align-self: start; padding-inline: 1.5rem; }
+  .corte__techo { position: relative; height: 40px; margin-inline: 8px; border-bottom: 3px solid var(--blue); }
+  .corte__techo::before { content: ''; position: absolute; left: -8px; right: -8px; bottom: -3px; height: 10px; border: 2px solid var(--blue); border-bottom: 0; border-radius: 3px 3px 0 0; }
+  .corte__letrero { position: absolute; left: 50%; bottom: 10px; translate: -50% 0; display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .7rem; border-radius: 4px; background: var(--blue); color: #fff; font: 600 .78rem/1 var(--font-head); letter-spacing: .01em; }
+  .corte__cuerpo { position: relative; display: grid; grid-template-columns: 58px 1fr; margin-inline: 8px; border-inline: 2px solid var(--blue); border-bottom: 4px solid var(--navy); background: rgba(255, 255, 255, .78); }
+  .corte__ascensor { position: relative; border-right: 1.5px dashed var(--linea); background: repeating-linear-gradient(0deg, transparent 0 22px, rgba(1, 77, 183, .05) 22px 23px); }
+  .cabina { position: absolute; left: 9px; top: 0; width: 38px; height: 38px; border-radius: 6px; background: var(--blue); color: #fff; display: grid; place-items: center; box-shadow: 0 0 0 4px rgba(46, 163, 242, .22), 0 10px 22px -8px rgba(1, 77, 183, .7); }
   .pisos { list-style: none; margin: 0; padding: 0; }
-  .piso { padding-block: 1rem; border-bottom: 2px solid var(--slate); display: grid; gap: .7rem; }
-  .piso:first-child { border-top: 2px solid var(--slate); }
-  .piso__nombre { display: flex; align-items: baseline; gap: .8rem; background: none; border: 0; padding: 0; color: #fff; font: 700 1.3125rem/1.2 var(--font-head); cursor: pointer; text-align: left; }
-  .piso__nombre small { font: 600 .9375rem var(--font-body); color: #9fb0d6; }
-  .puertas { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-  .puerta { width: 44px; height: 54px; border: 0; border-radius: 22px 22px 2px 2px; background: #2d4073; color: #c9d3ea; font: 800 .95rem/1 var(--font-head); font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color .3s calc(var(--i) * 25ms), color .3s calc(var(--i) * 25ms), box-shadow .2s; }
-  .puerta:hover { background: #3a5292; color: #fff; }
-  .piso.is-on .puerta { background: var(--gold); color: var(--navy); }
-  .puerta.is-sel { box-shadow: 0 0 0 3px #fff; }
+  .piso { position: relative; display: grid; grid-template-columns: 7.2rem 1fr; gap: 1rem; align-items: center; padding: .9rem 1rem; border-top: 1.5px solid var(--linea); transition: background .35s; }
+  .piso:first-child { border-top: 0; }
+  .piso[data-piso='s'] { border-top: 3px solid var(--navy); background: repeating-linear-gradient(135deg, rgba(36, 52, 95, .045) 0 6px, transparent 6px 12px); }
+  .piso.is-on { background: rgba(1, 77, 183, .07); }
+  .piso__nombre { display: grid; gap: .1rem; background: none; border: 0; padding: 0; color: var(--navy); text-align: left; cursor: pointer; }
+  .piso__nombre span { font: 600 1.15rem/1.2 var(--font-head); letter-spacing: -.02em; }
+  .piso__nombre small { font-size: .875rem; color: var(--muted); }
+  .piso.is-on .piso__nombre span { color: var(--blue); }
+  .salas { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .sala { width: 40px; height: 34px; border-radius: 2px; border: 1.5px solid #b9c8e6; background: #fff; color: var(--slate); font: 600 .78rem/1 var(--font-head); font-variant-numeric: tabular-nums; cursor: pointer;
+    transition: background-color .3s calc(var(--i) * 22ms), border-color .3s calc(var(--i) * 22ms), color .3s calc(var(--i) * 22ms), box-shadow .3s; }
+  .sala:hover { border-color: var(--blue); color: var(--blue); }
+  .piso.is-on .sala { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 0 0 3px rgba(46, 163, 242, .18); }
+  .sala.is-sel { outline: 2px solid var(--navy); outline-offset: 2px; }
+  .corte__calle { position: absolute; right: -1.5rem; bottom: -1.65rem; z-index: 1; font-size: .78rem; font-weight: 600; color: var(--navy); background: var(--plano); padding: 0 .4rem; }
+  .piso[data-piso='pb']::after { content: ''; position: absolute; left: calc(-58px - 2.5rem); right: -2.5rem; bottom: -3px; height: 3px; background: var(--navy); }
 
-  .hoja { grid-area: hoja; background: #fff; color: var(--text); border-radius: var(--radius); padding: 1.4rem 1.4rem 1rem; align-self: start; box-shadow: var(--shadow-2); }
+  .hoja { grid-area: hoja; background: #fff; color: var(--text); border-radius: var(--radius); border: 1px solid var(--line); padding: 1.4rem 1.4rem 1rem; align-self: start; box-shadow: var(--shadow); }
   .hoja__piso summary { list-style: none; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .1rem 1rem; cursor: pointer; padding-block: .6rem; border-bottom: 1px solid var(--line); }
   .hoja__piso summary::-webkit-details-marker { display: none; }
-  .hoja__piso summary span { font: 700 1.3125rem var(--font-head); color: var(--navy); }
+  .hoja__piso summary span { font: 600 1.25rem var(--font-head); letter-spacing: -.02em; color: var(--navy); }
   .hoja__piso summary small { grid-column: 1; font-size: .9375rem; color: var(--muted); }
-  .mas { grid-column: 2; grid-row: 1 / 3; width: 18px; height: 18px; position: relative; transition: transform .3s var(--ease-out); }
+  .mas { grid-column: 2; grid-row: 1 / 3; width: 16px; height: 16px; position: relative; transition: transform .3s var(--ease-out); }
   .mas::before, .mas::after { content: ''; position: absolute; inset: 0; margin: auto; background: var(--blue); border-radius: 2px; }
-  .mas::before { width: 18px; height: 3px; }
-  .mas::after { width: 3px; height: 18px; }
+  .mas::before { width: 16px; height: 2.5px; }
+  .mas::after { width: 2.5px; height: 16px; }
   .hoja__piso[open] .mas { transform: rotate(45deg); }
   .hoja__lista { list-style: none; margin: 0; padding: .4rem 0 .8rem; display: grid; }
-  .hoja__lista li { display: grid; grid-template-columns: 56px 1fr; gap: .9rem; align-items: center; padding-block: .7rem; border-bottom: 1px solid var(--line); transition: opacity .25s; }
+  .hoja__lista li { display: grid; grid-template-columns: 52px 1fr; gap: .9rem; align-items: center; padding-block: .7rem; border-bottom: 1px solid var(--line); transition: opacity .25s; }
   .hoja__lista li:last-child { border-bottom: 0; }
   .hoja__lista li.is-tenue { opacity: .3; }
-  .hoja__lista img, .ini { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; }
-  .ini { display: grid; place-items: center; background: var(--navy); color: #fff; font: 800 1.05rem var(--font-head); }
-  .hoja__lista b { display: block; color: var(--navy); font-family: var(--font-head); }
+  .hoja__lista img, .ini { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; }
+  .ini { display: grid; place-items: center; background: var(--navy); color: #fff; font: 600 1rem var(--font-head); }
+  .hoja__lista b { display: block; color: var(--navy); font-family: var(--font-head); font-weight: 600; }
   .hoja__lista span { display: block; font-size: .9375rem; }
   .hoja__lista a { color: var(--blue); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
   .hoja__mas { padding-top: .6rem; }
-  .edificio__esps { margin-top: 2.5rem; color: #fff; }
-  .edificio__esps summary { cursor: pointer; font: 700 1.05rem var(--font-head); text-decoration: underline; text-underline-offset: 4px; }
+  .edificio__esps { margin-top: 2.5rem; }
+  .edificio__esps summary { cursor: pointer; font: 600 1.05rem var(--font-head); color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
   .edificio__esps ul { list-style: none; margin: 1.2rem 0 0; padding: 0; columns: 4 14rem; column-gap: 2rem; }
   .edificio__esps li { padding-block: .3rem; break-inside: avoid; }
-  .edificio__esps a { color: #c9d3ea; }
-  .edificio__esps a:hover { color: #fff; text-decoration: underline; }
+  .edificio__esps a { color: var(--navy); }
+  .edificio__esps a:hover { color: var(--blue); text-decoration: underline; }
 
   /* escritorio con movimiento: escenario fijo mientras se recorre el edificio (sticky de CSS, sin pin) */
   .edificio:global(.edificio--vivo) { height: calc(100svh + 260svh); }
-  .edificio:global(.edificio--vivo) .edificio__escena { position: sticky; top: var(--nav-h); height: calc(100svh - var(--nav-h)); padding-block: 1.5rem; overflow: hidden; }
+  .edificio:global(.edificio--vivo) .edificio__escena { position: sticky; top: var(--nav-h); height: calc(100svh - var(--nav-h)); padding-block: 1.4rem; overflow: hidden; }
   .edificio:global(.edificio--vivo) .edificio__esps { display: none; }
-  .edificio:global(.edificio--vivo) .edificio__grid { height: 100%; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: 'head hoja' 'torre hoja'; gap: 1.6rem 3rem; }
-  .edificio:global(.edificio--vivo) .edificio__head { grid-template-columns: 1fr; gap: .9rem; }
+  .edificio:global(.edificio--vivo) .edificio__grid { height: 100%; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: 'head hoja' 'corte hoja'; gap: 1.2rem 3rem; }
+  .edificio:global(.edificio--vivo) .edificio__head { grid-template-columns: 1fr; gap: .8rem; }
   .edificio:global(.edificio--vivo) .edificio__head h2 { font-size: clamp(1.6rem, 1rem + 1.4vw, 2.2rem); max-width: 24ch; }
   .edificio:global(.edificio--vivo) .edificio__head p { display: none; }
   .edificio:global(.edificio--vivo) .buscador { grid-column: 1; grid-row: auto; }
-  .edificio:global(.edificio--vivo) .piso { padding-block: .5rem; gap: .45rem; }
-  .edificio:global(.edificio--vivo) .puertas { gap: 5px; }
-  .edificio:global(.edificio--vivo) .puerta { width: 35px; height: 42px; font-size: .8rem; border-radius: 18px 18px 2px 2px; }
+  .edificio:global(.edificio--vivo) .piso { padding-block: .55rem; }
+  .edificio:global(.edificio--vivo) .salas { gap: 4px; }
+  .edificio:global(.edificio--vivo) .sala { width: 33px; height: 28px; font-size: .74rem; }
   .edificio:global(.edificio--vivo) .hoja { max-height: 100%; overflow: auto; overscroll-behavior: contain; }
   .edificio:global(.edificio--vivo) .hoja__piso { display: none; }
   .edificio:global(.edificio--vivo) .hoja__piso:global(.is-on) { display: block; }
@@ -424,49 +453,51 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
   .estudios { list-style: none; margin: 0 0 3.5rem; padding: 0; border-top: 1px solid var(--line); }
   .estudios a { display: grid; grid-template-columns: 15rem 1fr 180px; gap: 1.5rem; align-items: center; padding: 1rem .8rem; border-bottom: 1px solid var(--line); transition: background .2s; }
   .estudios a:hover { background: var(--mist); }
-  .estudios__nombre { font: 700 1.3125rem var(--font-head); color: var(--blue); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
+  .estudios__nombre { font: 600 1.3125rem var(--font-head); letter-spacing: -.02em; color: var(--blue); text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1.5px; }
   .estudios :global(.estudios__foto) { width: 180px; height: 120px; object-fit: cover; border-radius: var(--r-foto); }
   .unidades { list-style: none; margin: 0 0 3rem; padding: 0; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 1.5rem; }
   .unidades a { display: grid; gap: .5rem; align-content: start; }
   .unidades :global(img) { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-foto); margin-bottom: .5rem; }
-  .unidades__nombre { font: 700 1.15rem var(--font-head); color: var(--blue); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
+  .unidades__nombre { font: 600 1.15rem var(--font-head); letter-spacing: -.02em; color: var(--blue); text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1.5px; }
   .unidades a:hover .unidades__nombre { text-decoration-thickness: 2.5px; }
   .servicios__esp { padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: 1.0625rem; }
-  .servicios__esp b { font-family: var(--font-head); color: var(--navy); margin-right: .6rem; }
+  .servicios__esp b { font-family: var(--font-head); font-weight: 600; color: var(--navy); margin-right: .6rem; }
 
-  /* ---------- afiliación ---------- */
-  .afiliacion { background: var(--blue); color: #e4ecfb; }
+  /* ---------- afiliación: degradado azul de marca (como las tarjetas de ExpertsDDT) ---------- */
+  .afiliacion { overflow: hidden; isolation: isolate; background: linear-gradient(135deg, var(--blue) 0%, #12306f 55%, var(--navy) 100%); color: #dfe8fb; }
   .afiliacion :is(h2, h3) { color: #fff; }
   .afiliacion__grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(2rem, 6vw, 6rem); }
   .afiliacion__grid > div { display: grid; gap: 1.4rem; align-content: start; }
   .afiliacion__precio { font: 600 1.15rem var(--font-head); color: #fff; }
   .afiliacion__incluye { list-style: none; margin: 0; padding: 0; }
-  .afiliacion__incluye li { padding-block: .8rem; border-top: 1px solid rgba(255, 255, 255, .25); }
-  .afiliacion__incluye li:last-child { border-bottom: 1px solid rgba(255, 255, 255, .25); }
-  .afiliacion__link { color: #fff; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+  .afiliacion__incluye li { padding-block: .8rem; border-top: 1px solid rgba(255, 255, 255, .22); }
+  .afiliacion__incluye li:last-child { border-bottom: 1px solid rgba(255, 255, 255, .22); }
+  .afiliacion__link { color: #fff; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--sky); }
   .pasos { list-style: none; margin: 0; padding: 0; counter-reset: paso; }
-  .pasos li { counter-increment: paso; display: grid; grid-template-columns: 4.5rem 1fr; align-items: baseline; padding-block: 1.1rem; border-top: 1px solid rgba(255, 255, 255, .25); font-size: 1.15rem; color: #fff; }
-  .pasos li::before { content: counter(paso); font: 800 3rem/1 var(--font-head); color: var(--gold); }
+  .pasos li { counter-increment: paso; display: grid; grid-template-columns: 4.5rem 1fr; align-items: baseline; padding-block: 1.1rem; border-top: 1px solid rgba(255, 255, 255, .22); font-size: 1.125rem; color: #fff; }
+  .pasos li::before { content: counter(paso, decimal-leading-zero); font: 300 2.6rem/1 var(--font-head); letter-spacing: -.04em; color: #8fd0ff; }
 
-  /* ---------- 74 años ---------- */
-  .aniversario { background: var(--gold); color: var(--navy); }
+  /* ---------- años y testimonios ---------- */
+  .aniversario { background: #fff; }
   .aniversario__grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: clamp(2rem, 6vw, 6rem); align-items: start; }
-  .aniversario__t { font-size: clamp(2.4rem, 1.4rem + 3.6vw, 4.5rem); font-weight: 800; line-height: 1.02; letter-spacing: -.025em; max-width: 10ch; }
+  .aniversario__t { font-size: clamp(2.2rem, 1.3rem + 3.2vw, 4rem); font-weight: 500; line-height: 1.04; letter-spacing: -.045em; color: var(--navy); max-width: 11ch; }
+  .aniversario__t span { display: block; font-weight: 700; color: var(--blue); }
   .citas { list-style: none; margin: 0; padding: 0; }
-  .citas li { padding-block: 1.2rem; border-bottom: 1px solid rgba(36, 52, 95, .2); }
+  .citas li { padding-block: 1.2rem; border-bottom: 1px solid var(--line); }
   .citas li:first-child { padding-top: 0; }
-  .citas blockquote { margin: 0; font: 600 clamp(1.2rem, 1rem + .9vw, 1.5rem) / 1.35 var(--font-head); text-indent: -.45em; }
-  .aniversario__pie { margin-top: 1.2rem; font-size: .9375rem; }
+  .citas blockquote { margin: 0; font: 500 clamp(1.2rem, 1rem + .9vw, 1.5rem) / 1.4 var(--font-head); letter-spacing: -.02em; color: var(--navy); text-indent: -.45em; }
+  .aniversario__pie { margin-top: 1.2rem; font-size: .9375rem; color: var(--muted); }
 
   /* ---------- cómo llegar ---------- */
+  .llegar { background: var(--mist); }
   .llegar__grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); }
   .llegar h2 { max-width: 16ch; margin-bottom: 2rem; }
   .numeros { margin: 0; display: grid; gap: 1.6rem; }
   .numeros dt { font-weight: 600; font-size: .9375rem; color: var(--muted); }
   .numeros dd { margin: 0; display: grid; gap: .2rem; }
-  .numeros__n { white-space: nowrap; font: 800 clamp(1.6rem, 1rem + 2.2vw, 2.7rem) / 1.1 var(--font-head); color: var(--blue); font-variant-numeric: tabular-nums; min-height: 56px; display: inline-flex; align-items: center; }
+  .numeros__n { white-space: nowrap; font: 600 clamp(1.6rem, 1rem + 2.2vw, 2.7rem) / 1.1 var(--font-head); letter-spacing: -.03em; color: var(--blue); font-variant-numeric: tabular-nums; min-height: 56px; display: inline-flex; align-items: center; }
   .numeros__n--sos { color: var(--red); }
-  .numeros__n:hover { text-decoration: underline; text-decoration-thickness: 3px; }
+  .numeros__n:hover { text-decoration: underline; text-decoration-thickness: 2px; }
   .llegar__lugar { display: grid; gap: .8rem; align-content: start; }
   .mapa { aspect-ratio: 4 / 3; border-radius: var(--r-foto); overflow: hidden; background: #cfe4f8; }
   .mapa iframe { width: 100%; height: 100%; border: 0; display: block; mix-blend-mode: multiply; filter: grayscale(1) contrast(1.1); }
@@ -482,14 +513,13 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
     .edificio__grid { grid-template-columns: 1fr; grid-template-areas: 'head' 'hoja'; }
     .edificio__head { grid-template-columns: 1fr; }
     .buscador { grid-column: 1; grid-row: auto; }
-    .torre { display: none; }
+    .corte { display: none; }
     .hoja { padding: .6rem 1.1rem; }
     .afiliacion__grid, .aniversario__grid, .llegar__grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 960px) {
     .estudios a { grid-template-columns: 1fr 96px; gap: .3rem 1rem; }
-    .estudios__nombre { grid-column: 1; }
-    .estudios__nota { grid-column: 1; }
+    .estudios__nombre, .estudios__nota { grid-column: 1; }
     .estudios :global(.estudios__foto) { grid-column: 2; grid-row: 1 / 3; width: 96px; height: 72px; }
     .unidades { grid-template-columns: 1fr 1fr; }
   }
@@ -499,4 +529,5 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
     .unidades { grid-template-columns: 1fr; }
     .edificio__esps ul { columns: 1; }
   }
+  @media (prefers-reduced-motion: reduce) { .hero__glow i { animation: none; } }
 </style>

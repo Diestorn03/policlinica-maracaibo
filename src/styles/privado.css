@@ -1,6 +1,6 @@
 /* Zonas privadas (admin, médico, cliente, acceso): misma marca, interfaz de aplicación limpia. */
 .app { background: var(--mist); min-height: 100vh; }
-.app-demo { background: var(--gold); color: #3d2600; text-align: center; font-size: .85rem; font-weight: 700; padding: .45rem 1rem; }
+.app-demo { background: var(--navy); color: #fff; text-align: center; font-size: .85rem; font-weight: 700; padding: .45rem 1rem; }
 .app-bar { background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 50; }
 .app-bar__in { width: min(1240px, 100% - 2rem); margin-inline: auto; min-height: 68px; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .app-bar__logo img { height: 34px; width: auto; }

@@ -1,6 +1,6 @@
 /* ==========================================================
-   Policlínica Maracaibo — tokens reciclados de policlinicamaracaibo.com
-   Fuentes del sitio actual: Montserrat (títulos, 700) + Open Sans (texto y menú).
+   Policlínica Maracaibo — azules y blancos de policlinicamaracaibo.com, con tipografía moderna
+   Fuente: Manrope (geométrica y técnica, pesos medios, tracking cerrado en títulos). Sin amarillo.
    Colores del sitio actual: azul #014DB7 (botones), celeste #2EA3F2 (menú), azul pizarra #677BA5,
    marino #24345F, grises #333/#666, fondo lavanda #EDEFFA, dorado #FFB342 (campaña 70 años).
    Base minimalista: mucho blanco, una sola familia de acentos, el movimiento hace el resto.
@@ -19,14 +19,13 @@
   --mist: #edeffa;         /* fondo de sección del sitio actual */
   --line: #e2e6f2;
   --white: #ffffff;
-  --gold: #ffb342;
   --rose: #fa546d;
   --red: #c62828;          /* emergencias */
   --wa: #25d366;
 
 
-  --font-head: 'Montserrat Variable', Montserrat, Helvetica, Arial, sans-serif;
-  --font-body: 'Open Sans Variable', 'Open Sans', Arial, sans-serif;
+  --font-head: 'Manrope Variable', Manrope, 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Manrope Variable', Manrope, 'Segoe UI', system-ui, sans-serif;
 
   /* radios con significado: 2 px losas · 8 px fotos y mapa · 12 px campos y hojas · píldora solo botones · 50 % solo rostros */
   --radius: 12px;
@@ -54,7 +53,7 @@ img, video, svg { max-width: 100%; display: block; }
 main { overflow-x: clip; }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
-h1, h2, h3, h4 { font-family: var(--font-head); color: var(--navy); line-height: 1.1; margin: 0; letter-spacing: -0.02em; font-weight: 700; text-wrap: balance; }
+h1, h2, h3, h4 { font-family: var(--font-head); color: var(--navy); line-height: 1.1; margin: 0; letter-spacing: -0.03em; font-weight: 600; text-wrap: balance; }
 p { margin: 0; text-wrap: pretty; }
 :focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; border-radius: 4px; }
 ::selection { background: var(--blue); color: #fff; }
@@ -71,9 +70,9 @@ p { margin: 0; text-wrap: pretty; }
 .eyebrow { font-family: var(--font-head); font-size: .95rem; font-weight: 600; color: var(--blue); }
 .section--navy .eyebrow, .page-hero .eyebrow { color: #9fd3fa; }
 /* escala ≈ 1.25, cuerpo grande por el público mayor; el peso también marca jerarquía (H1 800, H2 700) */
-.h-display { font-size: clamp(2.5rem, 1.5rem + 3.8vw, 4.5rem); font-weight: 800; line-height: 1.04; letter-spacing: -.025em; }
-.h-xl { font-size: clamp(1.75rem, 1.25rem + 2vw, 2.75rem); font-weight: 700; line-height: 1.12; }
-.h-lg { font-size: 1.3125rem; font-weight: 700; line-height: 1.25; letter-spacing: 0; }
+.h-display { font-size: clamp(2.5rem, 1.5rem + 3.8vw, 4.5rem); font-weight: 600; line-height: 1.02; letter-spacing: -.045em; }
+.h-xl { font-size: clamp(1.75rem, 1.25rem + 2vw, 2.75rem); font-weight: 600; line-height: 1.1; letter-spacing: -.035em; }
+.h-lg { font-size: 1.3125rem; font-weight: 600; line-height: 1.25; letter-spacing: -.015em; }
 .lead { font-size: clamp(1.1rem, 1rem + .4vw, 1.3125rem); line-height: 1.55; max-width: 56ch; }
 .section--navy .lead, .page-hero .lead { color: #c9d3ea; }
 .accent { color: var(--blue); }
@@ -91,7 +90,7 @@ p { margin: 0; text-wrap: pretty; }
 /* ---------- botones ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
-  padding: .9rem 1.5rem; border-radius: 999px; font-family: var(--font-head); font-weight: 700; font-size: .95rem;
+  padding: .9rem 1.5rem; border-radius: 999px; font-family: var(--font-head); font-weight: 600; font-size: .95rem;
   border: 2px solid transparent; cursor: pointer; white-space: nowrap; min-height: 52px; text-decoration: none;
   transition: background .25s, color .25s, border-color .25s;
 }
@@ -117,7 +116,6 @@ p { margin: 0; text-wrap: pretty; }
 /* ---------- tarjetas, pastillas, fotos ---------- */
 .card { background: #fff; border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); border: 1px solid var(--line); }
 .pill { display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .8rem; border-radius: 999px; font-family: var(--font-head); font-size: .85rem; font-weight: 600; background: var(--mist); color: var(--navy); }
-.pill--gold { background: rgba(255, 179, 66, .18); color: #8a5300; }
 .section--navy .pill, .page-hero .pill { background: rgba(255, 255, 255, .1); color: #cfe6fb; }
 .img-frame { border-radius: var(--r-foto); overflow: hidden; position: relative; }
 .img-frame img { width: 100%; height: 100%; object-fit: cover; }
@@ -210,6 +208,8 @@ html.js:not(.motion-ready) :is([data-split], [data-lit]) { visibility: hidden; }
 .crumbs a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- marquesina ---------- */
+/* retícula técnica (como la de ExpertsDDT): se desvanece hacia los bordes */
+.grid-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; background-image: linear-gradient(rgba(255, 255, 255, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .06) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse at 60% 40%, #000 25%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse at 60% 40%, #000 25%, transparent 75%); }
 .marquee { overflow: hidden; position: relative; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .marquee__track { display: flex; gap: 1rem; width: max-content; will-change: transform; }
 
