@@ -19,7 +19,7 @@ const busca = clave([m.nombre, ...m.especialidades.map((e) => e.nombre)].join(' 
   <div class="medico__body">
     <h3 class="medico__nombre">{m.nombre}</h3>
     <ul class="medico__esps">{m.especialidades.map((e) => <li><a class="pill" href={u(`/directorio/?esp=${e.slug}`)}>{e.nombre}</a></li>)}</ul>
-    {m.consultorio && <p class="medico__dato"><Icon name="pin" size={16} /> Consultorio {m.consultorio}</p>}
+    {m.consultorio && <p class="medico__dato"><Icon name="pin" size={16} /> {/consultorio/i.test(m.consultorio) ? m.consultorio : `Consultorio ${m.consultorio}`}</p>}
     {m.telefono && <a class="medico__tel" href={telHref(m.telefono)}><Icon name="phone" size={16} /> {m.telefono}</a>}
   </div>
 </article>

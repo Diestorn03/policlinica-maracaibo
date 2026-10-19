@@ -130,7 +130,8 @@ function initHero() {
     .fromTo(q('.hero__cta > *'), { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, stagger: 0.08 }, 0.9)
     .fromTo(q('.hero__media'), { y: 120, opacity: 0 }, { y: 0, opacity: 1, duration: 1.5, ease: 'expo.out' }, 0.55);
 
-  if (!hero.hasAttribute('data-pin') || isMobile()) return;
+  if (!hero.hasAttribute('data-pin') || !matchMedia('(min-width: 1101px)').matches) return; // misma condición que html.pin-ok
+  hero.classList.add('is-pinned'); // el CSS superpone [data-hero-next] donde estaba el texto
   const next = q('[data-hero-next]');
   if (next.length) gsap.set(next, { opacity: 0, y: 50 });
   gsap.timeline({ scrollTrigger: { trigger: hero, start: 'top top', end: '+=110%', pin: true, scrub: 0.5, anticipatePin: 1 } })

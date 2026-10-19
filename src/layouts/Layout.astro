@@ -44,7 +44,8 @@ const jsonld = {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- js: activa las animaciones; si motion.js no llega en 2.5 s, todo se muestra igual -->
-    <script is:inline>document.documentElement.classList.add('js');setTimeout(function(){document.documentElement.classList.add('motion-ready')},2500);</script>
+    <!-- pin-ok: escritorio con movimiento → el héroe con data-pin se maqueta ya como escena fijada (misma condición que motion.js) -->
+    <script is:inline>var h=document.documentElement;h.classList.add('js');if(matchMedia('(min-width: 1101px) and (prefers-reduced-motion: no-preference)').matches)h.classList.add('pin-ok');setTimeout(function(){h.classList.add('motion-ready')},2500);</script>
     <title>{titular}</title>
     <meta name="description" content={descripcion} />
     {noindex && <meta name="robots" content="noindex" />}
