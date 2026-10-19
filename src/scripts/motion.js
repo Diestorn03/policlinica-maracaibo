@@ -117,10 +117,21 @@ function initParallax() {
 
 /* ---------------- Texto que se ilumina ---------------- */
 function initLit() {
+  // palabras en <span> conservando los espacios (SplitText en modo palabras los perdía y las pegaba); solo texto plano, con nodos, sin innerHTML
   gsap.utils.toArray('[data-lit]').forEach((el) => {
-    const split = new SplitText(el, { type: 'words' });
+    const words = [];
+    const frag = document.createDocumentFragment();
+    el.textContent.split(/(\s+)/).forEach((t) => {
+      if (!t) return;
+      if (/^\s+$/.test(t)) return frag.append(t);
+      const s = document.createElement('span');
+      s.textContent = t;
+      words.push(s);
+      frag.append(s);
+    });
+    el.replaceChildren(frag);
     el.style.visibility = 'visible';
-    gsap.fromTo(split.words, { opacity: 0.2 }, { opacity: 1, stagger: 0.02, ease: 'none', scrollTrigger: { trigger: el, start: 'top 80%', end: 'bottom 50%', scrub: 0.6 } });
+    gsap.fromTo(words, { opacity: 0.2 }, { opacity: 1, stagger: 0.02, ease: 'none', scrollTrigger: { trigger: el, start: 'top 80%', end: 'bottom 50%', scrub: 0.6 } });
   });
 }
 

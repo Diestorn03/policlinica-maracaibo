@@ -61,7 +61,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
     <div class="wrap hero__grid">
       <div class="hero__texto">
         <h1 class="h-display">Atención médica en Maracaibo desde {clinica.desde}</h1>
-        <p class="lead">{res.medicos} médicos de {res.conMedicos} especialidades, laboratorio, estudios por imágenes y emergencias las 24 horas, en la {clinica.direccion}.</p>
+        <p class="lead"><span data-count={res.medicos}>{res.medicos}</span> médicos de <span data-count={res.conMedicos}>{res.conMedicos}</span> especialidades, laboratorio, estudios por imágenes y emergencias las 24 horas, en la {clinica.direccion}.</p>
         <div class="hero__tareas">
           <a class="btn btn--sos btn--tarea" href={clinica.emergencias.href}>Llamar a emergencias <small>{clinica.emergencias.texto}</small></a>
           <a class="btn btn--white btn--tarea" href={waHref()} target="_blank" rel="noopener">Pedir cita por WhatsApp <small>Lunes a viernes, 8:00 a. m. a 4:00 p. m.</small></a>
@@ -89,8 +89,8 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
     <div class="edificio__escena">
       <div class="wrap edificio__grid">
         <div class="edificio__head">
-          <h2 class="h-xl" id="pisos-t">Encuentra el piso y el consultorio de tu médico</h2>
-          <p>Elige un piso para ver sus consultorios, o escribe el nombre del médico o la especialidad.</p>
+          <h2 class="h-xl" id="pisos-t" data-split="lines">Encuentra el piso y el consultorio de tu médico</h2>
+          <p data-reveal="up" data-delay=".15">Elige un piso para ver sus consultorios, o escribe el nombre del médico o la especialidad.</p>
           <form class="buscador" action={u('/directorio/')} method="get" role="search">
             <label class="sr-only" for="q">Nombre del médico o especialidad</label>
             <Icon name="search" />
@@ -99,7 +99,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
           </form>
         </div>
 
-        <div class="corte">
+        <div class="corte" data-reveal="up" data-delay=".1">
           <div class="corte__techo" aria-hidden="true"><span class="corte__letrero"><Icon name="cross" size={14} /> Policlínica</span></div>
           <div class="corte__cuerpo">
             <div class="corte__ascensor" aria-hidden="true"><span class="cabina"><Icon name="cross" size={16} /></span></div>
@@ -119,7 +119,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
           </div>
         </div>
 
-        <div class="hoja" data-lenis-prevent>
+        <div class="hoja" data-lenis-prevent data-reveal="up" data-delay=".2">
           {edificio.map((p) => (
             <details class="hoja__piso" id={`hoja-${p.id}`} data-piso={p.id} open>
               <summary><span>{p.nombre}</span><small>{medicosTxt(p.filas.length)} en {p.puertas.length} {p.puertas.length === 1 ? 'consultorio' : 'consultorios'}</small><i class="mas" aria-hidden="true"></i></summary>
@@ -150,32 +150,32 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
   <!-- Servicios -->
   <section class="section servicios" id="servicios">
     <div class="wrap">
-      <h2 class="h-xl servicios__t">Estudios, cirugía y cuidados intensivos en un mismo edificio</h2>
-      <h3 class="h-lg">Estudios y diagnóstico</h3>
-      <ul class="estudios">
+      <h2 class="h-xl servicios__t" data-split="lines">Estudios, cirugía y cuidados intensivos en un mismo edificio</h2>
+      <h3 class="h-lg" data-reveal="up">Estudios y diagnóstico</h3>
+      <ul class="estudios" data-stagger=".07">
         {estudios.map((s) => (
           <li>
             <a href={u(`/servicios/${s.slug}/`)}>
               <span class="estudios__nombre">{s.nombre}</span>
               <span class="estudios__nota">{notaEstudio[s.slug]}</span>
-              <Image class="estudios__foto" src={s.imagen} alt={s.alt} widths={[240, 360]} sizes="180px" style={`object-position:${s.pos}`} />
+              <span class="estudios__foto"><Image src={s.imagen} alt={s.alt} widths={[240, 360]} sizes="180px" style={`object-position:${s.pos}`} /></span>
             </a>
           </li>
         ))}
       </ul>
-      <h3 class="h-lg">Cirugía y unidades especializadas</h3>
-      <ul class="unidades">
+      <h3 class="h-lg" data-reveal="up">Cirugía y unidades especializadas</h3>
+      <ul class="unidades" data-stagger=".08">
         {unidades.map((s) => (
           <li>
             <a href={u(`/servicios/${s.slug}/`)}>
-              <Image src={s.imagen} alt={s.alt} widths={[360, 560]} sizes="(max-width: 960px) 50vw, 25vw" style={`object-position:${s.pos}`} />
+              <span class="unidades__foto"><Image src={s.imagen} alt={s.alt} widths={[360, 560]} sizes="(max-width: 960px) 50vw, 25vw" style={`object-position:${s.pos}`} /></span>
               <span class="unidades__nombre">{s.nombre}</span>
               <span>{s.texto}</span>
             </a>
           </li>
         ))}
       </ul>
-      <p class="servicios__esp"><b>Especialidades</b> {res.conMedicos} especialidades con médicos en el directorio. <a class="link" href={u('/especialidades/')}>Ver las especialidades</a></p>
+      <p class="servicios__esp" data-reveal="up"><b>Especialidades</b> {res.conMedicos} especialidades con médicos en el directorio. <a class="link" href={u('/especialidades/')}>Ver las especialidades</a></p>
     </div>
   </section>
 
@@ -184,17 +184,17 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
     <div class="grid-bg" aria-hidden="true"></div>
     <div class="wrap afiliacion__grid">
       <div>
-        <h2 class="h-xl">{afiliacion.idea.replace(/\.$/, '')}</h2>
-        <p class="afiliacion__precio">Consulta el precio por WhatsApp.</p>
-        <ul class="afiliacion__incluye">{afiliacion.incluye.map((i) => <li>{i}</li>)}</ul>
+        <h2 class="h-xl" data-split="lines">{afiliacion.idea.replace(/\.$/, '')}</h2>
+        <p class="afiliacion__precio" data-reveal="up">Consulta el precio por WhatsApp.</p>
+        <ul class="afiliacion__incluye" data-stagger=".08">{afiliacion.incluye.map((i) => <li>{i}</li>)}</ul>
         <div class="cta-row">
           <a class="btn btn--white" href={afiliacion.cta.href} target="_blank" rel="noopener">{afiliacion.cta.texto}</a>
           <a class="afiliacion__link" href={u('/afiliacion/')}>Cómo funciona la afiliación</a>
         </div>
       </div>
       <div>
-        <h3 class="h-lg">Así es una consulta por videollamada</h3>
-        <ol class="pasos">
+        <h3 class="h-lg" data-reveal="up">Así es una consulta por videollamada</h3>
+        <ol class="pasos" data-stagger=".12">
           <li>Entra a tu panel con tu usuario y tu clave.</li>
           <li>Pulsa «Entrar a la videollamada» y espera en la sala de espera.</li>
           <li>Cuando un médico te atienda, se abre la videollamada.</li>
@@ -206,34 +206,61 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
   <!-- Años y testimonios -->
   <section class="section aniversario">
     <div class="wrap aniversario__grid">
-      <h2 class="aniversario__t"><span>{anos()} años</span> celebrando tu bienestar</h2>
+      <h2 class="aniversario__t" data-reveal="up"><span><b data-count={anos()}>{anos()}</b> años</span> celebrando tu bienestar</h2>
       <div>
-        <ul class="citas">{testimonios.map((t) => <li><blockquote>«{t.texto}»</blockquote></li>)}</ul>
+        <ul class="citas">{testimonios.map((t) => <li><blockquote data-lit>«{t.texto}»</blockquote></li>)}</ul>
         <p class="aniversario__pie">Comentarios de pacientes y doctores.</p>
       </div>
     </div>
   </section>
 
-  <!-- Cómo llegar -->
-  <section class="section llegar" id="como-llegar">
+  <!-- Contacto: números, formulario y cómo llegar -->
+  <section class="section llegar" id="contacto">
     <div class="wrap llegar__grid">
       <div>
-        <h2 class="h-xl">Estamos en la {clinica.direccion}</h2>
-        <dl class="numeros">
+        <h2 class="h-xl" data-split="lines">Estamos en la {clinica.direccion}</h2>
+        <dl class="numeros" data-stagger=".1">
           <div><dt>Emergencias</dt><dd><a class="numeros__n numeros__n--sos" href={clinica.emergencias.href}>{clinica.emergencias.texto}</a><span>Todos los días, a toda hora</span></dd></div>
           <div><dt>Citas por WhatsApp</dt><dd><a class="numeros__n" href={waHref()} target="_blank" rel="noopener">{clinica.whatsapp.texto}</a><span>Lunes a viernes, de 8:00 a. m. a 4:00 p. m.</span></dd></div>
           <div><dt>Central</dt><dd><a class="numeros__n" href={clinica.telefono.href}>{clinica.telefono.texto}</a></dd></div>
           <div><dt>Correo</dt><dd><a class="link" href={`mailto:${clinica.correo}`}>{clinica.correo}</a></dd></div>
         </dl>
       </div>
-      <div class="llegar__lugar">
-        <div class="mapa"><iframe src={mapa} title="Mapa: Policlínica Maracaibo, Av. 8 Santa Rita" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
-        <a class="link" href={clinica.mapa} target="_blank" rel="noopener">Abrir en Google Maps</a>
-        <div class="llegar__fotos">
-          <figure><Image src={accesoEmergencia} alt="Fachada de la Policlínica con el letrero de Emergencia" widths={[360, 560]} sizes="(max-width: 960px) 50vw, 22vw" /><figcaption>Acceso a Emergencia</figcaption></figure>
-          <figure><Image src={entrada} alt="Entrada de la Policlínica con bancas de concreto y palmas" widths={[360, 560]} sizes="(max-width: 960px) 50vw, 22vw" /><figcaption>La entrada</figcaption></figure>
+
+      <!-- Sin servidor que guarde mensajes en la demo: el mensaje se arma aquí y se abre en WhatsApp o en el correo para que la persona lo envíe.
+           Sin JS, el formulario cae al cliente de correo (mailto). -->
+      <form class="contacto" id="form-contacto" action={`mailto:${clinica.correo}`} method="post" enctype="text/plain" data-wa={clinica.whatsapp.href.match(/phone=(\d+)/)?.[1]} data-correo={clinica.correo} data-reveal="up" data-delay=".15">
+        <h3 class="h-lg">Escríbenos</h3>
+        <p class="contacto__nota">Tu mensaje se abre en WhatsApp o en tu correo, listo para enviar.</p>
+        <div class="contacto__campos">
+          <label class="field"><span>Nombre y apellido</span><input class="input" name="nombre" required autocomplete="name" maxlength="80" /></label>
+          <label class="field"><span>Teléfono</span><input class="input" name="telefono" type="tel" required autocomplete="tel" inputmode="tel" pattern="[0-9 ()+-]{7,}" maxlength="20" placeholder="0414-1234567" /></label>
+          <label class="field"><span>Correo <small>(opcional)</small></span><input class="input" name="correo" type="email" autocomplete="email" maxlength="120" /></label>
+          <label class="field"><span>Motivo</span>
+            <select class="select" name="motivo">
+              <option>Pedir una cita</option>
+              <option>Información de un servicio</option>
+              <option>Afiliación y telemedicina</option>
+              <option>Otro</option>
+            </select>
+          </label>
+          <label class="field contacto__msg"><span>Mensaje</span><textarea class="textarea" name="mensaje" required maxlength="800" rows="4"></textarea></label>
         </div>
-      </div>
+        <div class="cta-row">
+          <button class="btn btn--wa" type="submit" name="via" value="whatsapp"><Icon name="whatsapp" /> Enviar por WhatsApp</button>
+          <button class="btn btn--outline" type="submit" name="via" value="correo"><Icon name="mail" /> Enviar por correo</button>
+        </div>
+        <p class="contacto__ok" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+
+    <div class="wrap llegar__lugar">
+      <figure class="mapa" data-reveal="clip">
+        <iframe src={mapa} title="Mapa: Policlínica Maracaibo, Av. 8 Santa Rita" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <figcaption><a class="link" href={clinica.mapa} target="_blank" rel="noopener">Abrir en Google Maps</a></figcaption>
+      </figure>
+      <figure data-reveal="clip" data-delay=".1"><span class="llegar__foto"><Image src={accesoEmergencia} alt="Fachada de la Policlínica con el letrero de Emergencia" widths={[360, 560]} sizes="(max-width: 960px) 50vw, 22vw" /></span><figcaption>Acceso a Emergencia</figcaption></figure>
+      <figure data-reveal="clip" data-delay=".2"><span class="llegar__foto"><Image src={entrada} alt="Entrada de la Policlínica con bancas de concreto y palmas" widths={[360, 560]} sizes="(max-width: 960px) 50vw, 22vw" /></span><figcaption>La entrada</figcaption></figure>
     </div>
   </section>
 </Layout>
@@ -268,6 +295,27 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
       t.addEventListener('focus', ver);
       t.addEventListener('pointerleave', () => (nota.textContent = original));
       t.addEventListener('blur', () => (nota.textContent = original));
+    });
+  }
+
+  /* ---------- Formulario de contacto: arma el mensaje y lo abre en WhatsApp o en el correo ---------- */
+  const form = document.querySelector<HTMLFormElement>('#form-contacto');
+  if (form) {
+    const ok = form.querySelector<HTMLElement>('.contacto__ok')!;
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!form.reportValidity()) return;
+      const d = new FormData(form);
+      const via = (e as SubmitEvent).submitter?.getAttribute('value') ?? 'whatsapp';
+      const v = (k: string) => String(d.get(k) ?? '').trim();
+      const texto = [`Hola, soy ${v('nombre')}.`, `Motivo: ${v('motivo')}.`, v('mensaje'), `Teléfono: ${v('telefono')}`, v('correo') && `Correo: ${v('correo')}`].filter(Boolean).join('\n');
+      if (via === 'correo') {
+        location.href = `mailto:${form.dataset.correo}?` + new URLSearchParams({ subject: `${v('motivo')}, ${v('nombre')}`, body: texto }).toString().replace(/\+/g, '%20');
+        ok.textContent = 'Listo: se abrió tu correo con el mensaje. Solo falta pulsar «Enviar».';
+      } else {
+        open('https://api.whatsapp.com/send/?' + new URLSearchParams({ phone: form.dataset.wa!, text: texto }), '_blank', 'noopener');
+        ok.textContent = 'Listo: se abrió WhatsApp con tu mensaje. Solo falta pulsar «Enviar».';
+      }
     });
   }
 
@@ -454,10 +502,12 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
   .estudios a { display: grid; grid-template-columns: 15rem 1fr 180px; gap: 1.5rem; align-items: center; padding: 1rem .8rem; border-bottom: 1px solid var(--line); transition: background .2s; }
   .estudios a:hover { background: var(--mist); }
   .estudios__nombre { font: 600 1.3125rem var(--font-head); letter-spacing: -.02em; color: var(--blue); text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1.5px; }
-  .estudios :global(.estudios__foto) { width: 180px; height: 120px; object-fit: cover; border-radius: var(--r-foto); }
+  .estudios__foto { display: block; width: 180px; height: 120px; border-radius: var(--r-foto); overflow: hidden; }
+  .estudios__foto :global(img), .unidades__foto :global(img), .llegar__foto :global(img) { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease-out); }
+  .estudios a:hover .estudios__foto :global(img), .unidades a:hover .unidades__foto :global(img) { transform: scale(1.05); }
   .unidades { list-style: none; margin: 0 0 3rem; padding: 0; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 1.5rem; }
   .unidades a { display: grid; gap: .5rem; align-content: start; }
-  .unidades :global(img) { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-foto); margin-bottom: .5rem; }
+  .unidades__foto { display: block; aspect-ratio: 4 / 3; border-radius: var(--r-foto); overflow: hidden; margin-bottom: .5rem; }
   .unidades__nombre { font: 600 1.15rem var(--font-head); letter-spacing: -.02em; color: var(--blue); text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1.5px; }
   .unidades a:hover .unidades__nombre { text-decoration-thickness: 2.5px; }
   .servicios__esp { padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: 1.0625rem; }
@@ -482,15 +532,16 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
   .aniversario__grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: clamp(2rem, 6vw, 6rem); align-items: start; }
   .aniversario__t { font-size: clamp(2.2rem, 1.3rem + 3.2vw, 4rem); font-weight: 500; line-height: 1.04; letter-spacing: -.045em; color: var(--navy); max-width: 11ch; }
   .aniversario__t span { display: block; font-weight: 700; color: var(--blue); }
+  .aniversario__t b { font-weight: inherit; font-variant-numeric: tabular-nums; }
   .citas { list-style: none; margin: 0; padding: 0; }
   .citas li { padding-block: 1.2rem; border-bottom: 1px solid var(--line); }
   .citas li:first-child { padding-top: 0; }
   .citas blockquote { margin: 0; font: 500 clamp(1.2rem, 1rem + .9vw, 1.5rem) / 1.4 var(--font-head); letter-spacing: -.02em; color: var(--navy); text-indent: -.45em; }
   .aniversario__pie { margin-top: 1.2rem; font-size: .9375rem; color: var(--muted); }
 
-  /* ---------- cómo llegar ---------- */
+  /* ---------- contacto ---------- */
   .llegar { background: var(--mist); }
-  .llegar__grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); }
+  .llegar__grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(2rem, 6vw, 5rem); align-items: start; }
   .llegar h2 { max-width: 16ch; margin-bottom: 2rem; }
   .numeros { margin: 0; display: grid; gap: 1.6rem; }
   .numeros dt { font-weight: 600; font-size: .9375rem; color: var(--muted); }
@@ -498,13 +549,17 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
   .numeros__n { white-space: nowrap; font: 600 clamp(1.6rem, 1rem + 2.2vw, 2.7rem) / 1.1 var(--font-head); letter-spacing: -.03em; color: var(--blue); font-variant-numeric: tabular-nums; min-height: 56px; display: inline-flex; align-items: center; }
   .numeros__n--sos { color: var(--red); }
   .numeros__n:hover { text-decoration: underline; text-decoration-thickness: 2px; }
-  .llegar__lugar { display: grid; gap: .8rem; align-content: start; }
-  .mapa { aspect-ratio: 4 / 3; border-radius: var(--r-foto); overflow: hidden; background: #cfe4f8; }
-  .mapa iframe { width: 100%; height: 100%; border: 0; display: block; mix-blend-mode: multiply; filter: grayscale(1) contrast(1.1); }
-  .llegar__fotos { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: .8rem; }
-  .llegar__fotos figure { margin: 0; display: grid; gap: .4rem; }
-  .llegar__fotos :global(img) { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-foto); }
-  .llegar__fotos figcaption { font-size: .9375rem; color: var(--muted); }
+  .contacto { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(1.4rem, 3vw, 2.2rem); box-shadow: var(--shadow); display: grid; gap: 1.1rem; }
+  .contacto__nota { font-size: .9375rem; color: var(--muted); margin-top: -.6rem; }
+  .contacto__campos { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .contacto__msg { grid-column: 1 / -1; }
+  .contacto .field small { font-weight: 400; color: var(--muted); }
+  .contacto__ok { color: #1d6b3c; font-weight: 600; min-height: 1.5em; }
+  .llegar__lugar { margin-top: clamp(2.5rem, 5vw, 4rem); display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; }
+  .llegar__lugar figure { margin: 0; display: grid; gap: .5rem; align-content: start; }
+  .llegar__lugar figcaption { font-size: .9375rem; color: var(--muted); }
+  .mapa iframe { width: 100%; aspect-ratio: 2 / 1; border: 0; display: block; border-radius: var(--r-foto); background: #cfe4f8; filter: grayscale(.85) contrast(1.05) hue-rotate(185deg) saturate(1.4); }
+  .llegar__foto { display: block; aspect-ratio: 1; border-radius: var(--r-foto); overflow: hidden; }
 
   /* ---------- responsive ---------- */
   @media (max-width: 1100px) {
@@ -516,11 +571,14 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
     .corte { display: none; }
     .hoja { padding: .6rem 1.1rem; }
     .afiliacion__grid, .aniversario__grid, .llegar__grid { grid-template-columns: 1fr; }
+    .llegar__lugar { grid-template-columns: 1fr 1fr; }
+    .llegar__lugar .mapa { grid-column: 1 / -1; }
+    .mapa iframe { aspect-ratio: 4 / 3; }
   }
   @media (max-width: 960px) {
     .estudios a { grid-template-columns: 1fr 96px; gap: .3rem 1rem; }
     .estudios__nombre, .estudios__nota { grid-column: 1; }
-    .estudios :global(.estudios__foto) { grid-column: 2; grid-row: 1 / 3; width: 96px; height: 72px; }
+    .estudios__foto { grid-column: 2; grid-row: 1 / 3; width: 96px; height: 72px; }
     .unidades { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 640px) {
@@ -528,6 +586,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
     .hero__tareas .btn { width: 100%; }
     .unidades { grid-template-columns: 1fr; }
     .edificio__esps ul { columns: 1; }
+    .contacto__campos { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) { .hero__glow i { animation: none; } }
 </style>
