@@ -1,0 +1,46 @@
+---
+// /servicios/ (DESIGN §6.1): banda brisa y los 9 servicios como arcos «puerta». Estática y sin cifras de la base (funciona igual en la demo).
+// Entrada escalonada solo en escritorio (data-revelar sería también móvil: aquí es una escena propia).
+import Layout from '../../layouts/Layout.astro';
+import BandaPagina from '../../components/inner/BandaPagina.astro';
+import CierreCTA from '../../components/inner/CierreCTA.astro';
+import ServicioCard from '../../components/ui/ServicioCard.astro';
+import { indiceServicios } from '../../data/site';
+---
+<Layout
+  titulo="Servicios"
+  descripcion="Los nueve servicios de la Policlínica Maracaibo: tomografía, video endoscopia, laboratorio, cirugía, UCI, rayos X y más. Av. 8 Santa Rita."
+  tema="brisa"
+>
+  <BandaPagina migas={[{ texto: 'Inicio', href: '/' }, { texto: 'Servicios' }]} titulo="Nuestros servicios" lede="Nueve servicios, una misma casa." />
+
+  <section class="seccion seccion--compacta" data-tema="cal" aria-label="Los nueve servicios">
+    <div class="contenedor">
+      <ul class="srv-rejilla" role="list">
+        {indiceServicios.map((item) => <li><ServicioCard item={item} variante="arco" /></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <CierreCTA tema="brisa" />
+</Layout>
+
+<style>
+  .srv-rejilla { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-5); margin: 0; padding: 0; list-style: none; }
+  .srv-rejilla > li { display: grid; }
+  @media (min-width: 600px) { .srv-rejilla { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-6) var(--s-5); } }
+  @media (min-width: 900px) { .srv-rejilla { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+</style>
+
+<script>
+  import { scene } from '../../scripts/motion.js';
+
+  // Solo escritorio: las tarjetas suben de 24 px y aparecen, escalonadas (una vez)
+  scene(({ gsap, qa, mode }) => {
+    if (mode !== 'desktop') return;
+    gsap.from(qa('.srv-rejilla > li'), {
+      y: 24, opacity: 0, duration: 0.6, ease: 'power3.out', stagger: 0.07, clearProps: 'transform,opacity',
+      scrollTrigger: { trigger: '.srv-rejilla', start: 'top 85%', once: true },
+    });
+  });
+</script>

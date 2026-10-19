@@ -1,0 +1,23 @@
+---
+// Panel del médico (DESIGN.md §7.4): cola de espera en vivo, consultas en curso e historial. Rol médico (lo exige el middleware).
+// En la demo (GitHub Pages) es estático y vacío: src/components/tele/Cola.astro lo llena con la simulación de api.js.
+export const prerender = false;
+import TeleShell from '../../components/tele/TeleShell.astro';
+import Cola from '../../components/tele/Cola.astro';
+import Historial from '../../components/tele/Historial.astro';
+import { DEMO, getDB, usuarioDe } from '../../lib/entorno';
+import { cola, historial } from '../../lib/tele';
+
+const yo = usuarioDe(Astro.locals, 'medico');
+const db = await getDB();
+const [viva, pasadas] = await Promise.all([DEMO ? { espera: [], enCurso: [] } : cola(db, yo.id), historial(db, { medicoId: yo.id })]);
+const q = Astro.url.searchParams;
+---
+
+<TeleShell titulo="Sala de espera" rol="medico" nombre={yo.nombre}>
+  {!DEMO && <noscript slot="head"><meta http-equiv="refresh" content="10" /></noscript>}
+  <div class="medico">
+    <Cola espera={viva.espera} enCurso={viva.enCurso} error={q.get('error') ?? ''} atendiendo={q.get('atendiendo') ?? ''} />
+    <Historial items={pasadas} rol="medico" />
+  </div>
+</TeleShell>

@@ -77,6 +77,10 @@ Reglas para que una página funcione en los dos:
 4. Médico en `/medico/`: lista en vivo de la cola (paciente, edad, motivo, minutos esperando) con botón "Atender" (y campo opcional "Pegar enlace de Google Meet");
    sus consultas en curso con "Abrir videollamada" y "Finalizar"; su historial. Si `?atendiendo=<id>` → abrir/ofrecer el enlace de esa consulta.
 
-## Local
-Servidor de desarrollo: `npm run dev` (ya corriendo en http://localhost:4330; tarda ~1 min en arrancar). D1 local en `C:/pm-state` (ver `.env`).
-Usuarios demo: admin@policlinica.test, medico@policlinica.test, cliente@policlinica.test — la contraseña es `DEMO_PASSWORD` en `.dev.vars`.
+## Local (dos servidores ya corriendo; NO arrancar otros ni correr `astro build` mientras se trabaja en paralelo)
+- **Modo servidor** http://localhost:4330 (`npm run dev`): D1 local en `C:/pm-state` (ver `.env`). Las páginas privadas piden sesión:
+  usuarios admin@policlinica.test, medico@policlinica.test, cliente@policlinica.test, contraseña `DEMO_PASSWORD` de `.dev.vars`
+  (con curl: `curl -c jar -H "Origin: http://localhost:4330" --data-urlencode usuario=… --data-urlencode clave=… http://localhost:4330/api/sesion`).
+- **Modo demo** http://localhost:4331/policlinica-maracaibo/ (`npm run dev:demo`): igual que GitHub Pages; los paneles se ven sin sesión.
+- Capturas: `node tools/qa/shoot.mjs --port=<tu puerto CDP único> desktop|mobile <url> [#ancla…] [--reduced]` → imprime las rutas de los PNG
+  y los errores de consola (leerlos con Read).

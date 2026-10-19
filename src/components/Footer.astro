@@ -1,0 +1,53 @@
+---
+import { Image } from 'astro:assets';
+import logo from '../assets/img/logo.png';
+import Icon from './ui/Icon.astro';
+import { clinica, indiceServicios } from '../data/site';
+import { waHref } from '../lib/sitio';
+import { DEMO, u } from '../lib/entorno';
+---
+<footer class="footer" id="contacto">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div>
+        <Image class="footer__logo" src={logo} alt={clinica.nombre} height={44} />
+        <p style="margin-top:1.2rem;max-width:34ch">Desde {clinica.desde} cuidando la salud de Maracaibo. {clinica.lema}.</p>
+        <div class="socials">
+          <a href={clinica.instagram.href} target="_blank" rel="noopener" aria-label={`Instagram ${clinica.instagram.texto}`}><Icon name="instagram" /></a>
+          <a href={waHref()} target="_blank" rel="noopener" aria-label="WhatsApp"><Icon name="whatsapp" /></a>
+          <a href={clinica.mapa} target="_blank" rel="noopener" aria-label="Cómo llegar"><Icon name="pin" /></a>
+        </div>
+      </div>
+      <div>
+        <h4>Servicios</h4>
+        <ul>{indiceServicios.map((s) => <li><a href={u(s.href)}>{s.nombre}</a></li>)}</ul>
+      </div>
+      <div>
+        <h4>La Policlínica</h4>
+        <ul>
+          <li><a href={u('/nosotros/')}>Sobre nosotros</a></li>
+          <li><a href={u('/directorio/')}>Directorio médico</a></li>
+          <li><a href={u('/especialidades/')}>Especialidades</a></li>
+          <li><a href={u('/afiliacion/')}>Afiliación y telemedicina</a></li>
+          <li><a href={u('/acceso/')}>Acceder</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contacto</h4>
+        <ul>
+          <li><a href={clinica.telefono.href}>Central {clinica.telefono.texto}</a></li>
+          <li><a href={clinica.emergencias.href}>Emergencias {clinica.emergencias.texto}</a></li>
+          <li><a href={clinica.whatsapp.href} target="_blank" rel="noopener">WhatsApp {clinica.whatsapp.texto}</a></li>
+          <li><a href={`mailto:${clinica.correo}`}>{clinica.correo}</a></li>
+          <li><a href={clinica.mapa} target="_blank" rel="noopener">{clinica.direccion}, {clinica.ciudad}</a></li>
+          <li>{clinica.horario.emergencias}</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© {new Date().getFullYear()} {clinica.nombre}. Todos los derechos reservados.</span>
+      {DEMO && <span>Propuesta de rediseño · demo con datos de ejemplo en las zonas privadas</span>}
+    </div>
+  </div>
+  <div class="footer__ghost" aria-hidden="true">Policlínica</div>
+</footer>

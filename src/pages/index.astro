@@ -1,0 +1,16 @@
+---
+// Portada (DESIGN §5). Se arma al compilar en la demo de GitHub Pages y bajo demanda en el servidor (Cloudflare + D1):
+// en los dos modos lee la base con getDB() (src/lib/entorno.ts); astro.config la prerenderiza sola en la demo.
+export const prerender = false;
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/home/Hero.astro';
+import { getDB } from '../lib/entorno';
+import { especialidades, resumen } from '../lib/db';
+
+const db = await getDB();
+const [res, esps] = await Promise.all([resumen(db), especialidades(db)]);
+---
+
+<Layout titulo="Policlínica Maracaibo · Desde 1952">
+  <Hero medicos={res.medicos} especialidades={res.especialidades} />
+</Layout>

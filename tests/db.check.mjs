@@ -25,6 +25,26 @@ assert.equal(todos.length, 125);
 assert.ok(todos.every((m) => m.especialidades.length > 0), 'todo médico tiene especialidad');
 assert.ok(todos.every((m) => /^(Dra?\. |[A-Z])/.test(m.nombre)), 'nombres normalizados');
 
+// Cifras de la portada y vitrina de retratos
+const res = await db.resumen(D1);
+assert.deepEqual([res.medicos, res.especialidades], [125, 50]);
+assert.equal(res.top.length, 8);
+assert.deepEqual(res.top.map((t) => t.total), [...res.top.map((t) => t.total)].sort((a, b) => b - a), 'top ordenado de mayor a menor');
+assert.deepEqual(res.top[0], { slug: 'ginecologia-y-obstetricia', nombre: 'Ginecología y obstetricia', total: 17 });
+assert.ok(res.conMedicos < res.especialidades, 'hay especialidades sin médicos');
+const conFoto = todos.filter((m) => m.foto);
+assert.equal(conFoto.length, 122, '3 médicos sin foto');
+const r1 = await db.retratosDelDia(D1, 12, new Date('2026-10-19T16:00:00Z'));
+const r2 = await db.retratosDelDia(D1, 12, new Date('2026-10-20T16:00:00Z'));
+assert.equal(r1.length, 12);
+assert.ok(r1.every((m) => m.foto), 'solo médicos con foto');
+assert.equal(r1[0].id, conFoto[(292 * 5) % 122].id, 'empieza en (día del año × 5) mod N'); // 19-oct = día 292
+assert.notEqual(r1[0].id, r2[0].id, 'rota cada día');
+assert.equal(r2[0].id, conFoto[(293 * 5) % 122].id);
+assert.deepEqual(await db.retratosDelDia(D1, 12, new Date('2026-10-20T02:00:00Z')), r1, 'a las 22:00 de Maracaibo sigue siendo el día 19');
+assert.equal((await db.retratosDelDia(D1, 500)).length, 122, 'n mayor que N: sin repetir');
+assert.equal((await db.retratosDelDia(D1, 12, new Date('2026-12-31T16:00:00Z')))[0].id, conFoto[(365 * 5) % 122].id);
+
 // Búsqueda sin acentos, por especialidad y por slug
 assert.ok((await db.medicos(D1, { q: 'pena' })).some((m) => m.nombre.includes('Peña')));
 assert.ok((await db.medicos(D1, { q: 'CARDIO' })).length >= 9);
@@ -32,6 +52,14 @@ const cardio = await db.medicos(D1, { esp: 'cardiologia' });
 assert.ok(cardio.length >= 7 && cardio.every((m) => m.especialidades.some((e) => e.slug === 'cardiologia')));
 assert.equal((await db.medicos(D1, { q: '%' })).length, 125, '% no es comodín');
 assert.equal((await db.medicos(D1, { esp: 'no-existe' })).length, 0);
+
+// El filtro del navegador (directorio y tablas del admin) da lo mismo que la base
+const { coincide, ficha, termino } = await import('../src/components/directorio/buscar.ts');
+for (const [q, esp] of [['pena', ''], ['CARDIO', ''], ['dra. ana', ''], ['dr', ''], ['x%_', ''], ['', 'cardiologia'], ['cardio', 'pediatria'], ['', 'no-existe'], ['  médico  ', '']]) {
+  const sql = (await db.medicos(D1, { q, esp })).map((m) => m.id);
+  const js = todos.filter((m) => coincide(ficha(m.nombre, ...m.especialidades.map((e) => e.nombre)), m.especialidades.map((e) => e.slug).join(' '), termino(q), esp)).map((m) => m.id);
+  assert.deepEqual(js, sql, 'filtro del navegador = base: q=' + q + ' esp=' + esp);
+}
 
 // Validación del formulario
 const form = (o) => { const f = new FormData(); for (const [k, v] of Object.entries(o)) [].concat(v).forEach((x) => f.append(k, x)); return f; };
@@ -103,6 +131,24 @@ assert.equal((await u.sesionUsuario(D1, cli)).version, v1 + 1, 'cambiar la clave
 assert.equal(await verificarClave('nueva-clave-99', (await u.porLogin(D1, 'pedro@correo.test')).clave_hash), true);
 assert.equal(u.edad('1950-03-01', new Date(2026, 1, 28)), 75);
 assert.equal(u.edad('1950-03-01', new Date(2026, 2, 1)), 76);
+
+// Resumen del admin: derivado de la base, con ventanas «ahora» como las de tele.ts
+const ra = await u.resumenAdmin(D1);
+assert.deepEqual([ra.medicos, ra.especialidades], [(await db.medicos(D1)).length, (await db.especialidades(D1)).length]);
+assert.ok(ra.sinMedicos >= 8, 'hay especialidades sin médicos');
+assert.equal(ra.vigentes, 1, 'solo Pedro tiene la afiliación vigente (Rosa venció en 2020)');
+assert.equal(ra.porVencer.length, 0);
+const hoyC = new Date(Date.now() - 4 * 3600e3).toISOString().slice(0, 10);
+const en = (d) => new Date(Date.parse(hoyC) + d * 864e5).toISOString().slice(0, 10);
+const pronto = await u.guardarUsuario(D1, nuevoUsuario({ rol: 'cliente', nombre: 'Lucía Pronto', correo: 'lucia@correo.test', cedula: '11223344', afiliacion_vence: en(10) }));
+const lejos = await u.guardarUsuario(D1, nuevoUsuario({ rol: 'cliente', nombre: 'Mario Lejos', correo: 'mario@correo.test', cedula: '44332211', afiliacion_vence: en(31) }));
+const hoyMismo = await u.guardarUsuario(D1, nuevoUsuario({ rol: 'cliente', nombre: 'Hugo Hoy', correo: 'hugo@correo.test', cedula: '55667788', afiliacion_vence: hoyC }));
+const ra2 = await u.resumenAdmin(D1);
+assert.deepEqual(ra2.porVencer.map((c) => c.id), [hoyMismo, pronto], 'vence hoy o en ≤ 30 días, por fecha');
+assert.equal(ra2.vigentes, ra.vigentes + 3, 'vigente = vence hoy o después');
+assert.deepEqual((await u.resumenAdmin(D1, new Date(Date.now() + 21 * 864e5))).porVencer.map((c) => c.id), [lejos], 'la ventana se mueve con la fecha');
+assert.equal(ra.enEspera + ra.atendiendo + ra.consultasHoy, 0);
+await u.borrarUsuario(D1, lejos, admin); await u.borrarUsuario(D1, hoyMismo, admin); await u.borrarUsuario(D1, pronto, admin);
 
 // Telemedicina: sala de espera → atender → finalizar
 assert.match(await tele.entrar(D1, cli2, ''), /venció/);

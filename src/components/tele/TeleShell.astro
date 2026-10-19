@@ -1,0 +1,39 @@
+---
+// Marco de los paneles de telemedicina (DESIGN.md §7.1, §7.3, §7.4): barra --lago-2 con logo blanco, nombre y «Salir»;
+// el cliente además lleva abajo la franja de emergencias. Sin tira ni barra de acción públicas. Slot «head»: el refresh del <noscript>.
+import Privado from '../../layouts/Privado.astro';
+import Logo from '../Logo.astro';
+import Icono from '../ui/Icono.astro';
+import { clinica } from '../../data/site';
+import { u } from '../../lib/entorno';
+import './tele.css';
+
+interface Props { titulo: string; rol: 'cliente' | 'medico'; nombre: string; }
+const { titulo, rol, nombre } = Astro.props;
+---
+
+<Privado titulo={titulo} rol={rol}>
+  <Fragment slot="head"><slot name="head" /></Fragment>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <header class="tele-barra" data-tema="lago-2">
+    <div class="tele-barra__in">
+      <a class="tele-barra__logo" href={u('/')} aria-label="Policlínica Maracaibo, ir al inicio"><Logo ancho={150} alt="" /></a>
+      <span class="tele-barra__nombre">{nombre}</span>
+      <form method="post" action={u('/api/sesion')}>
+        <input type="hidden" name="accion" value="salir" />
+        <button class="btn btn--borde btn--sm" type="submit"><Icono nombre="salir" />Salir</button>
+      </form>
+    </div>
+  </header>
+  <main id="contenido" tabindex="-1" class={`tele tele--${rol}`}>
+    <slot />
+    {rol === 'cliente' && (
+      <aside class="tele-col tele-emergencia-envoltura" aria-label="Emergencias">
+        <div class="tele-emergencia">
+          <p><strong>¿Es una emergencia?</strong> Llama al {clinica.emergencias.texto}</p>
+          <a class="btn btn--rojo" href={clinica.emergencias.href}><Icono nombre="emergencia" />Emergencias</a>
+        </div>
+      </aside>
+    )}
+  </main>
+</Privado>

@@ -110,3 +110,24 @@ export function edad(nacimiento: string | null, hoy = new Date()): number | null
   const [a, m, d] = nacimiento.split('-').map(Number);
   return hoy.getFullYear() - a - (hoy.getMonth() + 1 < m || (hoy.getMonth() + 1 === m && hoy.getDate() < d) ? 1 : 0);
 }
+
+/** Cifras del resumen del admin. «Ahora» usa las mismas ventanas que tele.ts (5 min sin latido en la sala, 4 h en curso)
+ *  para no contar a quien ya cerró la página. Fechas en hora de Maracaibo (UTC−4). */
+export async function resumenAdmin(db: DB, ahora = new Date()) {
+  const hoy = new Date(ahora.getTime() - 4 * 3600e3).toISOString().slice(0, 10);
+  const en30 = new Date(Date.parse(hoy) + 30 * 864e5).toISOString().slice(0, 10);
+  const inicio = new Date(Date.parse(hoy) + 4 * 3600e3), fin = new Date(inicio.getTime() + 864e5); // el día de Maracaibo, en UTC
+  const sql = (d: Date) => d.toISOString().slice(0, 19).replace('T', ' ');
+  const n = async (q: string, ...v: unknown[]) => Number((await db.prepare(q).bind(...v).first())?.n ?? 0);
+  const [medicos, especialidades, sinMedicos, vigentes, enEspera, atendiendo, consultasHoy, porVencer] = await Promise.all([
+    n('SELECT COUNT(*) AS n FROM medicos'),
+    n('SELECT COUNT(*) AS n FROM especialidades'),
+    n('SELECT COUNT(*) AS n FROM especialidades e WHERE NOT EXISTS (SELECT 1 FROM medico_especialidad x WHERE x.especialidad_id = e.id)'),
+    n("SELECT COUNT(*) AS n FROM usuarios WHERE rol = 'cliente' AND activo = 1 AND afiliacion_vence >= ?1", hoy),
+    n("SELECT COUNT(*) AS n FROM consultas WHERE estado = 'espera' AND visto >= datetime('now', '-5 minutes')"),
+    n("SELECT COUNT(*) AS n FROM consultas WHERE estado = 'atendiendo' AND atendida >= datetime('now', '-4 hours')"),
+    n('SELECT COUNT(*) AS n FROM consultas WHERE creada >= ?1 AND creada < ?2', sql(inicio), sql(fin)),
+    db.prepare(`SELECT ${CAMPOS} FROM usuarios WHERE rol = 'cliente' AND activo = 1 AND afiliacion_vence BETWEEN ?1 AND ?2 ORDER BY afiliacion_vence, nombre`).bind(hoy, en30).all(),
+  ]);
+  return { medicos, especialidades, sinMedicos, vigentes, enEspera, atendiendo, consultasHoy, porVencer: porVencer.results as unknown as Usuario[] };
+}

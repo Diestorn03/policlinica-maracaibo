@@ -1,0 +1,23 @@
+---
+// Cabecera de página interna: fondo azul marino con brillo celeste y la cruz del logo como marca de agua.
+import Icon from './Icon.astro';
+import { u } from '../../lib/entorno';
+
+interface Props { titulo: string; lead?: string; eyebrow?: string; migas?: { href?: string; texto: string }[] }
+const { titulo, lead, eyebrow, migas = [] } = Astro.props;
+---
+<section class="page-hero" data-scene>
+  <div class="page-hero__cross" data-parallax="0.4" aria-hidden="true"><Icon name="cross" size={520} /></div>
+  <div class="wrap stack">
+    {migas.length > 0 && (
+      <nav class="crumbs" aria-label="Migas de pan">
+        <a href={u('/')}>Inicio</a>
+        {migas.map((m) => <><span aria-hidden="true">/</span>{m.href ? <a href={u(m.href)}>{m.texto}</a> : <span aria-current="page">{m.texto}</span>}</>)}
+      </nav>
+    )}
+    {eyebrow && <span class="eyebrow" data-reveal="up">{eyebrow}</span>}
+    <h1 class="h-display" data-split="lines">{titulo}</h1>
+    {lead && <p class="lead" data-reveal="up" data-delay=".25">{lead}</p>}
+    <slot />
+  </div>
+</section>

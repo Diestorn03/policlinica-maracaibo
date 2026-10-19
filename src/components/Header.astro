@@ -1,0 +1,49 @@
+---
+// Cabecera como la del sitio actual (logo a la izquierda, menú, «Acceder»), con la barra de emergencias arriba,
+// vidrio al bajar y menú móvil que se abre en círculo.
+import { Image } from 'astro:assets';
+import logo from '../assets/img/logo.png';
+import Icon from './ui/Icon.astro';
+import { clinica, nav } from '../data/site';
+import { waHref } from '../lib/sitio';
+import { u } from '../lib/entorno';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const ruta = Astro.url.pathname.replace(base, '') || '/';
+const links = [...nav, { href: '/#contacto', texto: 'Contacto' }];
+const actual = (href: string) => href !== '/#contacto' && ruta.startsWith(href);
+---
+<div class="topbar">
+  <div class="wrap topbar__in">
+    <a class="topbar__sos" href={clinica.emergencias.href}>Emergencias 24 horas · {clinica.emergencias.texto}</a>
+    <span class="topbar__horario">Citas de lunes a viernes, 8:00 a. m. a 4:00 p. m. · <a href={clinica.telefono.href}>{clinica.telefono.texto}</a></span>
+  </div>
+</div>
+<header class="nav">
+  <div class="nav__inner">
+    <a class="nav__logo" href={u('/')} aria-label={`${clinica.nombre}, inicio`}>
+      <Image src={logo} alt="" height={42} loading="eager" />
+    </a>
+    <nav aria-label="Principal">
+      <ul class="nav__links">
+        {links.map((l) => <li><a href={u(l.href)} aria-current={actual(l.href) ? 'page' : undefined}>{l.texto}</a></li>)}
+      </ul>
+    </nav>
+    <div class="nav__cta">
+      <a class="btn btn--outline btn--sm" href={u('/acceso/')}><Icon name="login" /> Acceder</a>
+      <a class="btn btn--primary btn--sm" href={waHref()} target="_blank" rel="noopener" data-magnetic><Icon name="calendar" /> Solicitar cita</a>
+      <button class="burger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+<div class="menu" id="menu">
+  <nav class="menu__links" aria-label="Menú móvil">
+    <a href={u('/')}>Inicio</a>
+    {links.map((l) => <a href={u(l.href)}>{l.texto}</a>)}
+  </nav>
+  <div class="menu__extra">
+    <a class="btn btn--white" href={waHref()} target="_blank" rel="noopener"><Icon name="calendar" /> Solicitar cita</a>
+    <a class="btn btn--ghost" href={u('/acceso/')}><Icon name="login" /> Acceder</a>
+    <a class="btn btn--ghost" href={clinica.emergencias.href}><Icon name="siren" /> Emergencias {clinica.emergencias.texto}</a>
+  </div>
+</div>

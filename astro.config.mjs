@@ -6,7 +6,9 @@ import { fileURLToPath } from 'node:url';
 // Dos modos con el mismo código:
 //  · servidor (por defecto): Cloudflare Workers + D1. Páginas públicas prerenderizadas; directorio, paneles y admin bajo demanda.
 //  · demo (PUBLIC_DEMO=1): sitio 100 % estático para GitHub Pages; la base se arma al compilar con datos de ejemplo.
-const env = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), '');
+// `astro dev|build --mode demo` carga .env.demo (PUBLIC_DEMO=1); también vale la variable de entorno PUBLIC_DEMO=1
+const i = process.argv.indexOf('--mode');
+const env = loadEnv(i > 0 ? process.argv[i + 1] : (process.env.NODE_ENV ?? 'development'), process.cwd(), '');
 const DEMO = (process.env.PUBLIC_DEMO ?? env.PUBLIC_DEMO) === '1';
 // CF_STATE (en .env): carpeta del D1 local si la ruta del proyecto es muy larga para Windows (usar la misma en wrangler --persist-to)
 const CF_STATE = env.CF_STATE;
@@ -41,6 +43,8 @@ export default defineConfig({
   devToolbar: { enabled: false },
   server: { port: 4330 },
   vite: {
+    // caché propia por modo: el servidor normal (4330) y el de la demo (4331) corren a la vez
+    cacheDir: DEMO ? 'node_modules/.vite-demo' : 'node_modules/.vite',
     resolve: { alias: { '#fuente': fileURLToPath(new URL(DEMO ? './src/lib/fuente-demo.ts' : './src/lib/fuente-cf.ts', import.meta.url)) } },
   },
 });

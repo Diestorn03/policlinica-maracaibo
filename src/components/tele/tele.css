@@ -1,0 +1,115 @@
+/* ==========================================================================
+   tele.css · panel del cliente y panel del médico (DESIGN.md §7.1, §7.3, §7.4)
+   Solo CSS: sin GSAP ni scroll animado. Los destellos y la respiración se anulan con
+   html[data-fx="reduced"] y prefers-reduced-motion (global.css).
+   ========================================================================== */
+
+/* ---------- Barra ---------- */
+.tele-barra__in {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem;
+  max-inline-size: var(--max); min-block-size: 4rem; margin-inline: auto; padding: .5rem var(--gutter);
+}
+.tele-barra__logo { display: block; line-height: 0; }
+.tele-barra__nombre { margin-inline-start: auto; min-inline-size: 0; font-weight: 600; overflow-wrap: anywhere; }
+.tele-barra form { margin: 0; }
+@media (max-width: 599.98px) {
+  .tele-barra__nombre { display: none; }
+  .tele-barra form { margin-inline-start: auto; }
+}
+
+.tele { min-block-size: calc(100dvh - 4rem); }
+.tele-col { inline-size: 100%; max-inline-size: 40rem; margin-inline: auto; padding-inline: var(--gutter); }
+.tele--cliente { font-size: 1.1875rem; }
+.tele--cliente h1 { font: 700 clamp(1.875rem, 1.4rem + 2vw, 2.5rem)/1.15 var(--f-display); font-variation-settings: 'SOFT' 50, 'WONK' 0; }
+.tele--cliente h2 { font-size: 1.375rem; }
+.tele h1:focus, .tele h1:focus-visible { outline: none; }   /* el foco por programa al cambiar de pantalla no dibuja aro */
+
+/* ---------- Cliente · pantallas ---------- */
+.estado { padding-block: clamp(1.5rem, 5vw, 3rem); }
+html.js [data-estados][data-cargando] .estado { visibility: hidden; }   /* demo: hasta la primera respuesta de espera() */
+.afiliacion { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; font-weight: 600; }
+.tele-tarjeta { padding: clamp(1.25rem, 4vw, 2rem); border-radius: var(--r-2); }
+.tele-tarjeta > * { margin: 0; }
+.motivo summary { min-block-size: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
+.motivo[open] summary { margin-block-end: .5rem; }
+.btn--entrar { min-block-size: 5.5rem; font-size: 1.375rem; }
+.aviso .btn { flex: none; margin-inline-start: auto; }
+.aviso:has(.btn) { flex-wrap: wrap; }
+
+/* ---------- Cliente · sala de espera (fondo lago, pantalla completa bajo la barra) ---------- */
+.estado--sala { display: grid; align-content: center; min-block-size: calc(100dvh - 7rem); }
+.sala { display: grid; gap: 1.25rem; justify-items: center; text-align: center; }
+.sala > * { margin: 0; max-inline-size: 100%; }
+.sala-visual { --lado: min(19rem, 78vw); --disco: calc(var(--lado) * .4); position: relative; display: grid; place-items: center; inline-size: var(--lado); aspect-ratio: 1; }
+.sala-anillo {
+  position: absolute; inset: 50% auto auto 50%; translate: -50% -50%; aspect-ratio: 1; border-radius: 50%;
+  inline-size: calc(var(--disco) + (var(--lado) - var(--disco)) * var(--i) / 7);
+  border: 2px solid rgb(255 247 232 / .45);
+  transition: opacity .8s var(--ease-out), scale .8s var(--ease-out);
+}
+.sala-anillo.is-fuera { opacity: 0; scale: 1.1; }   /* el anillo exterior se desvanece hacia afuera; nada parpadea */
+.sala-disco { display: grid; place-items: center; inline-size: var(--disco); aspect-ratio: 1; border-radius: 50%; background: var(--sol); color: var(--tinta); }
+.sala-disco span { font: 700 calc(var(--disco) * .52)/1 var(--f-display); font-variation-settings: 'SOFT' 100, 'WONK' 0; font-variant-numeric: tabular-nums lining-nums; }
+.sala-linea { font: 700 clamp(1.5rem, 1.2rem + 1.5vw, 2rem)/1.2 var(--f-texto); }
+.sala-reloj { font-variant-numeric: tabular-nums; color: var(--texto-2); }
+.sala .aviso { text-align: start; }
+.sala-lista { justify-self: stretch; max-inline-size: 28rem; margin-inline: auto; text-align: start; }
+.sala-lista h2 { margin-block-end: .5rem; }
+.sala-lista ol { margin: 0; padding-inline-start: 1.5em; display: grid; gap: .5rem; }
+
+/* ---------- Cliente · te atienden (fondo sol) ---------- */
+.estado--atiende { display: grid; align-content: center; min-block-size: calc(100dvh - 7rem); }
+.estado--atiende p { margin: 0; }
+.enlace-texto { padding: .75rem 1rem; background: var(--papel); border: 2px solid var(--tinta); border-radius: var(--r-1); font-weight: 600; word-break: break-all; user-select: all; }
+
+/* ---------- Franja de emergencias y historial del cliente ---------- */
+.tele-historial { padding-block: 2rem 1rem; }
+.historial h2 { margin-block-end: 1rem; }
+.historial-vacio, .vacio-txt { margin: 0; color: var(--tinta-2); }
+.tele-emergencia-envoltura { padding-block: 1rem 2.5rem; }
+.tele-emergencia {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1rem 1.25rem; background: var(--papel); border: 1px solid var(--linea); border-inline-start: 6px solid var(--rojo); border-radius: var(--r-2);
+}
+.tele-emergencia p { margin: 0; }
+
+/* ---------- Médico ---------- */
+.medico { display: grid; gap: 2.5rem; max-inline-size: var(--max); margin-inline: auto; padding: 1.5rem var(--gutter) 4rem; }
+.medico [data-cola] { display: grid; gap: 1.25rem; }
+.medico-cab { display: grid; gap: .75rem; }
+.medico-estado { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
+.en-vivo { display: inline-flex; align-items: center; gap: .5rem; font-weight: 700; color: var(--lago); }
+.actualizado { font-weight: 450; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
+.medico-grid { display: grid; gap: 2rem; align-items: start; }   /* móvil: «En curso» primero (va antes en el HTML) */
+.medico-grid h2 { margin-block-end: 1rem; }
+@media (min-width: 900px) {
+  .medico-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 2.5rem; }
+  .medico-grid > .curso { order: 2; }
+}
+.meet { margin-block-end: .5rem; max-inline-size: 36rem; }
+.cola-tabla td { vertical-align: middle; }
+.cola-tabla [data-celda="paciente"] { font-weight: 700; }
+.cola-tabla [data-celda="paciente"] .chip, .cola-tabla [data-celda="espera"] .chip { margin-inline-start: .5rem; }
+.cola-tabla [data-celda="motivo"] { max-inline-size: 18rem; overflow-wrap: anywhere; }
+.cola-tabla [data-celda="espera"] time { font-variant-numeric: tabular-nums; font-weight: 600; }
+.cola-tabla .btn { white-space: nowrap; }
+.vacio { display: grid; justify-items: center; gap: 1rem; padding: 2rem 1rem; text-align: center; border: 2px dashed var(--linea); border-radius: var(--r-2); }
+.vacio p { margin: 0; font-weight: 600; }
+.vacio-anillos { -webkit-mask: radial-gradient(circle, #000 40%, transparent 72%); mask: radial-gradient(circle, #000 40%, transparent 72%); }
+
+@media (max-width: 899.98px) {
+  .cola-tabla [data-celda="orden"] { display: none; }
+  .cola-tabla [data-celda="paciente"] { justify-content: flex-start; flex-wrap: wrap; font: 600 1.375rem/1.2 var(--f-display); text-align: start; }
+  .cola-tabla [data-celda="motivo"] { max-inline-size: none; }
+  .cola-tabla [data-celda="accion"] { display: block; }
+  .cola-tabla [data-celda="accion"] .btn { inline-size: 100%; }
+}
+
+/* En curso */
+.curso-lista { display: grid; gap: 1rem; margin: 0; }
+.curso-card { display: grid; gap: .75rem; padding: 1.25rem; }
+.curso-card h3 { font: 600 1.375rem/1.2 var(--f-display); }
+.curso-card p { margin: 0; color: var(--tinta-2); }
+.curso-card[aria-current="true"] { border: 3px solid var(--sol); box-shadow: 0 0 0 1px var(--tinta); }
+.dialogo-acciones { justify-content: flex-end; margin-block-start: 1.5rem; }
+.dialogo h2 { margin: 0; }

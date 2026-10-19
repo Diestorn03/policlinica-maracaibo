@@ -1,0 +1,44 @@
+---
+// Historial de conexiones (DESIGN.md §7.3 «Mis conexiones», §7.4 «Mi historial»): tabla en escritorio, tarjetas apiladas en móvil (.tabla).
+// Solo consultas terminadas; las activas viven en la sala de espera / «En curso». Fechas de SQLite (UTC) en hora de Maracaibo.
+import Chip from '../ui/Chip.astro';
+import { duracion, fechaCaracas } from '../../lib/sitio';
+import type { Pasada } from '../../lib/tele';
+
+interface Props { items: Pasada[]; rol: 'cliente' | 'medico'; }
+const { items, rol } = Astro.props;
+const cliente = rol === 'cliente';
+const filas = items.filter((i) => i.estado === 'finalizada' || i.estado === 'cancelada');
+---
+
+<section class="historial" aria-labelledby="t-historial">
+  <h2 id="t-historial">{cliente ? 'Mis conexiones' : 'Mi historial'}</h2>
+  {filas.length === 0 ? (
+    <p class="historial-vacio">{cliente ? 'Aún no te has conectado. Cuando lo hagas, tu historial aparecerá aquí.' : 'Todavía no has atendido consultas.'}</p>
+  ) : (
+    <div class="tabla-envoltura">
+      <table class="tabla historial-tabla">
+        <caption class="solo-lectores">{cliente ? 'Mis conexiones de telemedicina' : 'Consultas que he atendido'}</caption>
+        <thead><tr><th scope="col">Fecha</th><th scope="col">Hora</th><th scope="col">{cliente ? 'Médico' : 'Paciente'}</th><th scope="col">Duración</th><th scope="col">Estado</th></tr></thead>
+        <tbody>
+          {filas.map((i) => {
+            const min = i.atendida ? duracion(i.atendida, i.finalizada) : null;
+            return (
+              <tr>
+                <td data-etiqueta="Fecha">{fechaCaracas(i.creada)}</td>
+                <td data-etiqueta="Hora">{fechaCaracas(i.creada, 'hora')}</td>
+                <td data-etiqueta={cliente ? 'Médico' : 'Paciente'}>{(cliente ? i.medico : i.paciente) || '—'}</td>
+                <td data-etiqueta="Duración">{min == null ? '—' : `${min} min`}</td>
+                <td data-etiqueta="Estado">
+                  {i.estado === 'finalizada'
+                    ? <Chip texto="Finalizada" icono="check" clase="chip--vigente" />
+                    : <Chip texto={cliente ? 'Saliste de la sala' : 'Salió de la sala'} icono="salir" clase="chip--suspendida" />}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  )}
+</section>

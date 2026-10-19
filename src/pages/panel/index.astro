@@ -1,0 +1,24 @@
+---
+// Panel del cliente (DESIGN.md §7.3): botón grande «Entrar a la videollamada», sala de espera en vivo e historial. Rol cliente (lo exige el middleware).
+// En la demo (GitHub Pages) es estático: nace en «inicio» y src/components/tele/Estados.astro toma el control con la simulación de api.js.
+export const prerender = false;
+import TeleShell from '../../components/tele/TeleShell.astro';
+import Estados from '../../components/tele/Estados.astro';
+import Historial from '../../components/tele/Historial.astro';
+import { DEMO, getDB, usuarioDe } from '../../lib/entorno';
+import { estado, historial } from '../../lib/tele';
+import { usuario } from '../../lib/usuarios';
+
+const yo = usuarioDe(Astro.locals, 'cliente');
+const db = await getDB();
+const [consulta, pasadas, ficha] = await Promise.all([estado(db, yo.id), historial(db, { clienteId: yo.id }), usuario(db, yo.id)]);
+const error = Astro.url.searchParams.get('error') ?? '';
+---
+
+<TeleShell titulo="Mi panel" rol="cliente" nombre={yo.nombre}>
+  {!DEMO && consulta?.estado === 'espera' && <noscript slot="head"><meta http-equiv="refresh" content="10" /></noscript>}
+  <Estados consulta={consulta} nombre={yo.nombre} vence={ficha?.afiliacion_vence ?? null} error={error} />
+  <div class="tele-col tele-historial">
+    <Historial items={pasadas} rol="cliente" />
+  </div>
+</TeleShell>

@@ -1,0 +1,51 @@
+---
+// Zonas privadas: /admin, /medico, /panel y /acceso. Misma marca, interfaz de aplicación sobria. Siempre noindex.
+// <Privado titulo="…" zona="Panel del médico" usuario={yo}> … </Privado>   (sin usuario = /acceso/)
+import '@fontsource-variable/montserrat/index.css';
+import '@fontsource-variable/open-sans/index.css';
+import '../styles/global.css';
+import '../styles/privado.css';
+import { Image } from 'astro:assets';
+import logo from '../assets/img/logo.png';
+import Icon from '../components/ui/Icon.astro';
+import { DEMO, u } from '../lib/entorno';
+import { clinica } from '../data/site';
+import { ROLES } from '../lib/usuarios';
+import type { Rol } from '../lib/auth';
+
+interface Props { titulo: string; zona?: string; usuario?: { nombre: string; rol: Rol } }
+const { titulo, zona, usuario } = Astro.props;
+---
+<!doctype html>
+<html lang="es-VE" data-demo={DEMO ? '1' : undefined} data-base={import.meta.env.BASE_URL}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>document.documentElement.classList.add('js','motion-ready');</script>
+    <title>{titulo} · {clinica.nombre}</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#014db7" />
+    <link rel="icon" href={u('/favicon.png')} type="image/png" />
+    <slot name="head" />
+  </head>
+  <body class="app">
+    {DEMO && <div class="app-demo" role="note">Demostración: datos de ejemplo, nada se guarda.</div>}
+    <header class="app-bar">
+      <div class="app-bar__in">
+        <a class="app-bar__logo" href={u('/')} aria-label={`${clinica.nombre}, sitio público`}><Image src={logo} alt="" height={34} /></a>
+        {zona && <span class="app-bar__zona">{zona}</span>}
+        {usuario && (
+          <div class="app-bar__user">
+            <span class="app-bar__who"><Icon name="user" size={18} /> <b>{usuario.nombre}</b> <small>{ROLES[usuario.rol]}</small></span>
+            <form method="post" action={u('/api/sesion')}>
+              <input type="hidden" name="accion" value="salir" />
+              <button class="btn btn--outline btn--sm" type="submit"><Icon name="logout" size={18} /> Salir</button>
+            </form>
+          </div>
+        )}
+      </div>
+    </header>
+    <main class="app-main" id="contenido"><slot /></main>
+    <script>import '../scripts/api.js';</script>
+  </body>
+</html>

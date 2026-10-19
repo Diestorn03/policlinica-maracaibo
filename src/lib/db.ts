@@ -38,6 +38,23 @@ export async function medicos(db: DB, { q = '', esp = '' }: { q?: string; esp?: 
   return results.map(toMedico);
 }
 
+/** Cifras de la portada, derivadas de la base en cada petición: nunca se quedan viejas tras un alta o baja */
+export async function resumen(db: DB): Promise<{ medicos: number; especialidades: number; conMedicos: number; top: { slug: string; nombre: string; total: number }[] }> {
+  const [n, e] = await Promise.all([db.prepare('SELECT COUNT(*) AS n FROM medicos').first(), especialidades(db)]);
+  const top = e.filter((x) => x.total > 0).sort((a, b) => b.total - a.total || a.nombre.localeCompare(b.nombre, 'es')).slice(0, 8);
+  return { medicos: Number(n?.n ?? 0), especialidades: e.length, conMedicos: e.filter((x) => x.total > 0).length, top: top.map(({ slug, nombre, total }) => ({ slug, nombre, total })) };
+}
+
+/** Retratos de la vitrina: solo médicos con foto, en orden alfabético, empezando en (día del año × 5) mod N y circular.
+ *  Rota cada día (hora de Maracaibo) y reparte la vitrina entre todos. */
+export async function retratosDelDia(db: DB, n = 12, hoy = new Date()): Promise<Medico[]> {
+  const todos = (await medicos(db)).filter((m) => m.foto);
+  if (!todos.length) return [];
+  const c = new Date(hoy.getTime() - 4 * 3600e3);
+  const dia = Math.floor((Date.UTC(c.getUTCFullYear(), c.getUTCMonth(), c.getUTCDate()) - Date.UTC(c.getUTCFullYear(), 0, 0)) / 864e5);
+  return Array.from({ length: Math.min(n, todos.length) }, (_, i) => todos[(dia * 5 + i) % todos.length]);
+}
+
 export async function medico(db: DB, id: number): Promise<Medico | null> {
   const r = await db.prepare(`SELECT m.id, m.nombre, m.telefono, m.consultorio, m.foto, ${ESPS} AS especialidades FROM medicos m WHERE m.id = ?1`).bind(id).first();
   return r ? toMedico(r) : null;

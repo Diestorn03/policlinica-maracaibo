@@ -1,0 +1,23 @@
+---
+// Una consulta en curso del médico (DESIGN.md §7.4). La usan el servidor y el <template> que clona el script (sin `c`).
+// «Finalizar» pide confirmación con un <dialog> si hay JS; sin JS envía directo.
+import Icono from '../ui/Icono.astro';
+import { u } from '../../lib/entorno';
+
+interface Props { c?: { id: number; paciente: string; edad: number | null; motivo: string; enlace: string }; actual?: boolean }
+const { c, actual = false } = Astro.props;
+---
+
+<li class="curso-card tarjeta" data-id={c?.id} aria-current={actual ? 'true' : undefined}>
+  <h3 data-campo="paciente">{c?.paciente}</h3>
+  <p class="curso-meta"><span data-campo="edad">{c ? (c.edad == null ? 'Edad —' : `${c.edad} años`) : ''}</span> · <span data-campo="motivo">{c ? c.motivo || 'Sin motivo indicado' : ''}</span></p>
+  <a class="btn btn--lago btn--grande btn--bloque" data-campo="enlace" href={c?.enlace} target="_blank" rel="noopener">
+    <Icono nombre="video" tam={28} /><span>Abrir videollamada<span class="solo-lectores"> (se abre en otra pestaña)</span></span>
+  </a>
+  <button type="button" class="btn btn--borde btn--sm" data-copiar={c?.enlace ?? ''}><Icono nombre="copiar" /><span data-txt aria-live="polite">Copiar enlace</span></button>
+  <form method="post" action={u('/api/cola')}>
+    <input type="hidden" name="accion" value="finalizar" />
+    <input type="hidden" name="consulta" value={c?.id} />
+    <button type="submit" class="btn btn--borde btn--bloque" data-finalizar aria-label={c ? `Finalizar consulta con ${c.paciente}` : undefined}>Finalizar consulta</button>
+  </form>
+</li>

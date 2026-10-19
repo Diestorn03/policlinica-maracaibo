@@ -1,0 +1,146 @@
+---
+// /directorio/ · buscador y tarjetas de los médicos (DESIGN §6.4). Un solo código, dos modos (docs/BACKEND.md):
+//  · servidor: filtra en la base con ?q= y ?esp= (medicos() de lib/db.ts); sin JS todo funciona con el formulario GET.
+//  · demo (GitHub Pages): la página es estática y trae a todos; filtro.ts lee location.search y filtra en el navegador.
+// En los dos se renderizan TODAS las fichas; las que no coinciden salen con `hidden`. Así el filtro instantáneo siempre
+// tiene la lista completa en el DOM (si el servidor mandara solo las filtradas, no podría ampliar la búsqueda).
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import Migas from '../../components/ui/Migas.astro';
+import Buscador from '../../components/ui/Buscador.astro';
+import MedicoCard from '../../components/ui/MedicoCard.astro';
+import ContactoCTA from '../../components/ui/ContactoCTA.astro';
+import Icono from '../../components/ui/Icono.astro';
+import { getDB, u, DEMO } from '../../lib/entorno';
+import { especialidades, medicos } from '../../lib/db';
+import { waHref } from '../../lib/sitio';
+import { ficha } from '../../components/directorio/buscar';
+
+const db = await getDB();
+const params = Astro.url.searchParams; // en la demo viene vacío (página prerenderizada): filtro.ts lee la URL en el navegador
+const q = (params.get('q') ?? '').trim().slice(0, 80);
+const todas = await especialidades(db);
+const espActual = todas.find((e) => e.slug === params.get('esp')); // un slug desconocido se ignora
+const esp = espActual?.slug ?? '';
+
+const [todos, filtrados] = await Promise.all([medicos(db), q || esp ? medicos(db, { q, esp }) : null]);
+const coinciden = new Set((filtrados ?? todos).map((m) => m.id));
+let k = 0;
+const fichas = todos.map((m) => ({ m, visible: coinciden.has(m.id), orden: coinciden.has(m.id) ? k++ : -1 }));
+const sinResultados = coinciden.size === 0;
+const sinMedicosEsp = sinResultados && !!espActual && espActual.total === 0;
+
+const top = todas.filter((e) => e.total > 0).sort((a, b) => b.total - a.total || a.nombre.localeCompare(b.nombre, 'es')).slice(0, 10);
+const chips = [{ slug: '', nombre: 'Todas', total: todos.length }, ...top];
+const waVacio = waHref(espActual ? `Consulta de especialidad - ${espActual.nombre}` : 'Consulta del directorio médico');
+---
+
+<Layout
+  titulo="Directorio médico"
+  descripcion="Directorio médico de la Policlínica Maracaibo: busca por nombre o especialidad y llama directo al consultorio de tu médico."
+  tema="brisa"
+  cache={false}
+>
+  <div class="dir">
+    <section class="dir-cabecera" data-tema="brisa" aria-labelledby="dir-titulo">
+      <div class="contenedor">
+        <Migas items={[{ texto: 'Inicio', href: '/' }, { texto: 'Directorio médico' }]} />
+        <h1 id="dir-titulo" data-revelar="linea">Encuentra a tu médico</h1>
+        <p class="lede">Busca por nombre o por especialidad y llama directo al consultorio.</p>
+      </div>
+    </section>
+
+    <div class="dir-barra" data-tema="brisa">
+      <div class="contenedor">
+        <Buscador variante="pagina" q={q} esp={esp} especialidades={todas} />
+      </div>
+    </div>
+
+    <section class="dir-resultados seccion--compacta" data-tema="cal" aria-labelledby="dir-resultados">
+      <div class="contenedor">
+        <h2 id="dir-resultados" class="solo-lectores">Médicos del directorio</h2>
+        {DEMO && <noscript><p class="aviso aviso--info">Esta demostración filtra con JavaScript; sin él se muestran todos los médicos.</p></noscript>}
+
+        <nav class="dir-chips" aria-label="Filtrar por especialidad">
+          <ul role="list">
+            {chips.map((c) => (
+              <li>
+                <a class="chip dir-chip" href={u(c.slug ? `/directorio/?esp=${c.slug}` : '/directorio/')} data-esp={c.slug} aria-current={c.slug === esp ? 'true' : undefined}>
+                  <span class="dir-chip__ok" aria-hidden="true"><Icono nombre="check" tam={20} /></span>
+                  <span>{c.nombre}</span><span class="dir-cuenta">{c.total}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <p class="dir-conteo" id="dir-conteo" aria-live="polite" aria-atomic="true">Mostrando {coinciden.size} de {todos.length} médicos</p>
+
+        <ul class="dir-lista dir-entrada" id="dir-lista" role="list">
+          {fichas.map(({ m, visible, orden }) => (
+            <li
+              class:list={['dir-item', { 'dir-entra': orden >= 0 && orden < 12 }]}
+              data-clave={ficha(m.nombre, ...m.especialidades.map((e) => e.nombre))}
+              data-esp={m.especialidades.map((e) => e.slug).join(' ')}
+              style={orden >= 0 && orden < 12 ? `--i:${orden}` : undefined}
+              hidden={!visible}
+            >
+              <MedicoCard medico={m} variante="tarjeta" prioridad={orden >= 0 && orden < 3} />
+            </li>
+          ))}
+        </ul>
+
+        <div class="dir-vacio" id="dir-vacio" data-vacio="busqueda" hidden={!(sinResultados && !sinMedicosEsp)}>
+          <p>No encontramos médicos con esa búsqueda. Prueba con otra palabra o escríbenos por WhatsApp.</p>
+          <a class="btn btn--sol" href={waVacio} target="_blank" rel="noopener" data-wa><Icono nombre="whatsapp" />Escribir por WhatsApp</a>
+        </div>
+        <div class="dir-vacio" data-vacio="esp" hidden={!sinMedicosEsp}>
+          <p>Aún no tenemos médicos de <strong data-esp-nombre>{espActual?.nombre}</strong> en el directorio. Consulta disponibilidad por WhatsApp.</p>
+          <a class="btn btn--sol" href={waVacio} target="_blank" rel="noopener" data-wa><Icono nombre="whatsapp" />Consultar por WhatsApp</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion--compacta" data-tema="brisa" aria-label="Contacto">
+      <div class="contenedor contenedor--angosto">
+        <ContactoCTA variante="compacto" />
+      </div>
+    </section>
+  </div>
+
+  <script>
+    import '../../components/directorio/filtro.ts';
+  </script>
+</Layout>
+
+<style>
+  .dir-cabecera { padding-block: var(--s-4) var(--s-6); }
+  .dir-cabecera h1 { margin-block: var(--s-2) var(--s-3); }
+  .dir-barra { padding-block: 0 var(--s-6); }
+  /* escritorio: el buscador queda pegado bajo el header mientras se recorre la lista */
+  @media (min-width: 900px) {
+    .dir-barra { position: sticky; inset-block-start: var(--header-h); z-index: 40; padding-block: var(--s-4); border-block-end: 1px solid var(--linea); }
+  }
+
+  .dir-chips ul { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+  .dir-chip { white-space: normal; line-height: 1.2; padding-block: .25rem; }
+  .dir-chip__ok { display: none; }
+  .dir-chip[aria-current]:not([aria-current="false"]) .dir-chip__ok { display: inline-flex; }
+  .dir-cuenta { display: inline-grid; place-items: center; min-inline-size: 1.75rem; block-size: 1.75rem; padding-inline: .375rem; border-radius: var(--r-pill); background: var(--papel); font-size: .9375rem; font-variant-numeric: tabular-nums; }
+
+  .dir-conteo { margin-block: var(--s-5); font-weight: 600; color: var(--texto-2); }
+
+  .dir-lista { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); margin: 0; padding: 0; list-style: none; }
+  @media (min-width: 600px) { .dir-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 900px) { .dir-lista { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .dir-item { display: grid; content-visibility: auto; contain-intrinsic-size: auto 24rem; }
+  .dir-fuera { display: none; }
+  .dir-lista.dir-anima .dir-item { content-visibility: visible; } /* mientras Flip reubica, todo con su tamaño real */
+  /* entrada: las primeras 12 fichas suben una a una (solo transform y opacity; el movimiento reducido lo apaga global.css) */
+  .dir-entrada .dir-entra { animation: dir-entra var(--d-ui) var(--ease-texto) backwards; animation-delay: calc(var(--i) * .06s); }
+  @keyframes dir-entra { from { opacity: 0; transform: translateY(24px); } }
+
+  .dir-vacio { display: grid; justify-items: start; gap: var(--s-4); max-inline-size: var(--medida); padding-block: var(--s-6); font-size: var(--t-lg); }
+  .dir-vacio p { margin: 0; }
+</style>
