@@ -1,23 +1,21 @@
-// npm test — corre las migraciones reales sobre node:sqlite (mismo SQLite que D1) y prueba src/lib/db.ts y src/lib/auth.ts.
-import { DatabaseSync } from 'node:sqlite';
-import { readFileSync, readdirSync } from 'node:fs';
+// npm test — corre las migraciones reales sobre node:sqlite (mismo SQLite que D1) y prueba src/lib/{db,usuarios,tele,auth}.ts
+// y la base de ejemplo del modo demo (GitHub Pages).
 import assert from 'node:assert/strict';
 import * as db from '../src/lib/db.ts';
 import * as u from '../src/lib/usuarios.ts';
 import * as tele from '../src/lib/tele.ts';
 import { crearSesion, hashClave, inicioDe, leerSesion, verificarClave } from '../src/lib/auth.ts';
+import { d1Local } from '../src/lib/d1-local.ts';
+import { getDB as demoDB } from '../src/lib/fuente-demo.ts';
 
-// Adaptador mínimo con la forma de la API de D1
-const raw = new DatabaseSync(':memory:');
-raw.exec('PRAGMA foreign_keys = ON');
-for (const f of readdirSync('migrations').sort()) raw.exec(readFileSync(`migrations/${f}`, 'utf8'));
-const stmt = (sql, args = []) => ({
-  bind: (...a) => stmt(sql, a),
-  all: async () => ({ results: raw.prepare(sql).all(...args) }),
-  first: async () => raw.prepare(sql).get(...args) ?? null,
-  run: async () => { const r = raw.prepare(sql).run(...args); return { meta: { last_row_id: Number(r.lastInsertRowid), changes: Number(r.changes) } }; },
-});
-const D1 = { prepare: (sql) => stmt(sql), batch: async (list) => { for (const s of list) await s.run(); } };
+const { db: D1, raw } = d1Local();
+
+// La base de la demo arma sus usuarios y consultas de ejemplo sobre las migraciones reales
+const demo = await demoDB();
+assert.equal((await db.medicos(demo)).length, 125);
+assert.equal((await tele.cola(demo, 2)).espera.length, 2, 'cola de ejemplo para el panel del médico');
+assert.equal((await tele.historial(demo, { clienteId: 3 })).length, 3, 'historial de ejemplo del cliente');
+assert.ok((await u.usuario(demo, 7)).medico_id > 0, 'la médica de ejemplo está enlazada a su ficha');
 
 // Datos importados
 const esps = await db.especialidades(D1);
@@ -133,9 +131,9 @@ assert.equal(await tele.estado(D1, cli), null);
 const [pasada] = await tele.historial(D1, { clienteId: cli });
 assert.deepEqual([pasada.estado, pasada.medico, pasada.paciente], ['finalizada', 'Dra. Ana Médica', 'Pedro Paciente']);
 assert.equal((await tele.historial(D1, { medicoId: doc })).length, 1);
-// quien cierra la página sale de la cola a los 2 minutos
+// quien cierra la página sale de la cola a los 5 minutos
 await tele.entrar(D1, cli, '');
-raw.exec("UPDATE consultas SET visto = datetime('now', '-3 minutes') WHERE estado = 'espera'");
+raw.exec("UPDATE consultas SET visto = datetime('now', '-6 minutes') WHERE estado = 'espera'");
 assert.equal((await tele.cola(D1, doc)).espera.length, 0);
 assert.equal((await tele.historial(D1, { clienteId: cli }))[0].estado, 'cancelada');
 assert.equal(tele.aFecha('2026-10-19 19:20:00').toISOString(), '2026-10-19T19:20:00.000Z');

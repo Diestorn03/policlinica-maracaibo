@@ -12,9 +12,9 @@ export interface Pasada { id: number; estado: Estado; motivo: string; creada: st
 /** Las fechas de SQLite vienen en UTC sin zona: "2026-10-19 19:20:00" */
 export const aFecha = (s: string) => new Date(s.replace(' ', 'T') + 'Z');
 
-/** Saca de la cola a quien cerró la página (2 min sin latido) y cierra consultas olvidadas (4 h). */
+/** Saca de la cola a quien cerró la página (5 min sin latido: el móvil congela pestañas en segundo plano) y cierra consultas olvidadas (4 h). */
 const limpiar = (db: DB) => db.batch([
-  db.prepare("UPDATE consultas SET estado = 'cancelada', finalizada = datetime('now') WHERE estado = 'espera' AND visto < datetime('now', '-2 minutes')"),
+  db.prepare("UPDATE consultas SET estado = 'cancelada', finalizada = datetime('now') WHERE estado = 'espera' AND visto < datetime('now', '-5 minutes')"),
   db.prepare("UPDATE consultas SET estado = 'finalizada', finalizada = datetime('now') WHERE estado = 'atendiendo' AND atendida < datetime('now', '-4 hours')"),
 ]);
 

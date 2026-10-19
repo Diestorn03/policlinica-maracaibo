@@ -1,7 +1,7 @@
 // Fotos subidas desde el admin. La URL lleva ?v=… y cambia con cada subida, así que se puede cachear para siempre.
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
-import { foto } from '../../lib/db';
+import { foto } from '../lib/db';
 
 export const prerender = false;
 

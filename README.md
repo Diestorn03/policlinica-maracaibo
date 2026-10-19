@@ -19,7 +19,7 @@ npm install
 cp .dev.vars.example .dev.vars     # y cambiar los valores
 npm run db:local                   # crea las tablas y carga los 125 médicos del sitio anterior
 node tools/usuario.mjs --rol admin --nombre "Tu nombre" --correo tu@correo.com
-npm run dev                        # http://localhost:4321
+npm run dev                        # http://localhost:4330
 npm test                           # prueba la base de datos, la sesión y la telemedicina
 ```
 En Windows, si la ruta del proyecto es muy larga, el D1 local falla: poner `CF_STATE=C:/pm-state` en `.env`

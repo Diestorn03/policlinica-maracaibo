@@ -1,8 +1,9 @@
 // Única puerta de las zonas privadas: lee la sesión, relee al usuario en D1 y aplica el rol de cada ruta.
 // Sin sesión → /acceso/?volver=… (páginas) o 401 (API). Con el rol equivocado → a su propio panel.
+// En la demo (GitHub Pages) todo está prerenderizado y no pasa por aquí.
 import { defineMiddleware } from 'astro:middleware';
-import { env } from 'cloudflare:workers';
 import { COOKIE, inicioDe, leerSesion, type Rol } from './lib/auth';
+import { getDB, getEnv } from './lib/entorno';
 import { sesionUsuario } from './lib/usuarios';
 
 const REGLAS: [string, Rol[]][] = [
@@ -20,8 +21,8 @@ export const onRequest = defineMiddleware(async ({ url, cookies, locals, redirec
   const privada = !!regla || bajo(url.pathname, '/acceso') || bajo(url.pathname, '/api');
   if (!privada) return next();
 
-  const s = await leerSesion(env.SESSION_SECRET, cookies.get(COOKIE)?.value);
-  const u = s && (await sesionUsuario(env.DB, s.id));
+  const s = await leerSesion((await getEnv()).SESSION_SECRET, cookies.get(COOKIE)?.value);
+  const u = s && (await sesionUsuario(await getDB(), s.id));
   if (u && u.activo && u.version === s.version) locals.usuario = { id: u.id, rol: u.rol, nombre: u.nombre };
 
   if (regla && !regla[1].includes(locals.usuario?.rol as Rol)) {
