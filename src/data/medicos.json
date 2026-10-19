@@ -1,0 +1,1479 @@
+{
+  "especialidades": [
+    {
+      "slug": "anestesiologia",
+      "nombre": "ANESTESIOLOGIA"
+    },
+    {
+      "slug": "bacteriologia",
+      "nombre": "BACTERIOLOGIA"
+    },
+    {
+      "slug": "cardiologia",
+      "nombre": "CARDIOLOGIA"
+    },
+    {
+      "slug": "cardiologo-clinico-e-intensivista",
+      "nombre": "CARDIÓLOGO CLÍNICO E INTERVENCIONISTA"
+    },
+    {
+      "slug": "cirugia-bariatrica",
+      "nombre": "CIRUGIA BARIÁTRICA"
+    },
+    {
+      "slug": "cirugia-bucal",
+      "nombre": "CIRUGÍA BUCAL"
+    },
+    {
+      "slug": "cirugia-cardiovascular",
+      "nombre": "CIRUGIA CARDIOVASCULAR"
+    },
+    {
+      "slug": "cirugia-de-mano",
+      "nombre": "CIRUGIA DE MANO"
+    },
+    {
+      "slug": "cirugia-de-pie-y-tobillo",
+      "nombre": "CIRUGIA DE PIE Y TOBILLO"
+    },
+    {
+      "slug": "cirugia-de-torax",
+      "nombre": "CIRUGIA DE TORAX"
+    },
+    {
+      "slug": "cirugia-general",
+      "nombre": "CIRUGIA GENERAL"
+    },
+    {
+      "slug": "cirugia-pediatrica",
+      "nombre": "CIRUGIA PEDIATRICA"
+    },
+    {
+      "slug": "cirugia-plastica",
+      "nombre": "CIRUGIA PLASTICA"
+    },
+    {
+      "slug": "cirujano-oncologo",
+      "nombre": "CIRUJANO ONCÓLOGO"
+    },
+    {
+      "slug": "coloproctologo",
+      "nombre": "COLOPROCTOLOGO"
+    },
+    {
+      "slug": "dermatologia",
+      "nombre": "DERMATOLOGIA"
+    },
+    {
+      "slug": "ecografista",
+      "nombre": "ECOGRAFISTA"
+    },
+    {
+      "slug": "endocrinologia",
+      "nombre": "ENDOCRINOLOGIA"
+    },
+    {
+      "slug": "gastroenterologia",
+      "nombre": "GASTROENTEROLOGIA"
+    },
+    {
+      "slug": "ginecologia-y-obstetricia",
+      "nombre": "GINECOLOGIA Y OBSTETRICIA"
+    },
+    {
+      "slug": "hematologia",
+      "nombre": "HEMATOLOGIA"
+    },
+    {
+      "slug": "inmunologia-y-alergias",
+      "nombre": "INMUNOLOGIA Y ALERGIAS"
+    },
+    {
+      "slug": "mastologo",
+      "nombre": "MASTOLOGO"
+    },
+    {
+      "slug": "medicina-critica",
+      "nombre": "MEDICINA CRITICA"
+    },
+    {
+      "slug": "medicina-critica-pediatrica",
+      "nombre": "MEDICINA CRÍTICA PEDIATRICA"
+    },
+    {
+      "slug": "medicina-del-dolor",
+      "nombre": "MEDICINA DEL DOLOR - ANESTESIOLOGO"
+    },
+    {
+      "slug": "medicina-interna",
+      "nombre": "MEDICINA INTERNA"
+    },
+    {
+      "slug": "nefrologia",
+      "nombre": "NEFROLOGIA"
+    },
+    {
+      "slug": "neonatologo-pediatra",
+      "nombre": "NEONATOLOGO-PEDIATRA"
+    },
+    {
+      "slug": "neumonologia",
+      "nombre": "NEUMONOLOGIA"
+    },
+    {
+      "slug": "neurocirugia",
+      "nombre": "NEUROCIRUGIA"
+    },
+    {
+      "slug": "neurologia",
+      "nombre": "NEUROLOGIA"
+    },
+    {
+      "slug": "nutricionista",
+      "nombre": "NUTRICIONISTA"
+    },
+    {
+      "slug": "odontologia",
+      "nombre": "ODONTOLOGIA"
+    },
+    {
+      "slug": "oftalmologo",
+      "nombre": "OFTALMOLOGIA"
+    },
+    {
+      "slug": "oncologia",
+      "nombre": "ONCOLOGIA"
+    },
+    {
+      "slug": "ortopedia",
+      "nombre": "ORTOPEDIA"
+    },
+    {
+      "slug": "otorrinolaringologia",
+      "nombre": "OTORRINOLARINGOLOGIA"
+    },
+    {
+      "slug": "pediatra",
+      "nombre": "PEDIATRA"
+    },
+    {
+      "slug": "psicologia",
+      "nombre": "PSICOLOGIA"
+    },
+    {
+      "slug": "psicologo-clinico",
+      "nombre": "PSICOLOGO CLINICO"
+    },
+    {
+      "slug": "psicologo-clinico-de-nino",
+      "nombre": "PSICOLOGO CLINICO DE NIÑO"
+    },
+    {
+      "slug": "psicopedagoga",
+      "nombre": "PSICOPEDAGOGA"
+    },
+    {
+      "slug": "psiquiatria",
+      "nombre": "PSIQUIATRIA"
+    },
+    {
+      "slug": "radiologia-e-imagenes",
+      "nombre": "RADIOLOGIA E IMAGENES"
+    },
+    {
+      "slug": "reemplazo-articular",
+      "nombre": "REEMPLAZO ARTICULAR"
+    },
+    {
+      "slug": "reumatologia",
+      "nombre": "REUMATOLOGIA"
+    },
+    {
+      "slug": "terapia-lenguaje-oral",
+      "nombre": "TERAPIA LENGUAJE ORAL"
+    },
+    {
+      "slug": "traumatologia",
+      "nombre": "TRAUMATOLOGIA"
+    },
+    {
+      "slug": "urologia",
+      "nombre": "UROLOGIA"
+    }
+  ],
+  "medicos": [
+    {
+      "slug": "dr-roman-de-vicente",
+      "nombre": "Dr. Roman de Vicente",
+      "telefono": "0414-1640799",
+      "consultorio": "1er Piso Frente a Pabellón",
+      "foto": "/medicos/dr-roman-de-vicente.jpg",
+      "especialidades": [
+        "anestesiologia",
+        "cirugia-general"
+      ]
+    },
+    {
+      "slug": "dr-katynna-parra",
+      "nombre": "Dr. Katynna Parra",
+      "telefono": "0414-6727374",
+      "consultorio": "PB C Nro 10",
+      "foto": "/medicos/dr-katynna-parra.jpg",
+      "especialidades": [
+        "bacteriologia"
+      ]
+    },
+    {
+      "slug": "dr-andy-atencio",
+      "nombre": "Dr. Andy Atencio",
+      "telefono": "0414-0647682",
+      "consultorio": "PB C NRO 10-11",
+      "foto": "/medicos/dr-andy-atencio.jpg",
+      "especialidades": [
+        "cardiologia"
+      ]
+    },
+    {
+      "slug": "dr-angel-renato-acosta",
+      "nombre": "Dr. Angel Renato Acosta",
+      "telefono": "0414-6326273",
+      "consultorio": "1er Piso C. Nro.19 A",
+      "foto": "/medicos/dr-angel-renato-acosta.jpg",
+      "especialidades": [
+        "cardiologia"
+      ]
+    },
+    {
+      "slug": "dr-eduardo-jimenez",
+      "nombre": "Dr. Eduardo Jimenez",
+      "telefono": "0424-6098222",
+      "consultorio": "PB C NRO 11",
+      "foto": "/medicos/dr-eduardo-jimenez.jpg",
+      "especialidades": [
+        "cardiologia",
+        "medicina-interna"
+      ]
+    },
+    {
+      "slug": "dra-julitza-c-alvarez",
+      "nombre": "Dra. Julitza C. Alvarez",
+      "telefono": "0414-6495162",
+      "consultorio": "3er Piso C. Nro.39",
+      "foto": "/medicos/dra-julitza-c-alvarez.jpg",
+      "especialidades": [
+        "cardiologia"
+      ]
+    },
+    {
+      "slug": "dra-maria-e-faria",
+      "nombre": "Dra. Maria E. Faria",
+      "telefono": "0414-6990011",
+      "consultorio": "2do Piso C Nro 28",
+      "foto": "/medicos/dra-maria-e-faria.jpg",
+      "especialidades": [
+        "cardiologia"
+      ]
+    },
+    {
+      "slug": "dra-nuris-anez",
+      "nombre": "Dra. Nuris Añez",
+      "telefono": "0414-0674006",
+      "consultorio": "PB C. Nro. 32",
+      "foto": "/medicos/dra-nuris-anez.jpg",
+      "especialidades": [
+        "cardiologia"
+      ]
+    },
+    {
+      "slug": "dra-yacklimar-ali",
+      "nombre": "Dra Jacklimar Patricia Ali Perdomo",
+      "telefono": "0414-3683044",
+      "consultorio": "1 piso C Nro 23",
+      "foto": "/medicos/dra-yacklimar-ali.jpg",
+      "especialidades": [
+        "cardiologia",
+        "pediatra"
+      ]
+    },
+    {
+      "slug": "dr-david-perozo",
+      "nombre": "Dr David Perozo",
+      "telefono": "0414-6746286",
+      "consultorio": "P.B C Nro 3",
+      "foto": "/medicos/dr-david-perozo.jpg",
+      "especialidades": [
+        "cardiologia"
+      ]
+    },
+    {
+      "slug": "dr-david-j-perozo",
+      "nombre": "Dr. David J. Perozo",
+      "telefono": "0414-3614190",
+      "consultorio": "P.B Consultorio NRO 3",
+      "foto": "/medicos/dr-david-j-perozo.jpg",
+      "especialidades": [
+        "cardiologo-clinico-e-intensivista"
+      ]
+    },
+    {
+      "slug": "dra-rossy-vera",
+      "nombre": "Dra Rossy Vera",
+      "telefono": "0414-6172036",
+      "consultorio": "2do Piso C Nro 29",
+      "foto": "",
+      "especialidades": [
+        "cardiologo-clinico-e-intensivista"
+      ]
+    },
+    {
+      "slug": "dr-carlos-parra",
+      "nombre": "Dr. Carlos Parra",
+      "telefono": "0412-6620831",
+      "consultorio": "3er Piso C Nro 41",
+      "foto": "/medicos/dr-carlos-parra.jpg",
+      "especialidades": [
+        "cirugia-bariatrica",
+        "gastroenterologia"
+      ]
+    },
+    {
+      "slug": "dr-henry-garcia",
+      "nombre": "Dr. Henry Garcia",
+      "telefono": "0414-6945547",
+      "consultorio": "C Nro.1",
+      "foto": "/medicos/dr-henry-garcia.jpg",
+      "especialidades": [
+        "cirugia-bariatrica"
+      ]
+    },
+    {
+      "slug": "dr-ivan-anez",
+      "nombre": "Dr. Ivan Añez",
+      "telefono": "0424-6539774",
+      "consultorio": "3er Piso C Nro 41",
+      "foto": "/medicos/dr-ivan-anez.jpg",
+      "especialidades": [
+        "cirugia-bariatrica",
+        "cirugia-general"
+      ]
+    },
+    {
+      "slug": "dra-wendy-ferrer",
+      "nombre": "Dra. Wendy Ferrer",
+      "telefono": "0414-6458953",
+      "consultorio": "PB C Nro 6",
+      "foto": "/medicos/dra-wendy-ferrer.jpg",
+      "especialidades": [
+        "cirugia-bucal",
+        "odontologia"
+      ]
+    },
+    {
+      "slug": "dr-carlos-ugueto",
+      "nombre": "Dr. Carlos Ugueto",
+      "telefono": "0424-6676434",
+      "consultorio": "1 piso C Nro 23",
+      "foto": "/medicos/dr-carlos-ugueto.jpg",
+      "especialidades": [
+        "cirugia-cardiovascular"
+      ]
+    },
+    {
+      "slug": "dr-ricardo-colmenares",
+      "nombre": "Dr. Ricardo Colmenares",
+      "telefono": "0414-3614468",
+      "consultorio": "PB C. Nro 2",
+      "foto": "/medicos/dr-ricardo-colmenares.jpg",
+      "especialidades": [
+        "cirugia-cardiovascular"
+      ]
+    },
+    {
+      "slug": "dra-oneida-osorio",
+      "nombre": "Dra. Oneida Osorio",
+      "telefono": "0414-9685967",
+      "consultorio": "2do Piso C Nro 29",
+      "foto": "/medicos/dra-oneida-osorio.jpg",
+      "especialidades": [
+        "cirugia-cardiovascular"
+      ]
+    },
+    {
+      "slug": "dr-angel-leon",
+      "nombre": "Dr. Angel Leon",
+      "telefono": "0414-6593251",
+      "consultorio": "P.B. C NRO 11",
+      "foto": "/medicos/dr-angel-leon.jpg",
+      "especialidades": [
+        "cirugia-de-mano",
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dr-orlando-martin",
+      "nombre": "Dr. Orlando Martin",
+      "telefono": "0414-6122559",
+      "consultorio": "PB C NRO 11",
+      "foto": "/medicos/dr-orlando-martin.jpg",
+      "especialidades": [
+        "cirugia-de-mano"
+      ]
+    },
+    {
+      "slug": "dra-doris-meneses",
+      "nombre": "Dra Doris Meneses",
+      "telefono": "0424-6631634",
+      "consultorio": "3er Pisó C Nro 42",
+      "foto": "/medicos/dra-doris-meneses.jpg",
+      "especialidades": [
+        "cirugia-de-mano"
+      ]
+    },
+    {
+      "slug": "dr-george-a-alliey",
+      "nombre": "Dr. George A. Alliey",
+      "telefono": "04126783500",
+      "consultorio": "Primer Piso C NRO 20",
+      "foto": "/medicos/dr-george-a-alliey.jpg",
+      "especialidades": [
+        "cirugia-de-pie-y-tobillo",
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dr-aaron-mendez",
+      "nombre": "Dr. Aaron Mendez",
+      "telefono": "0414-3639282",
+      "consultorio": "2 piso C Nro 29",
+      "foto": "/medicos/dr-aaron-mendez.jpg",
+      "especialidades": [
+        "cirugia-general"
+      ]
+    },
+    {
+      "slug": "dra-jennifer-rochard",
+      "nombre": "Dra. Jennifer Rochard",
+      "telefono": "0414-6463615",
+      "consultorio": "2do Piso C. Nro..29",
+      "foto": "/medicos/dra-jennifer-rochard.jpg",
+      "especialidades": [
+        "cirugia-general"
+      ]
+    },
+    {
+      "slug": "dra-maria-virginia-callaspo",
+      "nombre": "Dra Maria Virginia Callaspo",
+      "telefono": "0414-3684888",
+      "consultorio": "1er Piso Frente a Pabellón",
+      "foto": "/medicos/dra-maria-virginia-callaspo.jpg",
+      "especialidades": [
+        "cirugia-general"
+      ]
+    },
+    {
+      "slug": "dra-maria-yajure",
+      "nombre": "Dra Maria Yajure",
+      "telefono": "0414-6561050",
+      "consultorio": "3er pisó C. Nro 45A",
+      "foto": "/medicos/dra-maria-yajure.jpg",
+      "especialidades": [
+        "cirugia-general"
+      ]
+    },
+    {
+      "slug": "dr-jose-luis-paz-diaz",
+      "nombre": "Dr Jose Luis Paz Diaz",
+      "telefono": "0414-6400141",
+      "consultorio": "C Nro 5 P.B",
+      "foto": "/medicos/dr-jose-luis-paz-diaz.jpg",
+      "especialidades": [
+        "cirugia-general"
+      ]
+    },
+    {
+      "slug": "dr-servio-tulio-rivero",
+      "nombre": "Dr. Servio Tulio Rivero",
+      "telefono": "0412-6672428",
+      "consultorio": "2do Piso 30 B",
+      "foto": "/medicos/dr-servio-tulio-rivero.jpg",
+      "especialidades": [
+        "cirugia-pediatrica"
+      ]
+    },
+    {
+      "slug": "dr-daniel-vargas",
+      "nombre": "Dr. Daniel Vargas",
+      "telefono": "0414-6260095",
+      "consultorio": "PB C. Nro.1 A",
+      "foto": "/medicos/dr-daniel-vargas.jpg",
+      "especialidades": [
+        "cirugia-plastica"
+      ]
+    },
+    {
+      "slug": "dr-ramon-marin",
+      "nombre": "Dr. Ramon Marin",
+      "telefono": "0414-6617775",
+      "consultorio": "PB C NRO 13-14-14B",
+      "foto": "/medicos/dr-ramon-marin.jpg",
+      "especialidades": [
+        "cirugia-plastica"
+      ]
+    },
+    {
+      "slug": "dr-felipe-diaz",
+      "nombre": "Dr. Felipe Diaz",
+      "telefono": "0424-6330691",
+      "consultorio": "PB C NRO 1B",
+      "foto": "/medicos/dr-felipe-diaz.jpg",
+      "especialidades": [
+        "cirujano-oncologo",
+        "mastologo"
+      ]
+    },
+    {
+      "slug": "dr-eddie-rojas",
+      "nombre": "Dr.Eddie Rojas",
+      "telefono": "0424-6571440",
+      "consultorio": "PB C Nro2",
+      "foto": "/medicos/dr-eddie-rojas.jpg",
+      "especialidades": [
+        "coloproctologo"
+      ]
+    },
+    {
+      "slug": "dra-yamaru-torres",
+      "nombre": "Dra Yamaru Torres",
+      "telefono": "0414-6365777",
+      "consultorio": "3 piso C Nro 45B",
+      "foto": "/medicos/dra-yamaru-torres.jpg",
+      "especialidades": [
+        "dermatologia"
+      ]
+    },
+    {
+      "slug": "dr-ezequiel-ordonez",
+      "nombre": "Dr. Ezequiel Ordoñez",
+      "telefono": "0424-6862945",
+      "consultorio": "PB",
+      "foto": "/medicos/dr-ezequiel-ordonez.jpg",
+      "especialidades": [
+        "ecografista"
+      ]
+    },
+    {
+      "slug": "dra-elizabeth-pena",
+      "nombre": "Dra. Elizabeth Peña",
+      "telefono": "0414-6642784",
+      "consultorio": "PB",
+      "foto": "/medicos/dra-elizabeth-pena.jpg",
+      "especialidades": [
+        "ecografista",
+        "radiologia-e-imagenes"
+      ]
+    },
+    {
+      "slug": "dra-isabel-boscan",
+      "nombre": "Dra. Isabel Boscan",
+      "telefono": "0414-0641043",
+      "consultorio": "2do Piso C Nro 26",
+      "foto": "/medicos/dra-isabel-boscan.jpg",
+      "especialidades": [
+        "ecografista"
+      ]
+    },
+    {
+      "slug": "dra-jessibel-velazquez",
+      "nombre": "Dra. Jessibel Velazquez",
+      "telefono": "0414-6319259",
+      "consultorio": "2do Piso C Nro 26",
+      "foto": "/medicos/dra-jessibel-velazquez.jpg",
+      "especialidades": [
+        "ecografista",
+        "radiologia-e-imagenes"
+      ]
+    },
+    {
+      "slug": "dr-jose-dugarte",
+      "nombre": "Dr. José Dugarte",
+      "telefono": "0414-6586436",
+      "consultorio": "3er Piso C.Nro 38",
+      "foto": "/medicos/dr-jose-dugarte.jpg",
+      "especialidades": [
+        "endocrinologia",
+        "medicina-interna"
+      ]
+    },
+    {
+      "slug": "dr-jose-peralta",
+      "nombre": "Dr. José R. Peralta Lloret",
+      "telefono": "0414-6123792",
+      "consultorio": "3er Piso C Nro 43",
+      "foto": "/medicos/dr-jose-peralta.jpg",
+      "especialidades": [
+        "gastroenterologia"
+      ]
+    },
+    {
+      "slug": "dr-manuel-afonso",
+      "nombre": "Dr. Manuel Afonso",
+      "telefono": "0414-0606508",
+      "consultorio": "2do piso C Nro 31",
+      "foto": "/medicos/dr-manuel-afonso.jpg",
+      "especialidades": [
+        "gastroenterologia"
+      ]
+    },
+    {
+      "slug": "dra-arlen-maria-urpin",
+      "nombre": "Dra, Arlen Maria Urpin",
+      "telefono": "0414-6349521",
+      "consultorio": "PB C Nro 32",
+      "foto": "/medicos/dra-arlen-maria-urpin.jpg",
+      "especialidades": [
+        "gastroenterologia"
+      ]
+    },
+    {
+      "slug": "dra-elimy-duarte",
+      "nombre": "Dra. Elimy Duarte",
+      "telefono": "0414-6197604",
+      "consultorio": "1er Piso Nro 21",
+      "foto": "/medicos/dra-elimy-duarte.jpg",
+      "especialidades": [
+        "gastroenterologia"
+      ]
+    },
+    {
+      "slug": "dra-gisela-romero",
+      "nombre": "Dra Gisela Romero",
+      "telefono": "0424-6584226",
+      "consultorio": "3 piso C Nro 42",
+      "foto": "/medicos/dra-gisela-romero.jpg",
+      "especialidades": [
+        "gastroenterologia"
+      ]
+    },
+    {
+      "slug": "dr-andri-fonseca",
+      "nombre": "Dr. Andry Fonseca",
+      "telefono": "0414-6456270",
+      "consultorio": "3er Piso C Nro 43",
+      "foto": "/medicos/dr-andri-fonseca.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dr-gladimir-vicuna",
+      "nombre": "Dr. Gladimir Vicuña",
+      "telefono": "0424-6651942",
+      "consultorio": "PB C. Nro 2",
+      "foto": "/medicos/dr-gladimir-vicuna.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dr-jorge-garcia",
+      "nombre": "Dr. Jorge Garcia",
+      "telefono": "0412-6632565",
+      "consultorio": "2do Piso C Nro 26",
+      "foto": "/medicos/dr-jorge-garcia.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dr-juan-salcedo",
+      "nombre": "Dr. Juan Salcedo",
+      "telefono": "0422-0047314",
+      "consultorio": "2 piso C Nro 26",
+      "foto": "/medicos/dr-juan-salcedo.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dr-leonardo-perez-bustamante",
+      "nombre": "Dr. Leonardo Perez Bustamante",
+      "telefono": "0414-9682471",
+      "consultorio": "3er.Piso C. Nro.44",
+      "foto": "/medicos/dr-leonardo-perez-bustamante.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dr-leonte-gonzalez",
+      "nombre": "Dr. Leonte Gonzalez",
+      "telefono": "0414-6154395",
+      "consultorio": "3er Piso C Nro 43",
+      "foto": "/medicos/dr-leonte-gonzalez.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dr-manuel-martinez",
+      "nombre": "Dr. Manuel Martinez",
+      "telefono": "0414-6137331",
+      "consultorio": "1er Piso C Nro 22",
+      "foto": "/medicos/dr-manuel-martinez.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dr-nelkis-montiel",
+      "nombre": "Dr. Nelkis Montiel",
+      "telefono": "0414-6117630",
+      "consultorio": "1er Piso C. Nro. 22",
+      "foto": "/medicos/dr-nelkis-montiel.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dr-nelson-velazquez",
+      "nombre": "Dr. Nelson Velazquez",
+      "telefono": "0414-3603471",
+      "consultorio": "PB. C. Nro 32",
+      "foto": "/medicos/dr-nelson-velazquez.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dra-alexandra-morales",
+      "nombre": "Dra. Alexandra Morales",
+      "telefono": "0424-6462901",
+      "consultorio": "2do Piso C. NRO 27 B",
+      "foto": "/medicos/dra-alexandra-morales.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dra-ana-zabala",
+      "nombre": "Dra. Ana Zabala",
+      "telefono": "0412-6467980",
+      "consultorio": "3er Piso C Nro 45 A",
+      "foto": "/medicos/dra-ana-zabala.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dra-doris-sounghi",
+      "nombre": "Dra. Doris Sounghi",
+      "telefono": "0414-6798712",
+      "consultorio": "3er.Piso C. Nro.44",
+      "foto": "/medicos/dra-doris-sounghi.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dra-gladys-sequera",
+      "nombre": "Dra. Gladys Sequera",
+      "telefono": "0414-0377434",
+      "consultorio": "3er piso C NRO 42",
+      "foto": "/medicos/dra-gladys-sequera.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dra-glareimy-ruiz-salazar",
+      "nombre": "Dra. Glareimy Ruiz Salazar",
+      "telefono": "0414-6450516",
+      "consultorio": "3er Piso C Nro 44",
+      "foto": "/medicos/dra-glareimy-ruiz-salazar.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dra-rubiyein-canquis",
+      "nombre": "Dra. Rubiyein Canquis",
+      "telefono": "0424-6138504",
+      "consultorio": "2do Piso C Nro 27B",
+      "foto": "/medicos/dra-rubiyein-canquis.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dra-janet-narvaez",
+      "nombre": "Dra. Yanet-ly Narváez",
+      "telefono": "0414-3637046",
+      "consultorio": "P.B Consultorio NRO 32",
+      "foto": "/medicos/dra-janet-narvaez.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dra-jessenia-medina",
+      "nombre": "Dra Jessenia Medina",
+      "telefono": "0412-6607358",
+      "consultorio": "3 piso C Nro 43",
+      "foto": "/medicos/dra-jessenia-medina.jpg",
+      "especialidades": [
+        "ginecologia-y-obstetricia"
+      ]
+    },
+    {
+      "slug": "dra-zulima-thomas",
+      "nombre": "Dra. Zulima Thomas",
+      "telefono": "0414-6069179",
+      "consultorio": "Sótano C Nro 36",
+      "foto": "/medicos/dra-zulima-thomas.jpg",
+      "especialidades": [
+        "hematologia"
+      ]
+    },
+    {
+      "slug": "dra-carmen-bracho",
+      "nombre": "Dra Carmen Bracho",
+      "telefono": "0414-9610913",
+      "consultorio": "Sótano C Nro 36",
+      "foto": "/medicos/dra-carmen-bracho.jpg",
+      "especialidades": [
+        "hematologia"
+      ]
+    },
+    {
+      "slug": "dra-maria-sierra",
+      "nombre": "Dra Maria Sierra",
+      "telefono": "0414-6155648",
+      "consultorio": "2do Piso C Nro 28",
+      "foto": "/medicos/dra-maria-sierra.jpg",
+      "especialidades": [
+        "mastologo"
+      ]
+    },
+    {
+      "slug": "dr-carlos-indriago",
+      "nombre": "Dr. Carlos Indriago",
+      "telefono": "0424-6876677",
+      "consultorio": "P.B Consultorio NRO 15",
+      "foto": "/medicos/dr-carlos-indriago.jpg",
+      "especialidades": [
+        "medicina-critica",
+        "medicina-interna"
+      ]
+    },
+    {
+      "slug": "dra-irayma-marquez",
+      "nombre": "Dra Irayma Márquez",
+      "telefono": "0414-6269858",
+      "consultorio": "PB C NRO 15",
+      "foto": "/medicos/dra-irayma-marquez.jpg",
+      "especialidades": [
+        "medicina-critica-pediatrica",
+        "pediatra"
+      ]
+    },
+    {
+      "slug": "dr-javier-enrique-rodriguez",
+      "nombre": "Dr. Javier Enrique Rodriguez",
+      "telefono": "0412-2002635",
+      "consultorio": "1er Piso C Nro 16",
+      "foto": "/medicos/dr-javier-enrique-rodriguez.jpg",
+      "especialidades": [
+        "medicina-del-dolor"
+      ]
+    },
+    {
+      "slug": "dr-gersan-montero",
+      "nombre": "Dr. Gersan Montero",
+      "telefono": "0424-6882155",
+      "consultorio": "2do Piso C Nro 31",
+      "foto": "/medicos/dr-gersan-montero.jpg",
+      "especialidades": [
+        "medicina-interna",
+        "nefrologia"
+      ]
+    },
+    {
+      "slug": "dr-gustavo-zuleta",
+      "nombre": "Dr. Gustavo Zuleta",
+      "telefono": "0414-6416821",
+      "consultorio": "2do Piso C. Nro.29",
+      "foto": "/medicos/dr-gustavo-zuleta.jpg",
+      "especialidades": [
+        "medicina-interna",
+        "reumatologia"
+      ]
+    },
+    {
+      "slug": "dr-jose-lenin-aparicio",
+      "nombre": "Dr. Jose Lenin Aparicio",
+      "telefono": "0424-6106725",
+      "consultorio": "1er piso C Nro 19",
+      "foto": "/medicos/dr-jose-lenin-aparicio.jpg",
+      "especialidades": [
+        "medicina-interna",
+        "nefrologia"
+      ]
+    },
+    {
+      "slug": "dra-alemis-chirinos",
+      "nombre": "Dra. Alemis Chirinos",
+      "telefono": "0414-6861899",
+      "consultorio": "2do piso C NRO 17",
+      "foto": "/medicos/dra-alemis-chirinos.jpg",
+      "especialidades": [
+        "medicina-interna"
+      ]
+    },
+    {
+      "slug": "dra-geraldine-lopez",
+      "nombre": "Dra. Geraldine Lopez",
+      "telefono": "0414-6620178",
+      "consultorio": "3er.Piso C. Nro. 38",
+      "foto": "/medicos/dra-geraldine-lopez.jpg",
+      "especialidades": [
+        "medicina-interna"
+      ]
+    },
+    {
+      "slug": "dra-jaydick-marquez",
+      "nombre": "Dra. Jaydick Marquez",
+      "telefono": "0414-6339915",
+      "consultorio": "2do piso C NRO 17",
+      "foto": "/medicos/dra-jaydick-marquez.jpg",
+      "especialidades": [
+        "medicina-interna"
+      ]
+    },
+    {
+      "slug": "dra-nathaly-soto",
+      "nombre": "Dra. Nathaly Soto",
+      "telefono": "0414-6290696",
+      "consultorio": "3er piso C NRO 38",
+      "foto": "/medicos/dra-nathaly-soto.jpg",
+      "especialidades": [
+        "medicina-interna"
+      ]
+    },
+    {
+      "slug": "dra-nora-palazzi",
+      "nombre": "Dra. Nora Palazzi",
+      "telefono": "0414-6221162",
+      "consultorio": "3er.Piso C. Nro. 45 B",
+      "foto": "/medicos/dra-nora-palazzi.jpg",
+      "especialidades": [
+        "medicina-interna"
+      ]
+    },
+    {
+      "slug": "dra-roxana-romero",
+      "nombre": "Dra. Roxana Romero",
+      "telefono": "0414-9696692",
+      "consultorio": "1er Piso C Nro 17",
+      "foto": "/medicos/dra-roxana-romero.jpg",
+      "especialidades": [
+        "medicina-interna",
+        "neurologia"
+      ]
+    },
+    {
+      "slug": "dra-andreina-aguilar",
+      "nombre": "Dra Andreina Aguilar",
+      "telefono": "0414-6891934",
+      "consultorio": "3er piso C NRO 41",
+      "foto": "/medicos/dra-andreina-aguilar.jpg",
+      "especialidades": [
+        "medicina-interna",
+        "neurologia"
+      ]
+    },
+    {
+      "slug": "dra-eva-maria-cardozo-sandoval",
+      "nombre": "Dra Eva Maria Cardozo Sandoval",
+      "telefono": "0424-6745231",
+      "consultorio": "2do Piso C Nro 20",
+      "foto": "/medicos/dra-eva-maria-cardozo-sandoval.jpg",
+      "especialidades": [
+        "medicina-interna",
+        "reumatologia"
+      ]
+    },
+    {
+      "slug": "dr-jose-alejandro-colina",
+      "nombre": "Dr José Alejandro Colina",
+      "telefono": "0424-6954017",
+      "consultorio": "1er Piso C Nro 16",
+      "foto": "/medicos/dr-jose-alejandro-colina.jpg",
+      "especialidades": [
+        "medicina-interna",
+        "neurologia"
+      ]
+    },
+    {
+      "slug": "dra-zoila-maria-villalobos",
+      "nombre": "Dra Zoila Maria Villalobos",
+      "telefono": "0414-4547017",
+      "consultorio": "2do Piso C Nro 24A",
+      "foto": "/medicos/dra-zoila-maria-villalobos.jpg",
+      "especialidades": [
+        "neonatologo-pediatra"
+      ]
+    },
+    {
+      "slug": "dr-carlos-silva",
+      "nombre": "Dr. Carlos Silva",
+      "telefono": "0414-6401644",
+      "consultorio": "PB. C. Nro 15A",
+      "foto": "/medicos/dr-carlos-silva.jpg",
+      "especialidades": [
+        "neumonologia"
+      ]
+    },
+    {
+      "slug": "dr-edgardo-fernandez",
+      "nombre": "Dr. Edgardo Fernandez",
+      "telefono": "0424-6199273",
+      "consultorio": "1er.Piso C. Nro. 16",
+      "foto": "/medicos/dr-edgardo-fernandez.jpg",
+      "especialidades": [
+        "neumonologia"
+      ]
+    },
+    {
+      "slug": "dr-orlando-borjas",
+      "nombre": "Dr. Orlando Borjas",
+      "telefono": "0414-6547260",
+      "consultorio": "2do piso C Nro 29",
+      "foto": "/medicos/dr-orlando-borjas.jpg",
+      "especialidades": [
+        "neurocirugia"
+      ]
+    },
+    {
+      "slug": "dr-pastor-lizcano",
+      "nombre": "Dr. Pastor Lizcano",
+      "telefono": "0414-6220099",
+      "consultorio": "1er Piso C Nro 21",
+      "foto": "/medicos/dr-pastor-lizcano.jpg",
+      "especialidades": [
+        "neurocirugia"
+      ]
+    },
+    {
+      "slug": "dr-ricaute-hernandez",
+      "nombre": "Dr. Ricaute Hernandez",
+      "telefono": "0424-6299878",
+      "consultorio": "1er Piso C Nro 21",
+      "foto": "/medicos/dr-ricaute-hernandez.jpg",
+      "especialidades": [
+        "neurocirugia"
+      ]
+    },
+    {
+      "slug": "dr-angel-chacin",
+      "nombre": "Dr. Angel Chacin",
+      "telefono": "0414-6195210",
+      "consultorio": "1er Piso C. NRO 17",
+      "foto": "/medicos/dr-angel-chacin.jpg",
+      "especialidades": [
+        "neurologia"
+      ]
+    },
+    {
+      "slug": "dra-omaira-molina",
+      "nombre": "Dra. Omaira Molina",
+      "telefono": "0414-6284668",
+      "consultorio": "PB Consultorio Nro 6",
+      "foto": "/medicos/dra-omaira-molina.jpg",
+      "especialidades": [
+        "neurologia"
+      ]
+    },
+    {
+      "slug": "dr-cesar-pulgar",
+      "nombre": "Dr. Cesar Pulgar",
+      "telefono": "0414-7833257",
+      "consultorio": "2do Piso C Nro 24",
+      "foto": "/medicos/dr-cesar-pulgar.jpg",
+      "especialidades": [
+        "odontologia"
+      ]
+    },
+    {
+      "slug": "dr-jose-hernandez-perez",
+      "nombre": "Dr. Jose Hernandez Perez",
+      "telefono": "0414-6165662",
+      "consultorio": "PB C Nro 33",
+      "foto": "/medicos/dr-jose-hernandez-perez.jpg",
+      "especialidades": [
+        "odontologia"
+      ]
+    },
+    {
+      "slug": "dra-gabriela-molero",
+      "nombre": "Dra. Gabriela Molero",
+      "telefono": "0414-6235880",
+      "consultorio": "2do Piso C Nro 24",
+      "foto": "/medicos/dra-gabriela-molero.jpg",
+      "especialidades": [
+        "odontologia"
+      ]
+    },
+    {
+      "slug": "dra-mariela-fox",
+      "nombre": "Dra. Mariela Fox",
+      "telefono": "0414-6579684",
+      "consultorio": "PB C Nro 12",
+      "foto": "",
+      "especialidades": [
+        "odontologia"
+      ]
+    },
+    {
+      "slug": "dra-royelitza-barboza",
+      "nombre": "Dra. Royelitza Barboza",
+      "telefono": "0424-6649929",
+      "consultorio": "2do Piso C Nro 24",
+      "foto": "/medicos/dra-royelitza-barboza.jpg",
+      "especialidades": [
+        "odontologia"
+      ]
+    },
+    {
+      "slug": "dr-dixon-fox",
+      "nombre": "Dr. Dixon Fox",
+      "telefono": "0414-6196328",
+      "consultorio": "PB C Nro 12",
+      "foto": "/medicos/dr-dixon-fox.jpg",
+      "especialidades": [
+        "oftalmologo"
+      ]
+    },
+    {
+      "slug": "dra-belinda-ocando",
+      "nombre": "Dra. Belinda Ocando",
+      "telefono": "0414-6336385",
+      "consultorio": "2do Piso C Nro 30",
+      "foto": "/medicos/dra-belinda-ocando.jpg",
+      "especialidades": [
+        "oftalmologo"
+      ]
+    },
+    {
+      "slug": "dra-elsy-rodriguez",
+      "nombre": "Dra. Elsy Rodriguez",
+      "telefono": "0414-3629509",
+      "consultorio": "PB C Nro 12",
+      "foto": "/medicos/dra-elsy-rodriguez.jpg",
+      "especialidades": [
+        "oftalmologo"
+      ]
+    },
+    {
+      "slug": "dr-tomas-iragorry",
+      "nombre": "Dr. Tomas Iragorry",
+      "telefono": "0424-6116386",
+      "consultorio": "1er Piso C Nro 16",
+      "foto": "/medicos/dr-tomas-iragorry.jpg",
+      "especialidades": [
+        "ortopedia",
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dr-egenys-flores",
+      "nombre": "Dr. Egenys Flores",
+      "telefono": "0414-6172496",
+      "consultorio": "1er Piso C. Nro. 17",
+      "foto": "/medicos/dr-egenys-flores.jpg",
+      "especialidades": [
+        "otorrinolaringologia"
+      ]
+    },
+    {
+      "slug": "dr-osvaldo-villalobos",
+      "nombre": "Dr.Osvaldo Villalobos",
+      "telefono": "0414-6221073",
+      "consultorio": "3er Piso C. Nro. 40",
+      "foto": "/medicos/dr-osvaldo-villalobos.jpg",
+      "especialidades": [
+        "otorrinolaringologia"
+      ]
+    },
+    {
+      "slug": "dra-mysel-ortiz",
+      "nombre": "Dra. Mysel Ortiz",
+      "telefono": "0412-1288015",
+      "consultorio": "2do Piso C Nro 30",
+      "foto": "/medicos/dra-mysel-ortiz.jpg",
+      "especialidades": [
+        "otorrinolaringologia"
+      ]
+    },
+    {
+      "slug": "dr-heimel-marcano",
+      "nombre": "Dr. Heimel Marcano",
+      "telefono": "0414-6453413",
+      "consultorio": "1er piso C Nro 17",
+      "foto": "/medicos/dr-heimel-marcano.jpg",
+      "especialidades": [
+        "pediatra"
+      ]
+    },
+    {
+      "slug": "dr-victor-roman",
+      "nombre": "Dr. Victor Roman",
+      "telefono": "0414-3689915",
+      "consultorio": "2do Piso C Nro 24 A",
+      "foto": "/medicos/dr-victor-roman.jpg",
+      "especialidades": [
+        "pediatra"
+      ]
+    },
+    {
+      "slug": "dra-isabel-cluet",
+      "nombre": "Dra. Isabel Cluet",
+      "telefono": "0412-6072351",
+      "consultorio": "1er Piso C Nro 20",
+      "foto": "/medicos/dra-isabel-cluet.jpg",
+      "especialidades": [
+        "pediatra"
+      ]
+    },
+    {
+      "slug": "dra-keyla-paz",
+      "nombre": "Dra. Keyla Paz",
+      "telefono": "0414-6230858",
+      "consultorio": "1er. Piso C. Nro. 23",
+      "foto": "/medicos/dra-keyla-paz.jpg",
+      "especialidades": [
+        "pediatra"
+      ]
+    },
+    {
+      "slug": "dra-mariemma-ferrer",
+      "nombre": "Dra. Mariemma Ferrer",
+      "telefono": "0414-1212497",
+      "consultorio": "PB C Nro 2",
+      "foto": "/medicos/dra-mariemma-ferrer.jpg",
+      "especialidades": [
+        "pediatra"
+      ]
+    },
+    {
+      "slug": "dra-sthefany-belisario",
+      "nombre": "Dra. Sthefany Belisario",
+      "telefono": "0414-0371226",
+      "consultorio": "2do Piso C Nro 24 A",
+      "foto": "/medicos/dra-sthefany-belisario.jpg",
+      "especialidades": [
+        "pediatra"
+      ]
+    },
+    {
+      "slug": "dra-ideixi-ardiles",
+      "nombre": "Dra Ideixi Ardiles",
+      "telefono": "0424-1893566",
+      "consultorio": "1er Piso C Nro 20",
+      "foto": "/medicos/dra-ideixi-ardiles.jpg",
+      "especialidades": [
+        "pediatra"
+      ]
+    },
+    {
+      "slug": "dra-neyla-carolina-soto-leon",
+      "nombre": "Dra Neyla Carolina Soto León",
+      "telefono": "0424-6063719",
+      "consultorio": "3 piso C Nro 45A",
+      "foto": "",
+      "especialidades": [
+        "pediatra"
+      ]
+    },
+    {
+      "slug": "joennys-travez",
+      "nombre": "Joennys Travez",
+      "telefono": "0424-6408644",
+      "consultorio": "2do Piso C Nro 16",
+      "foto": "/medicos/joennys-travez.jpg",
+      "especialidades": [
+        "psicologia"
+      ]
+    },
+    {
+      "slug": "dixon-ibarra",
+      "nombre": "Dixon Ibarra",
+      "telefono": "0414-6460086",
+      "consultorio": "1er Piso C Nro 16",
+      "foto": "/medicos/dixon-ibarra.jpg",
+      "especialidades": [
+        "psicologo-clinico"
+      ]
+    },
+    {
+      "slug": "dr-guillermo-meier",
+      "nombre": "Dr. Guillermo Meier",
+      "telefono": "0261-7005205",
+      "consultorio": "PB",
+      "foto": "/medicos/dr-guillermo-meier.jpg",
+      "especialidades": [
+        "radiologia-e-imagenes"
+      ]
+    },
+    {
+      "slug": "dra-beatriz-martinez",
+      "nombre": "Dra. Beatriz Martínez",
+      "telefono": "0261-7005205",
+      "consultorio": "PB",
+      "foto": "/medicos/dra-beatriz-martinez.jpg",
+      "especialidades": [
+        "radiologia-e-imagenes"
+      ]
+    },
+    {
+      "slug": "dr-raimundo-sanguino",
+      "nombre": "Dr. Raimundo Sanguino",
+      "telefono": "0424-6765126",
+      "consultorio": "PB C NRO 4",
+      "foto": "/medicos/dr-raimundo-sanguino.jpg",
+      "especialidades": [
+        "reemplazo-articular",
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dr-alex-caliman",
+      "nombre": "Dr. Alex Caliman",
+      "telefono": "0424-6309439",
+      "consultorio": "3er Piso C Nro 42",
+      "foto": "/medicos/dr-alex-caliman.jpg",
+      "especialidades": [
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dr-andres-alvarez",
+      "nombre": "Dr. Andres Alvarez",
+      "telefono": "0412-1279844",
+      "consultorio": "PB C Nro 2",
+      "foto": "/medicos/dr-andres-alvarez.jpg",
+      "especialidades": [
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dr-daniel-bianchini",
+      "nombre": "Dr. Daniel Bianchini",
+      "telefono": "0414-6483342",
+      "consultorio": "2do Piso C Nro 25",
+      "foto": "/medicos/dr-daniel-bianchini.jpg",
+      "especialidades": [
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dr-fernando-lossada",
+      "nombre": "Dr. Fernando Lossada",
+      "telefono": "0414-6885578",
+      "consultorio": "1er piso C Nro 18",
+      "foto": "/medicos/dr-fernando-lossada.jpg",
+      "especialidades": [
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dr-wail-abou-asaff-yahia",
+      "nombre": "Dr. Wail Abou Asaff Yahia",
+      "telefono": "0414-3618769",
+      "consultorio": "PB Nro 7 A",
+      "foto": "/medicos/dr-wail-abou-asaff-yahia.jpg",
+      "especialidades": [
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dra-andreina-moran",
+      "nombre": "Dra. Andreina Moran",
+      "telefono": "0412-7759369",
+      "consultorio": "3er Piso C Nro 42",
+      "foto": "/medicos/dra-andreina-moran.jpg",
+      "especialidades": [
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dra-vanessa-araque",
+      "nombre": "Dra. Vanessa Araque",
+      "telefono": "0414-3752666",
+      "consultorio": "PB Nro 7 A",
+      "foto": "/medicos/dra-vanessa-araque.jpg",
+      "especialidades": [
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dr-euclides-torres",
+      "nombre": "Dr Euclides Torres",
+      "telefono": "0414-6359932",
+      "consultorio": "1er Piso C Nro 18",
+      "foto": "/medicos/dr-euclides-torres.jpg",
+      "especialidades": [
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dr-julio-carruyo",
+      "nombre": "Dr Julio Carruyo",
+      "telefono": "0424-6361850",
+      "consultorio": "3er Piso C Nro 45",
+      "foto": "/medicos/dr-julio-carruyo.jpg",
+      "especialidades": [
+        "traumatologia"
+      ]
+    },
+    {
+      "slug": "dr-jose-urdaneta",
+      "nombre": "Dr. Jose Urdaneta",
+      "telefono": "0414-3615573",
+      "consultorio": "1er piso C Nro 19",
+      "foto": "/medicos/dr-jose-urdaneta.jpg",
+      "especialidades": [
+        "urologia"
+      ]
+    },
+    {
+      "slug": "dr-juan-jose-delgado-dupont",
+      "nombre": "Dr. Juan Jose Delgado Dupont",
+      "telefono": "0414-6493571",
+      "consultorio": "2do Piso C Nro 27A",
+      "foto": "/medicos/dr-juan-jose-delgado-dupont.jpg",
+      "especialidades": [
+        "urologia"
+      ]
+    },
+    {
+      "slug": "dr-nelson-ortega",
+      "nombre": "Dr. Nelson Ortega",
+      "telefono": "0424-6617198",
+      "consultorio": "P.B C Nro 5",
+      "foto": "/medicos/dr-nelson-ortega.jpg",
+      "especialidades": [
+        "urologia"
+      ]
+    },
+    {
+      "slug": "dr-wilfredo-ferrer",
+      "nombre": "Dr. Wilfredo Ferrer",
+      "telefono": "0414-6443191",
+      "consultorio": "PB C Nro 6",
+      "foto": "/medicos/dr-wilfredo-ferrer.jpg",
+      "especialidades": [
+        "urologia"
+      ]
+    }
+  ]
+}
