@@ -53,3 +53,28 @@ export function esperando(creada: string, ahora = new Date()): string {
   const dos = (n: number) => String(n).padStart(2, '0');
   return s >= 3600 ? `${Math.floor(s / 3600)} h ${dos(Math.floor((s % 3600) / 60))} min` : `${dos(Math.floor(s / 60))}:${dos(s % 60)}`;
 }
+
+export type Piso = '3' | '2' | '1' | 'pb' | 's';
+/** Del techo al sótano: el orden en que se recorre el edificio */
+export const PISOS: { id: Piso; nombre: string }[] = [
+  { id: '3', nombre: '3er piso' }, { id: '2', nombre: '2do piso' }, { id: '1', nombre: '1er piso' },
+  { id: 'pb', nombre: 'Planta baja' }, { id: 's', nombre: 'Sótano' },
+];
+const RE_PISO = /s[oó]tano|\bp\.?\s?b\b\.?|planta baja|\b(?:[123](?:er|do|ro)?|primer|segundo|tercer)\.?\s*pis[oó]/gi;
+
+/** "2do Piso C Nro 28" → { piso: '2', puertas: ['28'], texto: '2do piso, consultorio 28' }.
+ *  Los consultorios del WordPress vienen escritos de mil formas ("P.B Consultorio NRO 32", "1er.Piso C. Nro. 16", "PB C NRO 13-14-14B"). */
+export function ubicacion(raw: string): { piso: Piso | null; puertas: string[]; texto: string } {
+  const t = raw.toLowerCase();
+  const piso: Piso | null = /s[oó]tano/.test(t) ? 's' : /\bp\.?\s?b\b|planta baja/.test(t) ? 'pb'
+    : /\b(1(er)?|primer)\.?\s*pis/.test(t) ? '1' : /\b(2(do)?|segundo)\.?\s*pis/.test(t) ? '2' : /\b(3(er|ro)?|tercer)\.?\s*pis/.test(t) ? '3' : null;
+  const resto = raw.replace(RE_PISO, ' ');
+  const puertas = [...new Set([...resto.matchAll(/(\d{1,3})\s?([AB])?(?![\w])/gi)].map((m) => m[1] + (m[2] ?? '').toUpperCase()))];
+  const nombre = PISOS.find((p) => p.id === piso)?.nombre;
+  const detalle = puertas.length ? `consultorio ${puertas.join(', ')}` : resto.replace(/\s+/g, ' ').trim().replace(/^./, (c) => c.toLowerCase());
+  const texto = nombre ? (detalle ? `${nombre}, ${detalle}` : nombre) : raw.trim().replace(/^./, (c) => c.toLowerCase());
+  return { piso, puertas, texto };
+}
+
+/** Miniatura 160 px de la foto importada (public/medicos/t/*.webp); las subidas desde el admin ya son pequeñas */
+export const miniatura = (foto: string) => foto.replace(/^\/medicos\/([^/]+)\.jpg$/, '/medicos/t/$1.webp');

@@ -10,7 +10,7 @@ interface Props { medico: Medico; lazy?: boolean }
 const { medico: m, lazy = true } = Astro.props;
 const busca = clave([m.nombre, ...m.especialidades.map((e) => e.nombre)].join(' '));
 ---
-<article class="medico" data-clave={busca} data-esp={m.especialidades.map((e) => e.slug).join(' ')} data-tilt>
+<article class="medico" data-clave={busca} data-esp={m.especialidades.map((e) => e.slug).join(' ')}>
   <div class="medico__foto">
     {m.foto
       ? <img src={u(m.foto)} alt={`Foto de ${m.nombre}`} width="480" height="480" loading={lazy ? 'lazy' : 'eager'} decoding="async" />
@@ -27,14 +27,14 @@ const busca = clave([m.nombre, ...m.especialidades.map((e) => e.nombre)].join(' 
 <style>
   .medico { background: #fff; border-radius: var(--radius); border: 1px solid var(--line); overflow: hidden; display: grid; grid-template-rows: auto 1fr; transition: box-shadow .4s var(--ease-out), border-color .3s; }
   .medico:hover { box-shadow: var(--shadow); border-color: transparent; }
-  .medico__foto { aspect-ratio: 1; background: var(--grad); display: grid; place-items: center; overflow: hidden; }
+  .medico__foto { aspect-ratio: 1; background: var(--navy); display: grid; place-items: center; overflow: hidden; }
   .medico__foto img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease-out); }
   .medico:hover .medico__foto img { transform: scale(1.05); }
   .medico__ini { font-family: var(--font-head); font-weight: 800; font-size: 3rem; color: #fff; letter-spacing: .02em; }
   .medico__body { padding: 1.1rem 1.2rem 1.3rem; display: grid; gap: .55rem; align-content: start; }
   .medico__nombre { font-size: 1.05rem; }
   .medico__esps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
-  .medico__esps .pill { font-size: .66rem; }
+  .medico__esps .pill { font-size: .8rem; }
   .medico__dato, .medico__tel { display: inline-flex; align-items: center; gap: .4rem; font-size: .88rem; }
   .medico__tel { color: var(--blue); font-weight: 600; justify-self: start; }
   .medico__tel:hover { text-decoration: underline; }

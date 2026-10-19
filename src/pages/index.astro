@@ -1,380 +1,502 @@
 ---
-// Portada: la estructura del sitio actual (héroe, servicios, «tu cita en un click», testimonios, contacto) con la marca
-// de siempre y movimiento de motion.js. Lee la base con getDB(): bajo demanda en el servidor, al compilar en la demo.
+// Portada. Una sola apuesta, sacada del mundo real de la clínica: sus médicos y su edificio.
+//  · Héroe: la cruz del logo armada con retratos reales (único momento orquestado de la página).
+//  · El edificio, piso por piso: dónde atiende cada médico (la cabina del «+» recorre los pisos con el scroll).
+//  · Todo lo demás, quieto y en el tono del sitio actual. Lee la base con getDB() en los dos modos.
 export const prerender = false;
 import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
-import Icon, { type IconName } from '../components/ui/Icon.astro';
-import MedicoCard from '../components/ui/MedicoCard.astro';
+import Icon from '../components/ui/Icon.astro';
 import { getDB, u } from '../lib/entorno';
-import { especialidades, resumen, retratosDelDia } from '../lib/db';
-import { afiliacion, anos, clinica, indiceServicios, testimonios } from '../data/site';
-import { waHref } from '../lib/sitio';
-import fachada from '../assets/img/inst-3.jpg';
-import calle from '../assets/img/inst-2.jpg';
+import { especialidades, medicos, resumen, retratosDelDia, type Medico } from '../lib/db';
+import { afiliacion, anos, clinica, servicios, testimonios } from '../data/site';
+import { iniciales, miniatura, PISOS, telHref, ubicacion, waHref, type Piso } from '../lib/sitio';
+import entrada from '../assets/img/inst-3.jpg';
+import accesoEmergencia from '../assets/img/inst-5.jpg';
 
 const db = await getDB();
-const [res, esps, retratos] = await Promise.all([resumen(db), especialidades(db), retratosDelDia(db, 8)]);
-const conMedicos = esps.filter((e) => e.total > 0);
+const [res, esps, todos, caras] = await Promise.all([resumen(db), especialidades(db), medicos(db), retratosDelDia(db, 16)]);
 
-const ICONO: Record<string, IconName> = {
-  tomografia: 'scan', 'video-endoscopia': 'scope', laboratorio: 'microscope', especialidades: 'grid', cirugia: 'scissors',
-  uci: 'activity', 'cirugia-bariatrica': 'scale', 'rayos-x': 'bone', 'obstetrica-neonatal': 'baby',
+// La cruz: brazos de 2 de 6 celdas (proporción del «+» del logo); anillo 1 alrededor del sello, anillo 2 en las puntas
+const CELDAS = [[1, 2], [1, 3], [2, 4], [3, 4], [4, 3], [4, 2], [3, 1], [2, 1], [0, 2], [0, 3], [2, 5], [3, 5], [5, 3], [5, 2], [3, 0], [2, 0]];
+const cruz = caras.slice(0, CELDAS.length).map((m, i) => ({ m, r: CELDAS[i][0], c: CELDAS[i][1], anillo: i < 8 ? 1 : 2 }));
+const especialidadDe = (m: Medico) => m.especialidades.map((e) => e.nombre).join(', ');
+
+// El edificio: médicos agrupados por piso y puertas (consultorios) de cada piso
+type Fila = { m: Medico; puertas: string[]; donde: string };
+const porPiso = new Map<Piso, Fila[]>(PISOS.map((p) => [p.id, []]));
+for (const m of todos) {
+  const ub = ubicacion(m.consultorio);
+  if (ub.piso) porPiso.get(ub.piso)!.push({ m, puertas: ub.puertas, donde: ub.puertas.length ? `consultorio ${ub.puertas.join(', ')}` : ub.texto.split(', ').slice(1).join(', ') });
+}
+const orden = (a: string, b: string) => parseInt(a) - parseInt(b) || a.localeCompare(b);
+const edificio = PISOS.map((p) => {
+  const filas = porPiso.get(p.id)!;
+  const puertas = [...new Set(filas.flatMap((f) => f.puertas))].sort(orden);
+  return { ...p, filas, puertas, cuenta: (d: string) => filas.filter((f) => f.puertas.includes(d)).length };
+});
+
+const estudios = ['tomografia', 'rayos-x', 'laboratorio', 'video-endoscopia'].map((s) => servicios.find((x) => x.slug === s)!);
+const unidades = [
+  { s: 'cirugia', texto: 'Operaciones electivas y de urgencia.' },
+  { s: 'uci', texto: 'Medicina crítica, con banco de sangre, laboratorio y radiología las 24 horas.' },
+  { s: 'cirugia-bariatrica', texto: 'Un equipo coordinado de especialistas, psicólogos y nutricionistas.' },
+  { s: 'obstetrica-neonatal', texto: 'Atención durante el embarazo, el parto y el puerperio.' },
+].map((x) => ({ ...x, ...servicios.find((y) => y.slug === x.s)! }));
+const notaEstudio: Record<string, string> = {
+  tomografia: '7:00 a. m. a 5:00 p. m. Algunos estudios requieren cita previa.',
+  'rayos-x': '7:00 a. m. a 5:00 p. m. Algunos estudios requieren cita previa.',
+  laboratorio: '7:00 a. m. a 5:00 p. m. Emergencias las 24 horas.',
+  'video-endoscopia': 'Lunes a viernes, de 8:00 a. m. a 2:00 p. m.',
 };
-const accesos = [
-  { icono: 'siren' as const, titulo: 'Emergencias 24 h', texto: clinica.emergencias.texto, href: clinica.emergencias.href, tono: 'sos' },
-  { icono: 'calendar' as const, titulo: 'Solicitar cita', texto: 'Por WhatsApp, de lunes a viernes', href: waHref(), externo: true },
-  { icono: 'stethoscope' as const, titulo: 'Directorio médico', texto: `${res.medicos} médicos por especialidad`, href: u('/directorio/') },
-  { icono: 'video' as const, titulo: 'Telemedicina', texto: 'Incluida en la afiliación', href: u('/afiliacion/') },
-];
-const cifras = [
-  { n: anos(), t: 'años cuidando a Maracaibo' },
-  { n: res.medicos, t: 'médicos en el directorio' },
-  { n: res.especialidades, t: 'especialidades' },
-  { n: 24, t: 'horas de emergencia, todos los días' },
-];
-const horarios = [
-  ['Citas', 'Lunes a viernes, 8:00 a. m. a 4:00 p. m.'],
-  ['Emergencias', 'Abiertas las 24 horas'],
-  ['Laboratorio', '7:00 a. m. a 5:00 p. m. · emergencias 24 h'],
-  ['Tomografía y Rayos X', '7:00 a. m. a 5:00 p. m. · algunos estudios con cita'],
-  ['Video endoscopia', 'Lunes a viernes, 8:00 a. m. a 2:00 p. m.'],
-];
 const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20Av.%208%20Santa%20Rita%2C%20Maracaibo&z=16&output=embed';
 ---
-<Layout titulo={`${clinica.nombre} · Desde ${clinica.desde}`}>
-  <!-- 1 · Héroe: la campaña «70 años celebrando tu bienestar», modernizada -->
-  <section id="hero" class="hero" data-pin data-scene>
-    <div class="hero__bg" aria-hidden="true"><Image src={calle} alt="" widths={[800, 1280]} sizes="100vw" loading="eager" /></div>
-    <div class="hero__glow" aria-hidden="true"></div>
-    <div class="hero__dim" aria-hidden="true"></div>
-    <div class="hero__cross" aria-hidden="true" data-parallax="0.5"><Icon name="cross" size={640} /></div>
+<Layout titulo={`${clinica.nombre}, atención médica desde ${clinica.desde}`}>
+  <!-- Héroe -->
+  <section class="hero" id="hero">
+    <div class="wrap hero__grid">
+      <div class="hero__texto">
+        <h1 class="h-display">Atención médica en Maracaibo desde {clinica.desde}</h1>
+        <p class="lead">{res.medicos} médicos de {res.especialidades} especialidades, laboratorio, estudios por imágenes y emergencias las 24 horas, en la {clinica.direccion}.</p>
+        <div class="hero__tareas">
+          <a class="btn btn--sos btn--tarea" href={clinica.emergencias.href}>Llamar a emergencias <small>{clinica.emergencias.texto}</small></a>
+          <a class="btn btn--primary btn--tarea" href={waHref()} target="_blank" rel="noopener">Pedir cita por WhatsApp <small>Lunes a viernes, 8:00 a. m. a 4:00 p. m.</small></a>
+        </div>
+        <a class="link hero__buscar" href="#pisos">Buscar un médico</a>
+      </div>
 
-    <div class="wrap hero__stage">
-      <div class="hero__copy">
-        <p class="hero__eyebrow"><span class="pill hero__pill">Desde {clinica.desde} · {anos()} años</span></p>
-        <h1 class="hero__title">
-          <span class="line-mask"><span class="w">Celebrando</span></span>
-          <span class="line-mask"><span class="w">tu <em>bienestar</em></span></span>
-        </h1>
-        <p class="hero__lead">Especialistas, servicios de diagnóstico y emergencias las 24 horas en un solo lugar: {clinica.direccion}, {clinica.ciudad.split(',')[0]}.</p>
-        <div class="hero__cta cta-row">
-          <a class="btn btn--white" href={waHref()} target="_blank" rel="noopener" data-magnetic><Icon name="calendar" /> Solicitar cita</a>
-          <a class="btn btn--ghost" href={u('/directorio/')}><Icon name="search" /> Buscar médico</a>
+      <figure class="cruz">
+        <div class="cruz__grid">
+          {cruz.map(({ m, r, c, anillo }) => (
+            <a class="cruz__t" href={u(`/directorio/?q=${encodeURIComponent(m.nombre.replace(/^Dra?\. /, ''))}`)} data-anillo={anillo} data-r={r} data-c={c}
+              style={`grid-area:${r + 1}/${c + 1}`} aria-label={`${m.nombre}, ${especialidadDe(m)}`} data-quien={`${m.nombre}, ${especialidadDe(m).toLowerCase()}`}>
+              <img src={u(miniatura(m.foto))} alt="" width="160" height="160" decoding="async" />
+            </a>
+          ))}
+          <div class="cruz__sello" aria-hidden="true"><b>{anos()}</b><span>años</span></div>
+        </div>
+        <figcaption aria-live="polite">Algunos de nuestros {res.medicos} médicos</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- El edificio, piso por piso -->
+  <section class="edificio" id="pisos" aria-labelledby="pisos-t">
+    <div class="edificio__escena">
+      <div class="wrap edificio__grid">
+        <div class="edificio__head">
+          <h2 class="h-xl" id="pisos-t">Encuentra el piso y el consultorio de tu médico</h2>
+          <p>Elige un piso para ver sus consultorios, o escribe el nombre del médico o la especialidad.</p>
+          <form class="buscador" action={u('/directorio/')} method="get" role="search">
+            <label class="sr-only" for="q">Nombre del médico o especialidad</label>
+            <Icon name="search" />
+            <input id="q" name="q" type="search" placeholder="Médico o especialidad" autocomplete="off" />
+            <button class="btn btn--sm btn--white" type="submit">Buscar</button>
+          </form>
+        </div>
+
+        <div class="torre">
+          <div class="torre__riel" aria-hidden="true"><span class="torre__cabina"><Icon name="cross" size={22} /></span></div>
+          <ol class="pisos">
+            {edificio.map((p) => (
+              <li class="piso" data-piso={p.id}>
+                <button class="piso__nombre" type="button" aria-controls={`hoja-${p.id}`}>{p.nombre}<small>{p.filas.length} {p.filas.length === 1 ? 'médico' : 'médicos'}</small></button>
+                <ul class="puertas">
+                  {p.puertas.map((d, i) => (
+                    <li><button class="puerta" type="button" data-puerta={d} style={`--i:${i}`} aria-label={`Consultorio ${d}, ${p.nombre}, ${p.cuenta(d)} ${p.cuenta(d) === 1 ? 'médico' : 'médicos'}`}>{d}</button></li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div class="hoja" data-lenis-prevent>
+          {edificio.map((p) => (
+            <details class="hoja__piso" id={`hoja-${p.id}`} data-piso={p.id} open>
+              <summary><span>{p.nombre}</span><small>{p.filas.length} {p.filas.length === 1 ? 'médico' : 'médicos'} en {p.puertas.length} {p.puertas.length === 1 ? 'consultorio' : 'consultorios'}</small><i class="mas" aria-hidden="true"></i></summary>
+              <ul class="hoja__lista">
+                {p.filas.map(({ m, puertas, donde }) => (
+                  <li data-puertas={puertas.join(' ')}>
+                    {m.foto ? <img src={u(miniatura(m.foto))} alt="" width="56" height="56" loading="lazy" decoding="async" /> : <span class="ini" aria-hidden="true">{iniciales(m.nombre)}</span>}
+                    <div>
+                      <b>{m.nombre}</b>
+                      <span>{especialidadDe(m)}{donde && `, ${donde}`}</span>
+                      {m.telefono && <a href={telHref(m.telefono)}>{m.telefono}</a>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+          <p class="hoja__mas"><a class="link" href={u('/directorio/')}>Ver los {res.medicos} médicos en el directorio</a></p>
         </div>
       </div>
+      <details class="wrap edificio__esps">
+        <summary>Ver las {res.especialidades} especialidades</summary>
+        <ul>{esps.map((e) => <li><a href={u(`/directorio/?esp=${e.slug}`)}>{e.nombre}</a></li>)}</ul>
+      </details>
+    </div>
+  </section>
 
-      <div class="hero__media">
-        <div class="hero__photo"><Image src={fachada} alt="Entrada de la Policlínica Maracaibo con sus bancas de concreto y palmas" widths={[480, 760]} sizes="(max-width: 1100px) 90vw, 38vw" loading="eager" /></div>
-        <span class="hero__chip hero__chip--sos"><i></i> Emergencias 24 horas</span>
-        <span class="hero__chip hero__chip--docs"><Icon name="stethoscope" size={18} /> {res.medicos} médicos · {res.especialidades} especialidades</span>
-        <span class="hero__badge" aria-hidden="true"><b>{anos()}</b> años</span>
-      </div>
-
-      <ul class="hero__quick" aria-label="Accesos rápidos">
-        {accesos.map((a) => (
-          <li data-hero-next>
-            <a class:list={['quick', a.tono && `quick--${a.tono}`]} href={a.href} target={a.externo ? '_blank' : undefined} rel={a.externo ? 'noopener' : undefined}>
-              <span class="quick__ico"><Icon name={a.icono} /></span>
-              <span><b>{a.titulo}</b><small>{a.texto}</small></span>
-              <Icon name="arrow" class="quick__arrow" size={18} />
+  <!-- Servicios -->
+  <section class="section servicios" id="servicios">
+    <div class="wrap">
+      <h2 class="h-xl servicios__t">Estudios, cirugía y cuidados intensivos en un mismo edificio</h2>
+      <h3 class="h-lg">Estudios y diagnóstico</h3>
+      <ul class="estudios">
+        {estudios.map((s) => (
+          <li>
+            <a href={u(`/servicios/${s.slug}/`)}>
+              <span class="estudios__nombre">{s.nombre}</span>
+              <span class="estudios__nota">{notaEstudio[s.slug]}</span>
+              <Image class="estudios__foto" src={s.imagen} alt={s.alt} widths={[240, 360]} sizes="180px" style={`object-position:${s.pos}`} />
             </a>
           </li>
         ))}
       </ul>
-    </div>
-    <div class="hero__scroll" aria-hidden="true"><span></span>Desliza</div>
-  </section>
-
-  <!-- 2 · Cifras -->
-  <section class="cifras" aria-label="La Policlínica en cifras">
-    <div class="wrap cifras__grid" data-stagger>
-      {cifras.map((c) => <div class="cifra"><strong data-count={c.n}>{c.n}</strong><span>{c.t}</span></div>)}
-    </div>
-  </section>
-
-  <!-- 3 · Servicios (los 9 del sitio actual, en su orden) -->
-  <section class="section" id="servicios" data-scene>
-    <div class="wrap">
-      <div class="stack head" data-reveal-scope>
-        <span class="eyebrow" data-reveal="up">Servicios</span>
-        <h2 class="h-xl" data-split="lines">Todo lo que necesitas, en una <span class="underline-accent">misma casa</span></h2>
-        <p class="lead" data-reveal="up" data-delay=".2">Diagnóstico por imágenes, laboratorio, cirugía y unidades especializadas, con el respaldo de {anos()} años en Maracaibo.</p>
-      </div>
-      <div class="svc-grid" data-stagger=".06">
-        {indiceServicios.map((s) => (
-          <a class="svc" href={u(s.href)} data-tilt data-glow>
-            {s.imagen && <Image class="svc__img" src={s.imagen} alt="" widths={[420]} sizes="420px" style={`object-position:${s.pos}`} />}
-            <span class="svc__num">{String(s.num).padStart(2, '0')}</span>
-            <span class="icon-badge svc__ico"><Icon name={ICONO[s.slug] ?? 'plus'} /></span>
-            <h3>{s.nombre}</h3>
-            <p>{s.dato}</p>
-            <span class="svc__more">Ver más <Icon name="arrow" size={16} class="arrow" /></span>
-          </a>
+      <h3 class="h-lg">Cirugía y unidades especializadas</h3>
+      <ul class="unidades">
+        {unidades.map((s) => (
+          <li>
+            <a href={u(`/servicios/${s.slug}/`)}>
+              <Image src={s.imagen} alt={s.alt} widths={[360, 560]} sizes="(max-width: 960px) 50vw, 25vw" style={`object-position:${s.pos}`} />
+              <span class="unidades__nombre">{s.nombre}</span>
+              <span>{s.texto}</span>
+            </a>
+          </li>
         ))}
-      </div>
+      </ul>
+      <p class="servicios__esp"><b>Especialidades</b> {res.especialidades} especialidades con médicos en el directorio. <a class="link" href={u('/especialidades/')}>Ver las especialidades</a></p>
     </div>
   </section>
 
-  <!-- 4 · Especialidades en movimiento -->
-  <section class="esp-band" aria-label="Especialidades">
-    <div class="wrap esp-band__head">
-      <h2 class="h-lg">{res.especialidades} especialidades</h2>
-      <a class="btn btn--outline btn--sm" href={u('/especialidades/')}>Ver todas <Icon name="arrow" class="arrow" /></a>
-    </div>
-    <div class="marquee"><div class="marquee__track">
-      {conMedicos.map((e) => <a class="esp-chip" href={u(`/directorio/?esp=${e.slug}`)}><Icon name="plus" size={14} /> {e.nombre}</a>)}
-    </div></div>
-  </section>
-
-  <!-- 5 · Tu cita en un click (texto del sitio actual) -->
-  <section class="section section--mist" id="citas" data-scene>
-    <div class="wrap grid-2">
-      <div class="stack" data-reveal-scope>
-        <span class="eyebrow" data-reveal="up">Citas</span>
-        <h2 class="h-xl" data-split="lines">Tu cita en <span class="underline-accent">un click</span></h2>
-        <p class="lead" data-reveal="up" data-delay=".15">Si requieres una cita, contáctanos por WhatsApp o a través del {clinica.telefono.texto}. En caso de emergencia, llama al {clinica.emergencias.texto}.</p>
-        <div class="cta-row" data-reveal="up" data-delay=".3">
-          <a class="btn btn--wa" href={waHref()} target="_blank" rel="noopener"><Icon name="whatsapp" /> Solicitar cita</a>
-          <a class="btn btn--outline" href={clinica.telefono.href}><Icon name="phone" /> {clinica.telefono.texto}</a>
-        </div>
-      </div>
-      <div class="card horario" data-reveal="right">
-        <div class="horario__head"><span class="icon-badge"><Icon name="clock" /></span><h3>Horarios</h3></div>
-        <dl>{horarios.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
-        <a class="horario__sos" href={clinica.emergencias.href}><Icon name="siren" /> Emergencias {clinica.emergencias.texto}</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- 6 · Directorio -->
-  <section class="section" id="medicos" data-scene>
-    <div class="wrap">
-      <div class="medicos__head">
-        <div class="stack" data-reveal-scope>
-          <span class="eyebrow" data-reveal="up">Directorio médico</span>
-          <h2 class="h-xl" data-split="lines">Encuentra a <span class="underline-accent">tu médico</span></h2>
-        </div>
-        <form class="buscador" action={u('/directorio/')} method="get" role="search" data-reveal="up" data-delay=".15">
-          <label class="sr-only" for="q">Nombre del médico o especialidad</label>
-          <Icon name="search" />
-          <input class="buscador__input" id="q" name="q" type="search" placeholder="Nombre o especialidad, p. ej. cardiología" autocomplete="off" />
-          <button class="btn btn--primary btn--sm" type="submit">Buscar</button>
-        </form>
-      </div>
-      <div class="medicos__grid" data-stagger=".06">
-        {retratos.map((m) => <MedicoCard medico={m} />)}
-      </div>
-      <div class="medicos__foot" data-reveal="up"><a class="btn btn--primary" href={u('/directorio/')}>Ver los {res.medicos} médicos <Icon name="arrow" class="arrow" /></a></div>
-    </div>
-  </section>
-
-  <!-- 7 · Afiliación y telemedicina -->
-  <section class="section section--navy tele" data-scene>
-    <div class="tele__glow" aria-hidden="true"></div>
-    <div class="wrap grid-2">
-      <div class="stack" data-reveal-scope>
-        <span class="eyebrow" data-reveal="up">Afiliación</span>
-        <h2 class="h-xl" data-split="lines">Todos los servicios a un único precio, <span class="accent">con telemedicina</span></h2>
-        <ul class="tele__list" data-stagger>
-          {afiliacion.incluye.map((i) => <li><Icon name="check" /> {i}</li>)}
-        </ul>
-        <div class="cta-row" data-reveal="up">
+  <!-- Afiliación -->
+  <section class="section afiliacion">
+    <div class="wrap afiliacion__grid">
+      <div>
+        <h2 class="h-xl">{afiliacion.idea.replace(/\.$/, '')}</h2>
+        <p class="afiliacion__precio">Consulta el precio por WhatsApp.</p>
+        <ul class="afiliacion__incluye">{afiliacion.incluye.map((i) => <li>{i}</li>)}</ul>
+        <div class="cta-row">
           <a class="btn btn--white" href={afiliacion.cta.href} target="_blank" rel="noopener">{afiliacion.cta.texto}</a>
-          <a class="btn btn--ghost" href={u('/afiliacion/')}>Conocer la afiliación <Icon name="arrow" class="arrow" /></a>
+          <a class="afiliacion__link" href={u('/afiliacion/')}>Cómo funciona la afiliación</a>
         </div>
       </div>
-      <div class="llamada" data-reveal="scale" data-delay=".2" aria-hidden="true">
-        <div class="llamada__top"><span class="badge-live"><i></i> Sala de espera</span><Icon name="video" /></div>
-        <p class="llamada__turno">Tu turno<b>2</b></p>
-        <p class="llamada__txt">Un médico de la Policlínica te atenderá por videollamada en unos minutos.</p>
-        <div class="llamada__bar"><i></i></div>
+      <div>
+        <h3 class="h-lg">Así es una consulta por videollamada</h3>
+        <ol class="pasos">
+          <li>Entra a tu panel con tu usuario y tu clave.</li>
+          <li>Pulsa «Entrar a la videollamada» y espera en la sala de espera.</li>
+          <li>Cuando un médico te atienda, se abre la videollamada.</li>
+        </ol>
       </div>
     </div>
   </section>
 
-  <!-- 8 · Testimonios (los del sitio actual) -->
-  <section class="section section--mist" data-scene>
-    <div class="wrap">
-      <div class="stack head head--center" data-reveal-scope>
-        <span class="eyebrow" data-reveal="up">Doctores y pacientes</span>
-        <h2 class="h-xl" data-split="lines">Ellos confían <span class="underline-accent">en nosotros</span></h2>
-      </div>
-      <div class="grid-3" data-stagger=".1">
-        {testimonios.map((t) => (
-          <figure class="card testimonio">
-            <Icon name="quote" size={34} class="testimonio__q" />
-            <blockquote>«{t.texto}»</blockquote>
-          </figure>
-        ))}
+  <!-- 74 años y testimonios -->
+  <section class="section aniversario">
+    <div class="wrap aniversario__grid">
+      <h2 class="aniversario__t">{anos()} años celebrando tu bienestar</h2>
+      <div>
+        <ul class="citas">{testimonios.map((t) => <li><blockquote>«{t.texto}»</blockquote></li>)}</ul>
+        <p class="aniversario__pie">Comentarios de pacientes y doctores.</p>
       </div>
     </div>
   </section>
 
-  <!-- 9 · Ubicación -->
-  <section class="section" id="ubicacion" data-scene>
-    <div class="wrap grid-2">
-      <div class="stack" data-reveal-scope>
-        <span class="eyebrow" data-reveal="up">Contacto</span>
-        <h2 class="h-xl" data-split="lines">Te esperamos en <span class="underline-accent">Santa Rita</span></h2>
-        <ul class="contacto" data-stagger>
-          <li><span class="icon-badge"><Icon name="phone" /></span><span><small>Teléfono</small><a href={clinica.telefono.href}>{clinica.telefono.texto}</a></span></li>
-          <li><span class="icon-badge icon-badge--sos"><Icon name="siren" /></span><span><small>Emergencias</small><a href={clinica.emergencias.href}>{clinica.emergencias.texto}</a></span></li>
-          <li><span class="icon-badge"><Icon name="pin" /></span><span><small>Dirección</small><a href={clinica.mapa} target="_blank" rel="noopener">{clinica.direccion}, {clinica.ciudad}</a></span></li>
-          <li><span class="icon-badge"><Icon name="mail" /></span><span><small>Correo</small><a href={`mailto:${clinica.correo}`}>{clinica.correo}</a></span></li>
-          <li><span class="icon-badge"><Icon name="clock" /></span><span><small>Horario</small>{clinica.horario.emergencias}</span></li>
-        </ul>
+  <!-- Cómo llegar -->
+  <section class="section llegar" id="como-llegar">
+    <div class="wrap llegar__grid">
+      <div>
+        <h2 class="h-xl">Estamos en la {clinica.direccion}</h2>
+        <dl class="numeros">
+          <div><dt>Emergencias</dt><dd><a class="numeros__n numeros__n--sos" href={clinica.emergencias.href}>{clinica.emergencias.texto}</a><span>Todos los días, a toda hora</span></dd></div>
+          <div><dt>Citas por WhatsApp</dt><dd><a class="numeros__n" href={waHref()} target="_blank" rel="noopener">{clinica.whatsapp.texto}</a><span>Lunes a viernes, de 8:00 a. m. a 4:00 p. m.</span></dd></div>
+          <div><dt>Central</dt><dd><a class="numeros__n" href={clinica.telefono.href}>{clinica.telefono.texto}</a></dd></div>
+          <div><dt>Correo</dt><dd><a class="link" href={`mailto:${clinica.correo}`}>{clinica.correo}</a></dd></div>
+        </dl>
       </div>
-      <div class="img-frame mapa" data-reveal="iris">
-        <iframe src={mapa} title="Mapa: Policlínica Maracaibo, Av. 8 Santa Rita" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <div class="llegar__lugar">
+        <div class="mapa"><iframe src={mapa} title="Mapa: Policlínica Maracaibo, Av. 8 Santa Rita" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+        <a class="link" href={clinica.mapa} target="_blank" rel="noopener">Abrir en Google Maps</a>
+        <div class="llegar__fotos">
+          <figure><Image src={accesoEmergencia} alt="Fachada de la Policlínica con el letrero de Emergencia" widths={[360, 560]} sizes="(max-width: 960px) 50vw, 22vw" /><figcaption>Acceso a Emergencia</figcaption></figure>
+          <figure><Image src={entrada} alt="Entrada de la Policlínica con bancas de concreto y palmas" widths={[360, 560]} sizes="(max-width: 960px) 50vw, 22vw" /><figcaption>La entrada</figcaption></figure>
+        </div>
       </div>
     </div>
   </section>
 </Layout>
 
+<script>
+  import { gsap, ScrollTrigger, reduced, getLenis } from '../scripts/motion.js';
+
+  /* ---------- La cruz de los médicos: se arma una vez al cargar ---------- */
+  const cruz = document.querySelector('.cruz');
+  const nota = cruz?.querySelector('figcaption');
+  if (cruz && nota) {
+    const tiles = [...cruz.querySelectorAll<HTMLElement>('.cruz__t')];
+    const sello = cruz.querySelector('.cruz__sello');
+    const ancho = matchMedia('(min-width: 1101px)').matches;
+    if (!reduced) {
+      // desde el centro de la cruz hacia su celda
+      gsap.set(tiles, { xPercent: (_, el) => (2.5 - +el.dataset.c) * 105, yPercent: (_, el) => (2.5 - +el.dataset.r) * 105, scale: ancho ? 0.6 : 1, opacity: 0 });
+      gsap.set(sello, { scale: 0, opacity: 0 });
+    }
+    document.documentElement.classList.add('cruz-lista');
+    const k = ancho ? 1 : 0.8;
+    const listo = Promise.race([Promise.all(tiles.slice(0, 8).map((t) => t.querySelector('img')!.decode().catch(() => {}))), new Promise((r) => setTimeout(r, 900))]);
+    if (!reduced) listo.then(() => gsap.timeline({ onComplete: () => gsap.set([...tiles, sello], { clearProps: 'transform,opacity' }) })
+      .to(sello, { scale: 1, opacity: 1, duration: 0.6 * k, ease: 'back.out(1.5)' }, 0)
+      .to(tiles.filter((t) => t.dataset.anillo === '1'), { xPercent: 0, yPercent: 0, scale: 1, opacity: 1, duration: 0.9 * k, ease: 'power4.out', stagger: 0.04 }, 0.3 * k)
+      .to(tiles.filter((t) => t.dataset.anillo === '2'), { xPercent: 0, yPercent: 0, scale: 1, opacity: 1, duration: 1 * k, ease: 'power4.out', stagger: 0.04 }, 0.5 * k));
+    // al pasar o enfocar una cara, el pie dice quién es
+    const original = nota.textContent;
+    tiles.forEach((t) => {
+      const ver = () => (nota.textContent = t.dataset.quien!);
+      t.addEventListener('pointerenter', ver);
+      t.addEventListener('focus', ver);
+      t.addEventListener('pointerleave', () => (nota.textContent = original));
+      t.addEventListener('blur', () => (nota.textContent = original));
+    });
+  }
+
+  /* ---------- El edificio: la cabina recorre los pisos con el scroll (escritorio) ---------- */
+  const sec = document.querySelector<HTMLElement>('.edificio');
+  if (sec) {
+    const pisos = [...sec.querySelectorAll<HTMLElement>('.piso')];
+    const hojas = [...sec.querySelectorAll<HTMLDetailsElement>('.hoja__piso')];
+    const cabina = sec.querySelector<HTMLElement>('.torre__cabina')!;
+    const riel = sec.querySelector<HTMLElement>('.torre__riel')!;
+    const filas = [...sec.querySelectorAll<HTMLElement>('.hoja__lista li')];
+    let act = -1;
+    const activar = (i: number) => {
+      if (i === act) return;
+      act = i;
+      pisos.forEach((p, j) => p.classList.toggle('is-on', j === i));
+      hojas.forEach((h, j) => h.classList.toggle('is-on', j === i));
+      const p = pisos[i];
+      const y = p.getBoundingClientRect().top - riel.getBoundingClientRect().top + p.offsetHeight / 2 - cabina.offsetHeight / 2;
+      gsap.to(cabina, { y, duration: 0.7, ease: 'power3.inOut' });
+    };
+    const elegirPuerta = (d: string | null) => {
+      sec.querySelectorAll('.puerta').forEach((b) => b.classList.toggle('is-sel', (b as HTMLElement).dataset.puerta === d && b.closest('.piso')!.classList.contains('is-on')));
+      filas.forEach((f) => f.classList.toggle('is-tenue', !!d && !(f.dataset.puertas ?? '').split(' ').includes(d)));
+    };
+
+    const mm = gsap.matchMedia();
+    mm.add('(min-width: 1101px) and (prefers-reduced-motion: no-preference)', () => {
+      sec.classList.add('edificio--vivo');
+      ScrollTrigger.refresh();
+      const st = ScrollTrigger.create({
+        trigger: sec, start: 'top top', end: 'bottom bottom',
+        onUpdate: (s) => { const i = Math.min(pisos.length - 1, Math.floor(s.progress * pisos.length)); if (i !== act) { activar(i); elegirPuerta(null); } },
+      });
+      activar(0);
+      const irA = (i: number, puerta: string | null = null) => {
+        const y = st.start + ((i + 0.5) / pisos.length) * (st.end - st.start);
+        const lenis = getLenis();
+        lenis ? lenis.scrollTo(y, { duration: 0.9 }) : scrollTo({ top: y, behavior: 'smooth' });
+        activar(i);
+        elegirPuerta(puerta);
+      };
+      const onClick = (e: Event) => {
+        const b = (e.target as HTMLElement).closest('button');
+        if (!b) return;
+        const i = pisos.indexOf(b.closest('.piso') as HTMLElement);
+        if (i >= 0) irA(i, b.dataset.puerta ?? null);
+      };
+      sec.addEventListener('click', onClick);
+      return () => { sec.classList.remove('edificio--vivo'); sec.removeEventListener('click', onClick); st.kill(); act = -1; };
+    });
+    // móvil o movimiento reducido: un piso abierto a la vez; tocar un piso de la torre abre su hoja
+    mm.add('(max-width: 1100px), (prefers-reduced-motion: reduce)', () => {
+      hojas.forEach((h) => (h.open = false));
+      const onClick = (e: Event) => {
+        const b = (e.target as HTMLElement).closest('button');
+        const p = b?.closest('.piso') as HTMLElement | null;
+        if (!b || !p) return;
+        const h = hojas[pisos.indexOf(p)];
+        h.open = true;
+        h.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+        elegirPuerta(b.dataset.puerta ?? null);
+      };
+      sec.addEventListener('click', onClick);
+      return () => sec.removeEventListener('click', onClick);
+    });
+  }
+</script>
+
 <style>
   /* ---------- héroe ---------- */
-  .hero { position: relative; min-height: calc(100svh - var(--nav-h) - 38px); display: grid; align-items: center; background: var(--navy); color: #c9d3ea; overflow: hidden; isolation: isolate; }
-  .hero__bg { position: absolute; inset: 0; z-index: -3; }
-  .hero__bg img { width: 100%; height: 100%; object-fit: cover; opacity: .16; filter: grayscale(.3); }
-  .hero__glow { position: absolute; inset: 0; z-index: -2; background: radial-gradient(55% 70% at 80% 30%, rgba(46, 163, 242, .45), transparent 65%), radial-gradient(45% 60% at 0% 100%, rgba(1, 77, 183, .7), transparent 60%), linear-gradient(180deg, rgba(36, 52, 95, .4), var(--navy)); }
-  .hero__dim { position: absolute; inset: 0; z-index: -1; background: var(--navy-deep); opacity: 0; }
-  .hero__cross { position: absolute; z-index: -1; right: -8rem; bottom: -10rem; color: #fff; opacity: .05; }
-  .hero__stage { position: relative; display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(2rem, 5vw, 5rem); align-items: center; padding-block: clamp(3rem, 7vw, 5rem); }
-  .hero__copy { display: grid; gap: 1.5rem; }
-  .hero__pill { background: var(--gold); color: var(--navy); }
-  .hero__title { font-size: clamp(2.8rem, 7vw, 5.6rem); font-weight: 800; color: #fff; line-height: 1.02; letter-spacing: -.03em; }
-  .hero__title em { font-style: normal; color: var(--sky); }
-  .hero__lead { font-size: clamp(1.05rem, 1.5vw, 1.25rem); max-width: 48ch; color: #d5ddef; }
-  .hero__media { position: relative; }
-  .hero__photo { border-radius: 28px; overflow: hidden; aspect-ratio: 4 / 5; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .6); border: 1px solid rgba(255, 255, 255, .14); }
-  .hero__photo img { width: 100%; height: 100%; object-fit: cover; object-position: 47% 50%; }
-  .hero__chip { position: absolute; display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1rem; border-radius: 14px; background: rgba(255, 255, 255, .92); color: var(--ink); font-family: var(--font-head); font-weight: 700; font-size: .85rem; box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .5); backdrop-filter: blur(10px); animation: flota 7s ease-in-out infinite; }
-  .hero__chip--sos { left: -2rem; top: 12%; }
-  .hero__chip--sos i { width: 10px; height: 10px; border-radius: 50%; background: #e53935; box-shadow: 0 0 0 0 rgba(229, 57, 53, .6); animation: latido 1.8s infinite; }
-  .hero__chip--docs { right: -1.5rem; bottom: 14%; color: var(--blue); animation-delay: -3s; }
-  .hero__badge { position: absolute; left: 50%; bottom: -1.8rem; translate: -50% 0; width: 96px; height: 96px; border-radius: 50%; background: var(--gold); color: var(--navy); display: grid; place-content: center; text-align: center; font-family: var(--font-head); font-weight: 700; font-size: .8rem; line-height: 1; box-shadow: 0 20px 40px -14px rgba(255, 179, 66, .7); }
-  .hero__badge b { display: block; font-size: 2rem; font-weight: 800; }
-  @keyframes flota { 50% { transform: translateY(-10px); } }
-  .hero__quick { list-style: none; margin: 0; padding: 0; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-  .quick { display: flex; align-items: center; gap: .9rem; height: 100%; padding: 1.1rem 1.2rem; border-radius: 18px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14); color: #fff; backdrop-filter: blur(12px); transition: background .3s, transform .4s var(--ease-out), border-color .3s; }
-  .quick:hover { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .35); transform: translateY(-3px); }
-  .quick b { display: block; font-family: var(--font-head); }
-  .quick small { color: #b9c5e2; font-size: .82rem; }
-  .quick__ico { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: rgba(46, 163, 242, .22); flex: none; }
-  .quick--sos .quick__ico { background: rgba(229, 57, 53, .3); }
-  .quick :global(.quick__arrow) { margin-left: auto; opacity: .6; flex: none; }
-  /* escritorio con escena fijada: los accesos aparecen donde estaba el texto */
-  :global(html.pin-ok) .hero__quick { position: absolute; left: 0; top: 50%; translate: 0 -50%; width: 54%; grid-template-columns: repeat(2, 1fr); }
-  :global(html.pin-ok) .quick { padding: 1.4rem; }
-  :global(html.pin-ok:not(.motion-ready)) .hero__quick > li { opacity: 0; }
-  .hero__scroll { position: absolute; left: 50%; bottom: 1.2rem; translate: -50% 0; display: grid; justify-items: center; gap: .4rem; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: #9fb0d6; }
-  .hero__scroll span { width: 1px; height: 36px; background: linear-gradient(#fff, transparent); animation: baja 2s ease-in-out infinite; transform-origin: top; }
-  @keyframes baja { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
+  .hero { background: var(--mist); }
+  .hero__grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: clamp(2rem, 5vw, 5rem); align-items: center; padding-block: clamp(3rem, 6vw, 5rem); }
+  .hero__texto { display: grid; gap: 1.5rem; justify-items: start; }
+  .hero__texto h1 { font-size: clamp(2.5rem, 1.5rem + 3.4vw, 4.1rem); max-width: 15ch; }
+  .hero__tareas { display: flex; flex-wrap: wrap; gap: .8rem; }
+  .hero__buscar { font-size: 1.05rem; }
 
-  /* ---------- cifras ---------- */
-  .cifras { background: #fff; border-bottom: 1px solid var(--line); }
-  .cifras__grid { display: grid; grid-template-columns: repeat(4, 1fr); }
-  .cifra { padding: 2.2rem 1.5rem; display: grid; gap: .3rem; border-left: 1px solid var(--line); }
-  .cifra:first-child { border-left: 0; }
-  .cifra strong { font-family: var(--font-head); font-size: clamp(2.4rem, 4vw, 3.4rem); font-weight: 800; color: var(--blue); line-height: 1; }
-  .cifra span { font-size: .92rem; }
+  .cruz { margin: 0; width: min(440px, 100%); justify-self: center; display: grid; gap: .9rem; }
+  .cruz__grid { display: grid; grid-template: repeat(6, 1fr) / repeat(6, 1fr); gap: clamp(4px, .6vw, 7px); aspect-ratio: 1; }
+  .cruz__t { display: block; border-radius: var(--r-foto); overflow: hidden; background: var(--navy); outline-offset: 2px; }
+  .cruz__t img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; transition: transform .4s var(--ease-out); }
+  .cruz__t:hover img, .cruz__t:focus-visible img { transform: scale(1.08); }
+  .cruz__sello { grid-area: 3 / 3 / 5 / 5; display: grid; place-content: center; text-align: center; background: var(--gold); color: var(--navy); border-radius: var(--r-foto); font: 700 clamp(.8rem, 1.3vw, 1rem) / 1 var(--font-head); }
+  .cruz__sello b { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; line-height: .9; }
+  .cruz figcaption { text-align: center; font-size: .9375rem; color: var(--muted); min-height: 1.6em; }
+  :global(html.js:not(.cruz-lista)) :is(.cruz__t, .cruz__sello) { opacity: 0; }
+
+  /* ---------- el edificio ---------- */
+  .edificio { background: var(--navy-deep); color: #c9d3ea; }
+  .edificio__escena { padding-block: clamp(4rem, 8vw, 6rem); }
+  .edificio__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-template-areas: 'head head' 'torre hoja'; gap: 2.5rem 3rem; }
+  .edificio__head { grid-area: head; display: grid; gap: 1rem; grid-template-columns: 1fr auto; align-items: end; }
+  .edificio__head h2 { color: #fff; max-width: 18ch; }
+  .edificio__head p { grid-column: 1; max-width: 52ch; }
+  .buscador { grid-column: 2; grid-row: 1 / 3; align-self: end; display: flex; align-items: center; gap: .6rem; width: min(440px, 100%); padding: .35rem .35rem .35rem 1rem; border-radius: 999px; background: #fff; color: var(--muted); }
+  .buscador input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; min-height: 46px; color: var(--ink); }
+  .buscador:focus-within { box-shadow: 0 0 0 3px var(--sky); }
+  .buscador .btn--white { background: var(--blue); color: #fff; }
+
+  .torre { grid-area: torre; display: grid; grid-template-columns: 52px 1fr; gap: 1.2rem; align-self: start; }
+  .torre__riel { position: relative; border-left: 2px dashed #3a4a75; margin-left: 25px; }
+  .torre__cabina { position: absolute; left: -24px; top: 0; width: 46px; height: 46px; border-radius: 2px; background: var(--gold); color: var(--navy); display: grid; place-items: center; box-shadow: 0 0 0 6px rgba(255, 179, 66, .15); }
+  .pisos { list-style: none; margin: 0; padding: 0; }
+  .piso { padding-block: 1rem; border-bottom: 2px solid var(--slate); display: grid; gap: .7rem; }
+  .piso:first-child { border-top: 2px solid var(--slate); }
+  .piso__nombre { display: flex; align-items: baseline; gap: .8rem; background: none; border: 0; padding: 0; color: #fff; font: 700 1.3125rem/1.2 var(--font-head); cursor: pointer; text-align: left; }
+  .piso__nombre small { font: 600 .9375rem var(--font-body); color: #9fb0d6; }
+  .puertas { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .puerta { width: 44px; height: 54px; border: 0; border-radius: 22px 22px 2px 2px; background: #2d4073; color: #c9d3ea; font: 800 .95rem/1 var(--font-head); font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color .3s calc(var(--i) * 25ms), color .3s calc(var(--i) * 25ms), box-shadow .2s; }
+  .puerta:hover { background: #3a5292; color: #fff; }
+  .piso.is-on .puerta { background: var(--gold); color: var(--navy); }
+  .puerta.is-sel { box-shadow: 0 0 0 3px #fff; }
+
+  .hoja { grid-area: hoja; background: #fff; color: var(--text); border-radius: var(--radius); padding: 1.4rem 1.4rem 1rem; align-self: start; box-shadow: var(--shadow-2); }
+  .hoja__piso summary { list-style: none; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .1rem 1rem; cursor: pointer; padding-block: .6rem; border-bottom: 1px solid var(--line); }
+  .hoja__piso summary::-webkit-details-marker { display: none; }
+  .hoja__piso summary span { font: 700 1.3125rem var(--font-head); color: var(--navy); }
+  .hoja__piso summary small { grid-column: 1; font-size: .9375rem; color: var(--muted); }
+  .mas { grid-column: 2; grid-row: 1 / 3; width: 18px; height: 18px; position: relative; transition: transform .3s var(--ease-out); }
+  .mas::before, .mas::after { content: ''; position: absolute; inset: 0; margin: auto; background: var(--blue); border-radius: 2px; }
+  .mas::before { width: 18px; height: 3px; }
+  .mas::after { width: 3px; height: 18px; }
+  .hoja__piso[open] .mas { transform: rotate(45deg); }
+  .hoja__lista { list-style: none; margin: 0; padding: .4rem 0 .8rem; display: grid; }
+  .hoja__lista li { display: grid; grid-template-columns: 56px 1fr; gap: .9rem; align-items: center; padding-block: .7rem; border-bottom: 1px solid var(--line); transition: opacity .25s; }
+  .hoja__lista li:last-child { border-bottom: 0; }
+  .hoja__lista li.is-tenue { opacity: .3; }
+  .hoja__lista img, .ini { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; }
+  .ini { display: grid; place-items: center; background: var(--navy); color: #fff; font: 800 1.05rem var(--font-head); }
+  .hoja__lista b { display: block; color: var(--navy); font-family: var(--font-head); }
+  .hoja__lista span { display: block; font-size: .9375rem; }
+  .hoja__lista a { color: var(--blue); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .hoja__mas { padding-top: .6rem; }
+  .edificio__esps { margin-top: 2.5rem; color: #fff; }
+  .edificio__esps summary { cursor: pointer; font: 700 1.05rem var(--font-head); text-decoration: underline; text-underline-offset: 4px; }
+  .edificio__esps ul { list-style: none; margin: 1.2rem 0 0; padding: 0; columns: 4 14rem; column-gap: 2rem; }
+  .edificio__esps li { padding-block: .3rem; break-inside: avoid; }
+  .edificio__esps a { color: #c9d3ea; }
+  .edificio__esps a:hover { color: #fff; text-decoration: underline; }
+
+  /* escritorio con movimiento: escenario fijo mientras se recorre el edificio (sticky de CSS, sin pin) */
+  .edificio:global(.edificio--vivo) { height: calc(100svh + 260svh); }
+  .edificio:global(.edificio--vivo) .edificio__escena { position: sticky; top: var(--nav-h); height: calc(100svh - var(--nav-h)); padding-block: 1.5rem; overflow: hidden; }
+  .edificio:global(.edificio--vivo) .edificio__esps { display: none; }
+  .edificio:global(.edificio--vivo) .edificio__grid { height: 100%; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: 'head hoja' 'torre hoja'; gap: 1.6rem 3rem; }
+  .edificio:global(.edificio--vivo) .edificio__head { grid-template-columns: 1fr; gap: .9rem; }
+  .edificio:global(.edificio--vivo) .edificio__head h2 { font-size: clamp(1.6rem, 1rem + 1.4vw, 2.2rem); max-width: 24ch; }
+  .edificio:global(.edificio--vivo) .edificio__head p { display: none; }
+  .edificio:global(.edificio--vivo) .buscador { grid-column: 1; grid-row: auto; }
+  .edificio:global(.edificio--vivo) .piso { padding-block: .5rem; gap: .45rem; }
+  .edificio:global(.edificio--vivo) .puertas { gap: 5px; }
+  .edificio:global(.edificio--vivo) .puerta { width: 35px; height: 42px; font-size: .8rem; border-radius: 18px 18px 2px 2px; }
+  .edificio:global(.edificio--vivo) .hoja { max-height: 100%; overflow: auto; overscroll-behavior: contain; }
+  .edificio:global(.edificio--vivo) .hoja__piso { display: none; }
+  .edificio:global(.edificio--vivo) .hoja__piso:global(.is-on) { display: block; }
+  .edificio:global(.edificio--vivo) .hoja__piso summary { pointer-events: none; }
+  .edificio:global(.edificio--vivo) .mas { display: none; }
 
   /* ---------- servicios ---------- */
-  .head { margin-bottom: clamp(2.5rem, 5vw, 3.5rem); max-width: 760px; }
-  .head--center { margin-inline: auto; text-align: center; justify-items: center; }
-  .head--center .eyebrow { justify-self: center; }
-  .svc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-  .svc { position: relative; isolation: isolate; overflow: hidden; display: grid; gap: .6rem; align-content: start; min-height: 250px; padding: 1.8rem; border-radius: var(--radius); background: #fff; border: 1px solid var(--line); transition: border-color .3s, box-shadow .4s var(--ease-out); }
-  .svc::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(36, 52, 95, .55), rgba(24, 35, 63, .92)); opacity: 0; transition: opacity .5s var(--ease-out); }
-  .svc::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .4s; background: radial-gradient(260px circle at var(--gx, 50%) var(--gy, 50%), rgba(46, 163, 242, .12), transparent 70%); }
-  .svc :global(.svc__img) { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.08); transition: opacity .5s var(--ease-out), transform 1.2s var(--ease-out); }
-  .svc:hover, .svc:focus-visible { border-color: transparent; box-shadow: var(--shadow); }
-  .svc:hover :global(.svc__img), .svc:focus-visible :global(.svc__img) { opacity: 1; transform: scale(1); }
-  .svc:hover::before, .svc:focus-visible::before, .svc:hover::after { opacity: 1; }
-  .svc:hover :is(h3, p, .svc__num, .svc__more), .svc:focus-visible :is(h3, p, .svc__num, .svc__more) { color: #fff; }
-  .svc:hover .svc__ico, .svc:focus-visible .svc__ico { background: rgba(255, 255, 255, .18); color: #fff; }
-  .svc__num { position: absolute; top: 1.4rem; right: 1.6rem; font-family: var(--font-head); font-weight: 800; color: #cdd5ea; transition: color .3s; }
-  .svc h3 { font-size: 1.2rem; margin-top: .6rem; transition: color .3s; }
-  .svc p { font-size: .95rem; transition: color .3s; }
-  .svc__more { margin-top: auto; padding-top: .8rem; display: inline-flex; align-items: center; gap: .4rem; font-family: var(--font-head); font-weight: 700; font-size: .85rem; color: var(--blue); transition: color .3s; }
-  .svc:hover .svc__more :global(.arrow) { transform: translateX(4px); }
-
-  /* ---------- especialidades ---------- */
-  .esp-band { padding-block: 3rem; border-block: 1px solid var(--line); background: #fff; }
-  .esp-band__head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
-  .esp-chip { display: inline-flex; align-items: center; gap: .45rem; padding: .75rem 1.2rem; border-radius: 999px; background: var(--mist); color: var(--navy); font-family: var(--font-head); font-weight: 600; font-size: .92rem; white-space: nowrap; transition: background .3s, color .3s; }
-  .esp-chip:hover { background: var(--blue); color: #fff; }
-
-  /* ---------- citas ---------- */
-  .horario { display: grid; gap: 1.2rem; }
-  .horario__head { display: flex; align-items: center; gap: 1rem; }
-  .horario dl { margin: 0; display: grid; }
-  .horario dl div { display: grid; grid-template-columns: 12.5rem 1fr; gap: 1rem; padding: .85rem 0; border-top: 1px solid var(--line); }
-  .horario dt { font-family: var(--font-head); font-weight: 700; color: var(--ink); }
-  .horario dd { margin: 0; }
-  .horario__sos { display: flex; align-items: center; gap: .6rem; padding: 1rem 1.2rem; border-radius: 14px; background: #fdeced; color: #9b1c2a; font-family: var(--font-head); font-weight: 700; }
-
-  /* ---------- médicos ---------- */
-  .medicos__head { display: flex; justify-content: space-between; align-items: end; gap: 2rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
-  .buscador { display: flex; align-items: center; gap: .6rem; padding: .4rem .4rem .4rem 1.1rem; border-radius: 999px; background: #fff; border: 1.5px solid var(--line); width: min(100%, 520px); box-shadow: 0 16px 40px -28px rgba(36, 52, 95, .5); transition: border-color .2s, box-shadow .2s; }
-  .buscador:focus-within { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(1, 77, 183, .12); }
-  .buscador :global(svg) { color: var(--muted); flex: none; }
-  .buscador__input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; min-height: 44px; }
-  .medicos__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
-  .medicos__foot { margin-top: 2.5rem; text-align: center; }
+  .servicios__t { max-width: 22ch; margin-bottom: 2.5rem; }
+  .servicios h3 { margin-bottom: 1rem; }
+  .estudios { list-style: none; margin: 0 0 3.5rem; padding: 0; border-top: 1px solid var(--line); }
+  .estudios a { display: grid; grid-template-columns: 15rem 1fr 180px; gap: 1.5rem; align-items: center; padding: 1rem .8rem; border-bottom: 1px solid var(--line); transition: background .2s; }
+  .estudios a:hover { background: var(--mist); }
+  .estudios__nombre { font: 700 1.3125rem var(--font-head); color: var(--blue); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
+  .estudios :global(.estudios__foto) { width: 180px; height: 120px; object-fit: cover; border-radius: var(--r-foto); }
+  .unidades { list-style: none; margin: 0 0 3rem; padding: 0; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 1.5rem; }
+  .unidades a { display: grid; gap: .5rem; align-content: start; }
+  .unidades :global(img) { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-foto); margin-bottom: .5rem; }
+  .unidades__nombre { font: 700 1.15rem var(--font-head); color: var(--blue); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
+  .unidades a:hover .unidades__nombre { text-decoration-thickness: 2.5px; }
+  .servicios__esp { padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: 1.0625rem; }
+  .servicios__esp b { font-family: var(--font-head); color: var(--navy); margin-right: .6rem; }
 
   /* ---------- afiliación ---------- */
-  .tele { overflow: hidden; isolation: isolate; }
-  .tele__glow { position: absolute; inset: 0; z-index: -1; background: radial-gradient(50% 70% at 90% 20%, rgba(46, 163, 242, .35), transparent 60%), radial-gradient(40% 60% at 0% 100%, rgba(1, 77, 183, .5), transparent 60%); }
-  .tele__list { list-style: none; margin: 0; padding: 0; display: grid; gap: .7rem; }
-  .tele__list li { display: flex; gap: .7rem; align-items: center; color: #e2e9f8; }
-  .tele__list :global(svg) { color: var(--gold); flex: none; }
-  .llamada { justify-self: center; width: min(100%, 360px); padding: 1.6rem; border-radius: 28px; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .16); backdrop-filter: blur(14px); box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .6); display: grid; gap: 1rem; color: #fff; animation: flota 8s ease-in-out infinite; }
-  .llamada__top { display: flex; justify-content: space-between; align-items: center; }
-  .badge-live { display: inline-flex; align-items: center; gap: .45rem; padding: .35rem .8rem; border-radius: 999px; background: rgba(46, 163, 242, .2); font-size: .8rem; font-weight: 700; }
-  .badge-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--sky); animation: latido 1.8s infinite; }
-  .llamada__turno { display: grid; font-family: var(--font-head); font-weight: 600; color: #b9c5e2; }
-  .llamada__turno b { font-size: 4.5rem; line-height: 1; color: #fff; }
-  .llamada__txt { color: #d5ddef; font-size: .95rem; }
-  .llamada__bar { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, .12); overflow: hidden; }
-  .llamada__bar i { display: block; height: 100%; width: 40%; border-radius: inherit; background: var(--grad-sky); animation: carga 3.2s ease-in-out infinite; }
-  @keyframes carga { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
+  .afiliacion { background: var(--blue); color: #e4ecfb; }
+  .afiliacion :is(h2, h3) { color: #fff; }
+  .afiliacion__grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(2rem, 6vw, 6rem); }
+  .afiliacion__grid > div { display: grid; gap: 1.4rem; align-content: start; }
+  .afiliacion__precio { font: 600 1.15rem var(--font-head); color: #fff; }
+  .afiliacion__incluye { list-style: none; margin: 0; padding: 0; }
+  .afiliacion__incluye li { padding-block: .8rem; border-top: 1px solid rgba(255, 255, 255, .25); }
+  .afiliacion__incluye li:last-child { border-bottom: 1px solid rgba(255, 255, 255, .25); }
+  .afiliacion__link { color: #fff; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+  .pasos { list-style: none; margin: 0; padding: 0; counter-reset: paso; }
+  .pasos li { counter-increment: paso; display: grid; grid-template-columns: 4.5rem 1fr; align-items: baseline; padding-block: 1.1rem; border-top: 1px solid rgba(255, 255, 255, .25); font-size: 1.15rem; color: #fff; }
+  .pasos li::before { content: counter(paso); font: 800 3rem/1 var(--font-head); color: var(--gold); }
 
-  /* ---------- testimonios ---------- */
-  .testimonio { margin: 0; display: grid; gap: 1rem; }
-  .testimonio :global(.testimonio__q) { color: var(--sky); }
-  .testimonio blockquote { margin: 0; font-family: var(--font-head); font-size: 1.15rem; font-weight: 600; color: var(--ink); line-height: 1.45; }
+  /* ---------- 74 años ---------- */
+  .aniversario { background: var(--gold); color: var(--navy); }
+  .aniversario__grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: clamp(2rem, 6vw, 6rem); align-items: start; }
+  .aniversario__t { font-size: clamp(2.4rem, 1.4rem + 3.6vw, 4.5rem); font-weight: 800; line-height: 1.02; letter-spacing: -.025em; max-width: 10ch; }
+  .citas { list-style: none; margin: 0; padding: 0; }
+  .citas li { padding-block: 1.2rem; border-bottom: 1px solid rgba(36, 52, 95, .2); }
+  .citas li:first-child { padding-top: 0; }
+  .citas blockquote { margin: 0; font: 600 clamp(1.2rem, 1rem + .9vw, 1.5rem) / 1.35 var(--font-head); text-indent: -.45em; }
+  .aniversario__pie { margin-top: 1.2rem; font-size: .9375rem; }
 
-  /* ---------- contacto ---------- */
-  .contacto { list-style: none; margin: .5rem 0 0; padding: 0; display: grid; gap: 1rem; }
-  .contacto li { display: flex; align-items: center; gap: 1rem; }
-  .contacto small { display: block; font-size: .78rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
-  .contacto a { color: var(--ink); font-weight: 600; }
-  .contacto a:hover { color: var(--blue); }
-  .icon-badge--sos { background: #fdeced; color: #c62828; }
-  .mapa { aspect-ratio: 4 / 3; }
-  .mapa iframe { width: 100%; height: 100%; border: 0; display: block; }
+  /* ---------- cómo llegar ---------- */
+  .llegar__grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); }
+  .llegar h2 { max-width: 16ch; margin-bottom: 2rem; }
+  .numeros { margin: 0; display: grid; gap: 1.6rem; }
+  .numeros dt { font-weight: 600; font-size: .9375rem; color: var(--muted); }
+  .numeros dd { margin: 0; display: grid; gap: .2rem; }
+  .numeros__n { white-space: nowrap; font: 800 clamp(1.6rem, 1rem + 2.2vw, 2.7rem) / 1.1 var(--font-head); color: var(--blue); font-variant-numeric: tabular-nums; min-height: 56px; display: inline-flex; align-items: center; }
+  .numeros__n--sos { color: var(--red); }
+  .numeros__n:hover { text-decoration: underline; text-decoration-thickness: 3px; }
+  .llegar__lugar { display: grid; gap: .8rem; align-content: start; }
+  .mapa { aspect-ratio: 4 / 3; border-radius: var(--r-foto); overflow: hidden; background: #cfe4f8; }
+  .mapa iframe { width: 100%; height: 100%; border: 0; display: block; mix-blend-mode: multiply; filter: grayscale(1) contrast(1.1); }
+  .llegar__fotos { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: .8rem; }
+  .llegar__fotos figure { margin: 0; display: grid; gap: .4rem; }
+  .llegar__fotos :global(img) { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-foto); }
+  .llegar__fotos figcaption { font-size: .9375rem; color: var(--muted); }
 
   /* ---------- responsive ---------- */
   @media (max-width: 1100px) {
-    .hero__stage { grid-template-columns: 1fr; }
-    .hero__media { max-width: 460px; width: 100%; justify-self: center; margin-bottom: 2rem; }
-    .hero__chip--sos { left: -.5rem; }
-    .hero__chip--docs { right: -.5rem; }
-    .hero__quick { grid-template-columns: repeat(2, 1fr); }
-    .hero__scroll { display: none; }
-    .svc-grid, .medicos__grid { grid-template-columns: repeat(2, 1fr); }
+    .hero__grid { grid-template-columns: 1fr; }
+    .cruz { width: min(340px, 100%); }
+    .edificio__grid { grid-template-columns: 1fr; grid-template-areas: 'head' 'hoja'; }
+    .edificio__head { grid-template-columns: 1fr; }
+    .buscador { grid-column: 1; grid-row: auto; }
+    .torre { display: none; }
+    .hoja { padding: .6rem 1.1rem; }
+    .afiliacion__grid, .aniversario__grid, .llegar__grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 960px) {
+    .estudios a { grid-template-columns: 1fr 96px; gap: .3rem 1rem; }
+    .estudios__nombre { grid-column: 1; }
+    .estudios__nota { grid-column: 1; }
+    .estudios :global(.estudios__foto) { grid-column: 2; grid-row: 1 / 3; width: 96px; height: 72px; }
+    .unidades { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 640px) {
-    .hero__photo { aspect-ratio: 4 / 3.4; }
-    .hero__quick { grid-template-columns: 1fr; }
-    .cifras__grid { grid-template-columns: repeat(2, 1fr); }
-    .cifra:nth-child(3) { border-left: 0; }
-    .cifra { padding: 1.5rem 1rem; border-top: 1px solid var(--line); }
-    .svc-grid { grid-template-columns: 1fr; }
-    .svc { min-height: 0; }
-    .medicos__grid { grid-template-columns: repeat(2, 1fr); gap: .8rem; }
-    .horario dl div { grid-template-columns: 1fr; gap: .2rem; }
+    .hero__tareas { display: grid; width: 100%; }
+    .hero__tareas .btn { width: 100%; }
+    .unidades { grid-template-columns: 1fr; }
+    .edificio__esps ul { columns: 1; }
   }
 </style>

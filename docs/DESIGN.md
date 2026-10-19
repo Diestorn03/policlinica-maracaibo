@@ -47,3 +47,19 @@ Menú: Servicios · Especialidades · Directorio médico · Afiliación · Nosot
 9. Contacto: teléfono, dirección + mapa, correo, horario (footer id="contacto" ya lo cubre; la portada puede llevar el mapa).
 **Internas:** `PageHero` + contenido actual: /servicios/, /servicios/[slug]/, /especialidades/, /directorio/, /nosotros/ (misión, visión,
 instalaciones), /afiliacion/, 404. **Privadas:** /acceso/, /panel/, /medico/, /admin/ con `Privado.astro` + privado.css.
+
+## v2.1 · Anti-genérico (skill `frontend-design` de Anthropic + crítica con epic-design, 19-oct)
+Una sola apuesta, del mundo real de la clínica: **sus médicos y su edificio**. Todo lo demás, quieto.
+- Portada: héroe lavanda con H1 informativo y dos botones de tarea (Llamar a emergencias / Pedir cita por WhatsApp);
+  la **cruz del logo hecha con 16 retratos** y el sello dorado de los años (único momento orquestado al cargar).
+  **El edificio, piso por piso** (`ubicacion()` en `lib/sitio.ts` saca piso y puertas del consultorio): en escritorio la cabina del «+»
+  recorre los pisos con el scroll (sticky de CSS, sin pin); en móvil/reducido, acordeones. Servicios como tabla de estudios + unidades con
+  foto siempre visible; afiliación en azul plano con los 3 pasos reales; banda dorada «N años celebrando tu bienestar» con testimonios;
+  «Cómo llegar» con los teléfonos como tipografía grande.
+- Prohibido (señales de página generada): etiqueta en MAYÚSCULAS sobre cada título, resaltar una sola palabra del título, puntos medios
+  en textos («A · B»), «→» añadido a enlaces, numeración 01/02 si no es una secuencia, kit de tarjetas idénticas, degradados y vidrio de
+  adorno, marcas de agua, UI falsa, fundido-y-subida en cada sección, hover en cada tarjeta, bucles infinitos.
+- Radios con significado: 2 px losas · 8 px fotos y mapa · 12 px campos y hojas · píldora solo botones · 50 % solo rostros.
+  Títulos en marino `#24345F`; el rojo solo para emergencias; el dorado solo para «alguien te atiende» (puertas, cabina, sello, banda).
+- Textos: verbos claros, sentido de frase, desde lo que el paciente necesita («Pedir cita», «Buscar un médico»), nada de eslóganes de relleno.
+- Miniaturas de retratos: `public/medicos/t/*.webp` (160 px) vía `miniatura()`.

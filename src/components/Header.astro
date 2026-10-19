@@ -15,8 +15,8 @@ const actual = (href: string) => href !== '/#contacto' && ruta.startsWith(href);
 ---
 <div class="topbar">
   <div class="wrap topbar__in">
-    <a class="topbar__sos" href={clinica.emergencias.href}>Emergencias 24 horas · {clinica.emergencias.texto}</a>
-    <span class="topbar__horario">Citas de lunes a viernes, 8:00 a. m. a 4:00 p. m. · <a href={clinica.telefono.href}>{clinica.telefono.texto}</a></span>
+    <a class="topbar__sos" href={clinica.emergencias.href}>Emergencias las 24 horas: {clinica.emergencias.texto}</a>
+    <span class="topbar__horario">Citas de lunes a viernes, de 8:00 a. m. a 4:00 p. m. <a href={clinica.telefono.href}>Central {clinica.telefono.texto}</a></span>
   </div>
 </div>
 <header class="nav">
@@ -31,7 +31,7 @@ const actual = (href: string) => href !== '/#contacto' && ruta.startsWith(href);
     </nav>
     <div class="nav__cta">
       <a class="btn btn--outline btn--sm" href={u('/acceso/')}><Icon name="login" /> Acceder</a>
-      <a class="btn btn--primary btn--sm" href={waHref()} target="_blank" rel="noopener" data-magnetic><Icon name="calendar" /> Solicitar cita</a>
+      <a class="btn btn--primary btn--sm" href={waHref()} target="_blank" rel="noopener" ><Icon name="whatsapp" /> Pedir cita</a>
       <button class="burger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
     </div>
   </div>
@@ -42,7 +42,7 @@ const actual = (href: string) => href !== '/#contacto' && ruta.startsWith(href);
     {links.map((l) => <a href={u(l.href)}>{l.texto}</a>)}
   </nav>
   <div class="menu__extra">
-    <a class="btn btn--white" href={waHref()} target="_blank" rel="noopener"><Icon name="calendar" /> Solicitar cita</a>
+    <a class="btn btn--white" href={waHref()} target="_blank" rel="noopener"><Icon name="whatsapp" /> Pedir cita</a>
     <a class="btn btn--ghost" href={u('/acceso/')}><Icon name="login" /> Acceder</a>
     <a class="btn btn--ghost" href={clinica.emergencias.href}><Icon name="siren" /> Emergencias {clinica.emergencias.texto}</a>
   </div>

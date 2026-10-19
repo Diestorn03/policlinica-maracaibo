@@ -6,8 +6,6 @@
     data-parallax="0.3"          capa con parallax           data-lit                          texto que se ilumina palabra a palabra
     data-count="125"             contador                    data-tilt / data-magnetic / data-glow   efectos de puntero (escritorio)
     .marquee > .marquee__track   cinta infinita que acelera con el scroll
-    #hero (opcional data-pin)    intro del héroe; en escritorio con data-pin queda fijado y pasa al siguiente capítulo:
-      .hero__bg img · .hero__dim · .hero__eyebrow · .hero__title .w · .hero__lead · .hero__cta > * · .hero__media · [data-hero-next]
   Sin JS o con movimiento reducido todo está visible (html.motion-ready + CSS; red de seguridad de 2.5 s en el <head>).
   Las páginas pueden importar { gsap, ScrollTrigger, SplitText, reduced, coarse } para escenas propias.
 */
@@ -117,32 +115,6 @@ function initParallax() {
   });
 }
 
-/* ---------------- Héroe: intro + capítulo fijado (escritorio) ---------------- */
-function initHero() {
-  const hero = document.querySelector('#hero');
-  if (!hero) return;
-  const q = gsap.utils.selector(hero);
-  gsap.timeline({ defaults: { ease: 'power4.out' } })
-    .fromTo(q('.hero__bg img'), { scale: 1.14 }, { scale: 1, duration: 2.2, ease: 'power2.out' }, 0)
-    .fromTo(q('.hero__eyebrow'), { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 }, 0.2)
-    .fromTo(q('.hero__title .w'), { yPercent: 110, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 1.05, stagger: 0.06 }, 0.3)
-    .fromTo(q('.hero__lead'), { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9 }, 0.75)
-    .fromTo(q('.hero__cta > *'), { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, stagger: 0.08 }, 0.9)
-    .fromTo(q('.hero__media'), { y: 120, opacity: 0 }, { y: 0, opacity: 1, duration: 1.5, ease: 'expo.out' }, 0.55);
-
-  if (!hero.hasAttribute('data-pin') || !matchMedia('(min-width: 1101px)').matches) return; // misma condición que html.pin-ok
-  hero.classList.add('is-pinned'); // el CSS superpone [data-hero-next] donde estaba el texto
-  const next = q('[data-hero-next]');
-  if (next.length) gsap.set(next, { opacity: 0, y: 50 });
-  gsap.timeline({ scrollTrigger: { trigger: hero, start: 'top top', end: '+=110%', pin: true, scrub: 0.5, anticipatePin: 1 } })
-    .to(q('.hero__copy'), { yPercent: -25, opacity: 0, duration: 0.25, ease: 'power2.in' }, 0)
-    .fromTo(q('.hero__bg'), { scale: 1 }, { scale: 1.08, duration: 0.5, immediateRender: false }, 0)
-    .fromTo(q('.hero__dim'), { opacity: 0 }, { opacity: 0.55, duration: 0.5, immediateRender: false }, 0)
-    .to(q('.hero__media'), { y: -40, scale: 1.04, duration: 0.5, ease: 'power2.inOut' }, 0.05)
-    .to(next, { opacity: 1, y: 0, duration: 0.25, stagger: 0.07, ease: 'power3.out' }, 0.3)
-    .to({}, { duration: 0.25 });
-}
-
 /* ---------------- Texto que se ilumina ---------------- */
 function initLit() {
   gsap.utils.toArray('[data-lit]').forEach((el) => {
@@ -217,7 +189,6 @@ document.documentElement.classList.add('motion-ready');
 initNav();
 if (!reduced) {
   initLenis();
-  initHero();
   initSplits();
   initReveals();
   initParallax();

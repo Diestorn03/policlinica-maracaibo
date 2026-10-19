@@ -1,6 +1,7 @@
 // node tests/sitio.check.mjs — funciones puras de src/lib/sitio.ts (teléfonos, WhatsApp, iniciales, horarios, fechas)
 import assert from 'node:assert/strict';
-import { duracion, esperando, estaAbierto, fechaCaracas, horaCaracas, iniciales, telHref, waHref } from '../src/lib/sitio.ts';
+import { duracion, esperando, estaAbierto, fechaCaracas, horaCaracas, iniciales, miniatura, telHref, ubicacion, waHref } from '../src/lib/sitio.ts';
+import { readFileSync } from 'node:fs';
 
 // Teléfonos
 assert.equal(telHref('0414-1640799'), 'tel:+584141640799');
@@ -58,5 +59,25 @@ assert.equal(esperando('2026-10-19 19:00:00', t), '07:32');
 assert.equal(esperando('2026-10-19 19:07:30', t), '00:02');
 assert.equal(esperando('2026-10-19 18:02:00', t), '1 h 05 min');
 assert.equal(esperando('2026-10-19 19:10:00', t), '00:00', 'nunca negativo');
+
+// Ubicación del consultorio (piso y puertas) desde el texto del WordPress
+const U = (s) => { const u = ubicacion(s); return [u.piso, u.puertas.join(' '), u.texto]; };
+assert.deepEqual(U('2do Piso C Nro 28'), ['2', '28', '2do piso, consultorio 28']);
+assert.deepEqual(U('P.B Consultorio NRO 32'), ['pb', '32', 'Planta baja, consultorio 32']);
+assert.deepEqual(U('PB C NRO 13-14-14B'), ['pb', '13 14 14B', 'Planta baja, consultorio 13, 14, 14B']);
+assert.deepEqual(U('1er.Piso C. Nro. 16'), ['1', '16', '1er piso, consultorio 16']);
+assert.deepEqual(U('1er Piso  C. Nro.19 A'), ['1', '19A', '1er piso, consultorio 19A']);
+assert.deepEqual(U('3 piso C Nro 45B'), ['3', '45B', '3er piso, consultorio 45B']);
+assert.deepEqual(U('Primer Piso C NRO 20'), ['1', '20', '1er piso, consultorio 20']);
+assert.deepEqual(U('Sótano C Nro 36'), ['s', '36', 'Sótano, consultorio 36']);
+assert.deepEqual(U('C Nro 5 P.B'), ['pb', '5', 'Planta baja, consultorio 5']);
+assert.deepEqual(U('1er Piso Frente a Pabellón'), ['1', '', '1er piso, frente a Pabellón']);
+assert.deepEqual(U('PB'), ['pb', '', 'Planta baja']);
+assert.deepEqual(U('C Nro.1'), [null, '1', 'c Nro.1']);
+// todos los consultorios reales tienen piso salvo uno ('C Nro.1')
+const sinPiso = JSON.parse(readFileSync('src/data/medicos.json', 'utf8')).medicos.filter((m) => ubicacion(m.consultorio).piso === null);
+assert.equal(sinPiso.length, 1, JSON.stringify(sinPiso.map((m) => m.consultorio)));
+assert.equal(miniatura('/medicos/dr-x.jpg'), '/medicos/t/dr-x.webp');
+assert.equal(miniatura('/fotos/12?v=ab'), '/fotos/12?v=ab');
 
 console.log('ok · sitio (teléfonos, WhatsApp, iniciales, horarios, fechas)');

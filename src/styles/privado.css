@@ -22,7 +22,7 @@
 
 .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); }
 .table { width: 100%; border-collapse: collapse; font-size: .92rem; background: #fff; }
-.table th { text-align: left; font-family: var(--font-head); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: #f7f8fd; padding: .8rem 1rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.table th { text-align: left; font-family: var(--font-head); font-size: .85rem; color: var(--navy); background: #f7f8fd; padding: .8rem 1rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .table td { padding: .8rem 1rem; border-bottom: 1px solid var(--line); vertical-align: middle; color: var(--ink); }
 .table tr:last-child td { border-bottom: 0; }
 .table tr:hover td { background: #fafbff; }

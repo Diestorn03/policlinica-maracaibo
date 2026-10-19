@@ -1,13 +1,11 @@
 ---
-// Cabecera de página interna: fondo azul marino con brillo celeste y la cruz del logo como marca de agua.
-import Icon from './Icon.astro';
+// Cabecera de página interna: fondo lavanda del sitio actual, migas, título y entrada.
 import { u } from '../../lib/entorno';
 
 interface Props { titulo: string; lead?: string; eyebrow?: string; migas?: { href?: string; texto: string }[] }
 const { titulo, lead, eyebrow, migas = [] } = Astro.props;
 ---
 <section class="page-hero" data-scene>
-  <div class="page-hero__cross" data-parallax="0.4" aria-hidden="true"><Icon name="cross" size={520} /></div>
   <div class="wrap stack">
     {migas.length > 0 && (
       <nav class="crumbs" aria-label="Migas de pan">
