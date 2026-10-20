@@ -3,11 +3,11 @@
 //  · prerender = false como la portada: en servidor los médicos salen de la base en vivo; en la demo (todo prerenderizado) getStaticPaths genera una página por servicio.
 //  · /servicios/especialidades/ no es un servicio: página con meta refresh a /especialidades/.
 export const prerender = false;
-import { Image } from 'astro:assets';
 import Layout from '../../layouts/Layout.astro';
 import PageHero from '../../components/ui/PageHero.astro';
 import MedicoCard from '../../components/ui/MedicoCard.astro';
 import Tareas from '../../components/inner/Tareas.astro';
+import Foto from '../../components/inner/Foto.astro';
 import { nb, citasLista } from '../../components/inner/texto';
 import { getDB, u } from '../../lib/entorno';
 import { especialidades, medicos, type Medico } from '../../lib/db';
@@ -22,11 +22,10 @@ const s = servicios.find((x) => x.slug === slug);
 if (!s && slug !== 'especialidades') return new Response(null, { status: 404 }); // en servidor; en la demo getStaticPaths solo genera slugs válidos
 const destino = u('/especialidades/');
 
-// Foto con tamaño honesto: las fuentes pequeñas (UCI, obstétrica) no se estiran; la vertical se recorta a 4:5
-const { width = 0, height = 0 } = s?.imagen ?? {};
-const vertical = height > width * 1.2;
-const cuadrada = !vertical && width < height * 1.15; // UCI y obstétrica: casi cuadradas, se recortan lo mínimo
-const ancho = vertical ? 340 : width <= 720 ? 360 : 560;
+// Foto con tamaño honesto: las fuentes pequeñas (UCI 576 px, obstétrica 720 px) nunca pasan de ~380 px de ancho; el marco (4/3, 1/1 o 4/5) lo pone Foto.astro
+const { width = 0 } = s?.imagen ?? {};
+const vertical = (s?.imagen?.height ?? 0) > width * 1.2;
+const ancho = vertical ? 360 : width <= 720 ? 380 : 580;
 
 // Textos cortos del sitio («Emergencias las 24 horas.») van como nota junto al horario; los largos, como párrafos
 const corto = !!s && s.detalle.join(' ').length <= 60;
@@ -60,9 +59,9 @@ const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
       <div class="wrap servicio__grid" style={`--w:${ancho}px`}>
         <div class="servicio__texto">
           {parrafos.length > 1
-            ? <ul class="hechos">{parrafos.map((p) => <li>{p}</li>)}</ul>
-            : parrafos.map((p) => <p class="parrafo">{p}</p>)}
-          <dl class="datos">
+            ? <ul class="hechos" data-stagger=".08">{parrafos.map((p) => <li>{p}</li>)}</ul>
+            : parrafos.map((p) => <p class="parrafo" data-reveal="up">{p}</p>)}
+          <dl class="datos" data-stagger=".08">
             {s.horario && <div><dt>Horario</dt><dd>{nb(s.horario)}</dd></div>}
             {nota && <div><dt>Nota</dt><dd>{nota}</dd></div>}
             <div><dt>Citas</dt><dd>{citasLista}</dd></div>
@@ -70,8 +69,8 @@ const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
           </dl>
           <Tareas motivo={`Solicitud de cita - ${s.nombre}`} />
         </div>
-        <figure class:list={['servicio__foto', { 'servicio__foto--vertical': vertical, 'servicio__foto--cuadrada': cuadrada }]}>
-          <Image src={s.imagen} alt={s.alt} widths={[ancho, Math.min(ancho * 2, width)]} sizes={`(max-width: ${ancho}px) 100vw, ${ancho}px`} loading="eager" style={`object-position:${s.pos}`} />
+        <figure class="servicio__foto">
+          <Foto src={s.imagen} alt={s.alt} pos={s.pos} widths={[ancho, ancho * 2]} sizes={`(max-width: ${ancho}px) 100vw, ${ancho}px`} loading="eager" />
         </figure>
       </div>
     </section>
@@ -79,18 +78,18 @@ const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
     {lista.length > 0 && (
       <section class="section especialistas" aria-labelledby="esp-t">
         <div class="wrap">
-          <h2 class="h-xl" id="esp-t">Especialistas de esta área</h2>
-          <p class="especialistas__sub">{total === 1 ? '1 médico' : `${total} médicos`} de {espNombre} en el directorio.</p>
-          <div class="especialistas__lista">{lista.map((m) => <MedicoCard medico={m} />)}</div>
-          {total > lista.length && <p class="especialistas__mas"><a class="link" href={u(`/directorio/?esp=${s.especialidad}`)}>Ver los {total} médicos de {espNombre}</a></p>}
+          <h2 class="h-xl" id="esp-t" data-split="lines">Especialistas de esta área</h2>
+          <p class="especialistas__sub" data-reveal="up" data-delay=".15">{total === 1 ? '1 médico' : `${total} médicos`} de {espNombre} en el directorio.</p>
+          <div class="especialistas__lista" data-stagger=".06">{lista.map((m) => <MedicoCard medico={m} />)}</div>
+          {total > lista.length && <p class="especialistas__mas" data-reveal="up"><a class="link" href={u(`/directorio/?esp=${s.especialidad}`)}>Ver los {total} médicos de {espNombre}</a></p>}
         </div>
       </section>
     )}
 
     <nav class="section otros" aria-labelledby="otros-t">
       <div class="wrap">
-        <h2 class="h-lg" id="otros-t">Otros servicios</h2>
-        <ul>{otros.map((x) => <li><a class="link" href={u(x.href)}>{x.nombre}</a></li>)}</ul>
+        <h2 class="h-lg" id="otros-t" data-split="lines">Otros servicios</h2>
+        <ul data-stagger=".05">{otros.map((x) => <li><a class="link" href={u(x.href)}>{x.nombre}</a></li>)}</ul>
       </div>
     </nav>
   </Layout>
@@ -109,10 +108,7 @@ const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
   .datos dt { font-weight: 600; color: var(--navy); }
   .datos dd { margin: 0; }
   .datos .link { display: inline-flex; align-items: center; min-height: 44px; }
-  .servicio__foto { margin: 0; }
-  .servicio__foto :global(img) { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-foto); }
-  .servicio__foto--vertical :global(img) { aspect-ratio: 4 / 5; }
-  .servicio__foto--cuadrada :global(img) { aspect-ratio: 1; }
+  .servicio__foto { margin: 0; position: sticky; top: calc(var(--nav-h) + 1.5rem); } /* acompaña la lectura en escritorio */
 
   .especialistas { background: var(--mist); }
   .especialistas__sub { margin-top: .6rem; }
@@ -126,7 +122,7 @@ const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
 
   @media (max-width: 1100px) {
     .servicio__grid { grid-template-columns: minmax(0, 1fr); }
-    .servicio__foto { width: min(100%, var(--w)); }
+    .servicio__foto { width: min(100%, var(--w)); position: static; }
     .especialistas__lista { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
   @media (max-width: 900px) { .especialistas__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

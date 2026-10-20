@@ -84,10 +84,10 @@ function initReveals() {
     if (type === 'clip') to.clipPath = 'inset(0 0% 0 0)';
     if (type === 'drop') to.clipPath = 'inset(0 0 0% 0)';
     if (type === 'iris') to.clipPath = 'circle(75% at 50% 50%)';
-    gsap.fromTo(el, from, { ...to, scrollTrigger: { trigger: el, start: el.dataset.start || 'top 88%', once: true, onEnter: () => el.classList.add('is-inview') } });
+    gsap.fromTo(el, from, { ...to, scrollTrigger: { trigger: el, start: el.dataset.start || 'top 96%', once: true, onEnter: () => el.classList.add('is-inview') } });
   });
   gsap.utils.toArray('[data-stagger]').forEach((group) => {
-    gsap.fromTo(group.children, { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 0.85, ease: 'power3.out', stagger: +(group.dataset.stagger || 0.08), clearProps: 'transform', scrollTrigger: { trigger: group, start: 'top 85%', once: true } });
+    gsap.fromTo(group.children, { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 0.85, ease: 'power3.out', stagger: +(group.dataset.stagger || 0.08), clearProps: 'transform', scrollTrigger: { trigger: group, start: group.dataset.start || 'top 94%', once: true } });
   });
 }
 
@@ -98,7 +98,7 @@ function initSplits() {
     el.style.visibility = 'visible';
     const split = new SplitText(el, { type: mode === 'chars' ? 'chars,words' : mode, mask: mode === 'lines' ? 'lines' : undefined });
     const targets = mode === 'chars' ? split.chars : mode === 'words' ? split.words : split.lines;
-    const trig = { trigger: el, start: el.dataset.start || 'top 86%', once: true, onEnter: () => (el.closest('[data-reveal-scope]') || el).classList.add('is-inview') };
+    const trig = { trigger: el, start: el.dataset.start || 'top 92%', once: true, onEnter: () => (el.closest('[data-reveal-scope]') || el).classList.add('is-inview') };
     const delay = +(el.dataset.delay || 0);
     if (mode === 'chars') gsap.from(targets, { yPercent: 100, opacity: 0, duration: 0.7, ease: 'power3.out', stagger: 0.02, delay, scrollTrigger: trig });
     else if (mode === 'words') gsap.from(targets, { y: '0.8em', opacity: 0, duration: 0.8, ease: 'power4.out', stagger: 0.045, delay, scrollTrigger: trig });

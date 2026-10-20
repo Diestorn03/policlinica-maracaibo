@@ -19,13 +19,13 @@ const pasos = [
   <section class="section">
     <div class="wrap grid">
       <div class="bloque">
-        <h2 class="h-xl">Qué incluye</h2>
-        <ul class="incluye">{afiliacion.incluye.map((i) => <li>{i}</li>)}</ul>
+        <h2 class="h-xl" data-split="lines">Qué incluye</h2>
+        <ul class="incluye" data-stagger=".08">{afiliacion.incluye.map((i) => <li>{i}</li>)}</ul>
       </div>
       <div class="bloque">
-        <h2 class="h-xl">Cómo funciona la telemedicina</h2>
-        <ol class="pasos">{pasos.map((p) => <li>{p}</li>)}</ol>
-        <p class="nota">En la sala de espera ves tu lugar en la fila. Mantén abierta la página hasta que te atiendan. Para entrar a la videollamada, tu afiliación debe estar vigente.</p>
+        <h2 class="h-xl" data-split="lines">Cómo funciona la telemedicina</h2>
+        <ol class="pasos" data-stagger=".12">{pasos.map((p) => <li>{p}</li>)}</ol>
+        <p class="nota" data-reveal="up">En la sala de espera ves tu lugar en la fila. Mantén abierta la página hasta que te atiendan. Para entrar a la videollamada, tu afiliación debe estar vigente.</p>
       </div>
     </div>
   </section>
@@ -33,9 +33,9 @@ const pasos = [
   <section class="section precio">
     <div class="grid-bg" aria-hidden="true"></div>
     <div class="wrap precio__in">
-      <h2 class="h-xl">Consulta el precio por WhatsApp</h2>
-      <p>Escríbenos {citasFrase}, al <span class="num">{clinica.whatsapp.texto}</span>.</p>
-      <div class="cta-row">
+      <h2 class="h-xl" data-split="lines">Consulta el precio por WhatsApp</h2>
+      <p data-reveal="up" data-delay=".15">Escríbenos {citasFrase}, al <span class="num">{clinica.whatsapp.texto}</span>.</p>
+      <div class="cta-row" data-reveal="up" data-delay=".25">
         <a class="btn btn--white" href={afiliacion.cta.href} target="_blank" rel="noopener">{afiliacion.cta.texto}</a>
         <a class="acceso" href={u('/acceso/')}>Ya soy afiliado: entrar a mi panel</a>
       </div>

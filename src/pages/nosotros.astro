@@ -1,7 +1,7 @@
 ---
-// Nosotros: desde 1952, misión y visión, instalaciones con su pie y contacto. Texto de site.ts; las cifras salen de la base como en la portada.
+// Nosotros: desde 1952, cifras, misión y visión, instalaciones con su pie y contacto. Texto de site.ts; las cifras salen de la base como en la portada.
+// Movimiento con los atributos de src/scripts/motion.js (títulos por líneas, cascadas, fotos con clip, contadores).
 export const prerender = false;
-import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/ui/PageHero.astro';
 import { getDB } from '../lib/entorno';
@@ -9,49 +9,64 @@ import { resumen } from '../lib/db';
 import { anos, clinica, hitosConHoy, instalaciones } from '../data/site';
 import { waHref } from '../lib/sitio';
 import { nb } from '../components/inner/texto';
+import Foto from '../components/inner/Foto.astro';
 
 const res = await resumen(await getDB());
 const historia = hitosConHoy();
 const [fachada, ...resto] = instalaciones;
+// Encuadre de cada foto en su marco (la fachada es panorámica; el letrero de Emergencia queda a la izquierda)
+const encuadre: Record<string, string> = { 'Vista desde la calle': '50% 52%', 'El frente': '30% 50%', 'Acceso a Emergencia': '12% 50%', 'Entrada y estacionamiento': '40% 50%', 'Calle y jardineras': '72% 50%' };
 ---
 <Layout titulo="Nosotros" descripcion={`Policlínica Maracaibo atiende desde ${clinica.desde} en la ${clinica.direccion}. Misión, visión, instalaciones y contacto.`}>
   <PageHero titulo={`Cuidamos la salud de Maracaibo desde ${clinica.desde}`} lead={`${res.medicos} médicos en ${res.conMedicos} especialidades, laboratorio, estudios por imágenes, cirugía, cuidados intensivos y emergencias las 24 horas.`} migas={[{ texto: 'Nosotros' }]} />
 
   <section class="section historia">
     <div class="wrap historia__grid">
-      <h2 class="h-xl">{anos()} años celebrando tu bienestar</h2>
-      <ol class="hitos">
+      <h2 class="h-xl" data-split="lines">{anos()} años celebrando tu bienestar</h2>
+      <ol class="hitos" data-stagger=".08">
         {historia.map((h) => <li><b>{h.anio}</b><span>{h.texto}</span></li>)}
       </ol>
+    </div>
+  </section>
+
+  <section class="cifras" aria-label="La Policlínica en cifras">
+    <div class="grid-bg" aria-hidden="true"></div>
+    <div class="wrap">
+      <ul class="cifras__lista" data-stagger=".1">
+        <li><b data-count={anos()}>{anos()}</b><span>años de atención</span></li>
+        <li><b data-count={res.medicos}>{res.medicos}</b><span>médicos en el directorio</span></li>
+        <li><b data-count={res.conMedicos}>{res.conMedicos}</b><span>especialidades con médicos</span></li>
+        <li><b data-count="24">24</b><span>horas de emergencias, todos los días</span></li>
+      </ul>
     </div>
   </section>
 
   <section class="section propuesta">
     <div class="wrap propuesta__grid">
       <div>
-        <h2 class="h-lg">Misión</h2>
-        <p>{clinica.mision}</p>
+        <h2 class="h-lg" data-split="lines">Misión</h2>
+        <p data-reveal="up" data-delay=".15">{clinica.mision}</p>
       </div>
       <div>
-        <h2 class="h-lg">Visión</h2>
-        <p>{clinica.vision}</p>
+        <h2 class="h-lg" data-split="lines">Visión</h2>
+        <p data-reveal="up" data-delay=".15">{clinica.vision}</p>
       </div>
     </div>
   </section>
 
   <section class="section instalaciones" aria-labelledby="inst-t">
     <div class="wrap">
-      <h2 class="h-xl" id="inst-t">Las instalaciones</h2>
-      <p class="instalaciones__sub">Fachada y accesos de la Policlínica, en la {clinica.direccion}.</p>
+      <h2 class="h-xl" id="inst-t" data-split="lines">Las instalaciones</h2>
+      <p class="instalaciones__sub" data-reveal="up" data-delay=".15">Fachada y accesos de la Policlínica, en la {clinica.direccion}.</p>
       <figure class="portada">
-        <Image src={fachada.src} alt={fachada.alt} widths={[800, 1200]} sizes="(max-width: 1240px) 100vw, 1200px" />
+        <Foto src={fachada.src} alt={fachada.alt} ratio="21/9" pos={encuadre[fachada.pie]} widths={[800, 1280]} sizes="(max-width: 1240px) 100vw, 1200px" />
         <figcaption>{fachada.pie}</figcaption>
       </figure>
       <ul class="fotos">
-        {resto.map((f) => (
+        {resto.map((f, i) => (
           <li>
             <figure>
-              <Image src={f.src} alt={f.alt} widths={[400, 800]} sizes="(max-width: 640px) 100vw, (max-width: 960px) 50vw, 380px" loading="lazy" />
+              <Foto src={f.src} alt={f.alt} ratio="4/3" pos={encuadre[f.pie]} reveal="drop" delay={String((i % 3) * 0.12)} widths={[640, 960]} sizes="(max-width: 640px) 100vw, (max-width: 960px) 50vw, 380px" />
               <figcaption>{f.pie}</figcaption>
             </figure>
           </li>
@@ -62,8 +77,8 @@ const [fachada, ...resto] = instalaciones;
 
   <section class="section contacto" aria-labelledby="cont-t">
     <div class="wrap contacto__grid">
-      <h2 class="h-xl" id="cont-t">Cómo contactarnos</h2>
-      <dl class="datos">
+      <h2 class="h-xl" id="cont-t" data-split="lines">Cómo contactarnos</h2>
+      <dl class="datos" data-stagger=".08">
         <div><dt>Emergencias</dt><dd><a class="n n--sos" href={clinica.emergencias.href}>{clinica.emergencias.texto}</a><span>{clinica.horario.emergencias}</span></dd></div>
         <div><dt>Citas por WhatsApp</dt><dd><a class="n" href={waHref()} target="_blank" rel="noopener">{clinica.whatsapp.texto}</a><span>{nb(clinica.horario.citas)}</span></dd></div>
         <div><dt>Central</dt><dd><a class="n" href={clinica.telefono.href}>{clinica.telefono.texto}</a></dd></div>
@@ -84,6 +99,13 @@ const [fachada, ...resto] = instalaciones;
   .hitos b { font: 300 2.6rem / 1 var(--font-head); letter-spacing: -.04em; color: var(--blue); font-variant-numeric: tabular-nums; }
   .hitos span { font: 500 clamp(1.15rem, 1rem + .6vw, 1.4rem) / 1.35 var(--font-head); letter-spacing: -.02em; color: var(--navy); }
 
+  /* ---------- cifras: degradado azul de marca, como el bloque de afiliación de la portada ---------- */
+  .cifras { position: relative; isolation: isolate; overflow: hidden; background: linear-gradient(135deg, var(--blue) 0%, #12306f 55%, var(--navy) 100%); color: #dfe8fb; padding-block: clamp(3rem, 6vw, 4.5rem); }
+  .cifras__lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2rem clamp(1.5rem, 4vw, 3rem); }
+  .cifras li { display: grid; gap: .4rem; align-content: start; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, .28); }
+  .cifras b { font: 300 clamp(3rem, 2rem + 3.6vw, 4.8rem) / 1 var(--font-head); letter-spacing: -.045em; color: #fff; font-variant-numeric: tabular-nums; }
+  .cifras span { font-weight: 600; color: #dfe8fb; max-width: 20ch; }
+
   /* ---------- misión y visión ---------- */
   .propuesta { background: var(--mist); }
   .propuesta__grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 6rem); }
@@ -93,12 +115,9 @@ const [fachada, ...resto] = instalaciones;
   /* ---------- instalaciones ---------- */
   .instalaciones__sub { margin-top: .6rem; }
   .instalaciones figure { margin: 0; display: grid; gap: .5rem; }
-  .instalaciones :global(img) { width: 100%; height: auto; object-fit: cover; border-radius: var(--r-foto); }
   .instalaciones figcaption { font-size: .9375rem; color: var(--text); }
   .instalaciones .portada { margin-top: 2rem; }
-  .portada :global(img) { aspect-ratio: 21 / 9; }
   .fotos { list-style: none; margin: 1.5rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
-  .fotos :global(img) { aspect-ratio: 4 / 3; }
 
   /* ---------- contacto ---------- */
   .contacto { background: var(--mist); }
@@ -115,11 +134,12 @@ const [fachada, ...resto] = instalaciones;
 
   @media (max-width: 1100px) {
     .historia__grid, .contacto__grid { grid-template-columns: 1fr; }
+    .cifras__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 960px) {
     .propuesta__grid { grid-template-columns: 1fr; }
     .fotos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .portada :global(img) { aspect-ratio: 16 / 9; }
+    .portada :global(.marco) { aspect-ratio: 16 / 9; }
   }
   @media (max-width: 640px) {
     .fotos { grid-template-columns: 1fr; }

@@ -66,6 +66,7 @@ const pisos = (['pb', '1', '2', '3', 's'] as const).map((id) => ({ ...PISOS.find
       {DEMO && <noscript><p class="note">Esta demostración filtra con JavaScript. Sin él se muestran todos los médicos.</p></noscript>}
       <p class="cuenta"><span id="cuenta" aria-live="polite">{cuenta}</span> <a class="link" id="quitar" data-limpiar href={u('/directorio/')} hidden={!filtrado}>Quitar los filtros</a></p>
 
+      <!-- cascada de entrada al cargar (motor); con filtro puesto no: el motor contaría también las fichas ocultas y las pocas que coinciden tardarían en salir -->
       <ul class="lista" id="lista">
         {fichas.map(({ m, piso: p, ok, orden: i }) => (
           <li data-ficha={ficha(m.nombre, ...m.especialidades.map((e) => e.nombre))} data-esp={m.especialidades.map((e) => e.slug).join(' ')} data-piso={p} hidden={!ok}>

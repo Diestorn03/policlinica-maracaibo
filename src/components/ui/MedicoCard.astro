@@ -25,7 +25,7 @@ const busca = clave([m.nombre, ...m.especialidades.map((e) => e.nombre)].join(' 
 </article>
 
 <style>
-  .medico { background: #fff; border-radius: var(--radius); border: 1px solid var(--line); overflow: hidden; display: grid; grid-template-rows: auto 1fr; transition: box-shadow .4s var(--ease-out), border-color .3s; }
+  .medico { min-width: 0; background: #fff; border-radius: var(--radius); border: 1px solid var(--line); overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; transition: box-shadow .4s var(--ease-out), border-color .3s; }
   .medico:hover { box-shadow: var(--shadow); border-color: transparent; }
   .medico__foto { aspect-ratio: 1; background: var(--navy); display: grid; place-items: center; overflow: hidden; }
   .medico__foto img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease-out); }

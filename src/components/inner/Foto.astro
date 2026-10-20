@@ -1,0 +1,19 @@
+---
+// Marco de foto limpio para las páginas internas: proporción fija (según la foto, o la que se pida), recorte con object-position,
+// aparición con el motor (data-reveal) y zoom suave solo cuando la foto está dentro de un enlace.
+// El tamaño lo manda quien la usa (ancho del contenedor o height en el .marco); la imagen siempre rellena el marco.
+import { Image } from 'astro:assets';
+import { marcoDe } from './texto';
+
+interface Props { src: ImageMetadata; alt?: string; pos?: string; ratio?: string; widths?: number[]; sizes?: string; loading?: 'eager' | 'lazy'; reveal?: string; delay?: string; class?: string }
+const { src, alt = '', pos = '50% 50%', ratio = marcoDe(src), widths = [480, 960], sizes = '100vw', loading = 'lazy', reveal = 'clip', delay, class: clase } = Astro.props;
+---
+<span class:list={['marco', clase]} style={`--r:${ratio}`} data-reveal={reveal || undefined} data-delay={delay}>
+  <Image src={src} alt={alt} widths={[...new Set(widths.map((w) => Math.min(w, src.width)))]} sizes={sizes} loading={loading} style={`object-position:${pos}`} />
+</span>
+
+<style>
+  .marco { display: block; aspect-ratio: var(--r); overflow: hidden; isolation: isolate; border-radius: var(--r-foto); background: var(--mist); }
+  .marco :global(img) { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; }
+  :global(a:hover) .marco :global(img), :global(a:focus-visible) .marco :global(img) { transform: scale(1.04); }
+</style>

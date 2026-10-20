@@ -1,7 +1,8 @@
 // Filtro instantáneo del directorio. Trabaja sobre las fichas que el HTML ya trae (data-ficha, data-esp, data-piso):
 //  · al cargar lee location.search → así filtra la demo estática de GitHub Pages; en servidor repite lo que el HTML ya trae.
-//  · al escribir (150 ms) o elegir, filtra y deja la URL compartible (?q=&esp=&piso=); el movimiento no interviene.
+//  · al escribir (150 ms) o elegir, filtra y deja la URL compartible (?q=&esp=&piso=); ahí el movimiento no interviene (solo al cargar).
 import { coincide, termino } from './buscar';
+import { gsap, reduced } from '../../scripts/motion.js';
 
 const form = document.querySelector<HTMLFormElement>('#buscar');
 const lista = document.getElementById('lista');
@@ -56,4 +57,7 @@ if (form && lista) {
   esp.value = valida(esp, p.get('esp'));
   piso.value = valida(piso, p.get('piso'));
   aplicar();
+  // Entrada corta solo de las primeras 12 fichas visibles: una cascada sobre las 125 retrasaba el filtro unos segundos
+  const visibles = fichas.filter((li) => !li.hidden);
+  if (!reduced) gsap.from(visibles.slice(0, 12), { y: 36, opacity: 0, duration: 0.8, ease: 'power3.out', stagger: 0.05, clearProps: 'transform,opacity' });
 }

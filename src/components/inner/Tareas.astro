@@ -7,7 +7,7 @@ import { citasLista } from './texto';
 interface Props { motivo?: string }
 const { motivo = 'Solicitud de cita' } = Astro.props;
 ---
-<div class="tareas">
+<div class="tareas" data-reveal="up" data-delay=".1">
   <a class="btn btn--sos btn--tarea" href={clinica.emergencias.href}>Llamar a emergencias <small>{clinica.emergencias.texto}</small></a>
   <a class="btn btn--tarea btn--primary" href={waHref(motivo)} target="_blank" rel="noopener">Pedir cita por WhatsApp <small>{citasLista}</small></a>
 </div>

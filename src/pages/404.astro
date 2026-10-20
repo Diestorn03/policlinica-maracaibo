@@ -13,21 +13,21 @@ import { nav } from '../data/site';
   <section class="section">
     <div class="wrap grid">
       <div class="bloque">
-        <h2 class="h-lg">Buscar un médico</h2>
-        <form class="buscador" action={u('/directorio/')} method="get" role="search">
+        <h2 class="h-lg" data-split="lines">Buscar un médico</h2>
+        <form class="buscador" data-reveal="up" data-delay=".1" action={u('/directorio/')} method="get" role="search">
           <label class="sr-only" for="q404">Nombre del médico o especialidad</label>
           <Icon name="search" />
           <input id="q404" name="q" type="search" placeholder="Médico o especialidad" autocomplete="off" />
           <button class="btn btn--sm btn--primary" type="submit">Buscar</button>
         </form>
-        <h2 class="h-lg">O ir a</h2>
-        <ul class="destinos">
+        <h2 class="h-lg" data-split="lines">O ir a</h2>
+        <ul class="destinos" data-stagger=".05">
           <li><a href={u('/')}>Inicio</a></li>
           {nav.map((n) => <li><a href={u(n.href)}>{n.texto}</a></li>)}
         </ul>
       </div>
       <div class="bloque">
-        <h2 class="h-lg">¿Necesitas atención ahora?</h2>
+        <h2 class="h-lg" data-split="lines">¿Necesitas atención ahora?</h2>
         <Tareas />
       </div>
     </div>

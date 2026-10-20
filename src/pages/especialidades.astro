@@ -1,73 +1,148 @@
 ---
-// Especialidades de la A a la Z, cada una enlazada a su lista de médicos en el directorio, con su cuenta.
-// prerender = false como la portada: en servidor las cuentas son en vivo; en la demo se fijan al compilar.
+// Especialidades de la A a la Z en UNA sola lista, en orden de lectura (de izquierda a derecha y hacia abajo), cada una enlazada
+// a su lista de médicos en el directorio, con su cuenta. Las que aún no tienen médicos van al final, aparte.
+//  · Buscador que filtra al escribir (sin acentos) y casilla «solo las que tienen médicos»: todo en el navegador, así funciona en la demo estática.
+//  · prerender = false como la portada: en servidor las cuentas son en vivo; en la demo se fijan al compilar.
 export const prerender = false;
 import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/ui/PageHero.astro';
+import Icon from '../components/ui/Icon.astro';
 import { getDB, u } from '../lib/entorno';
-import { especialidades, resumen } from '../lib/db';
+import { clave, especialidades, resumen } from '../lib/db';
 
 const db = await getDB();
 const [esps, res] = await Promise.all([especialidades(db), resumen(db)]);
 
-// Agrupa por inicial, sin acentos
-const inicial = (n: string) => n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').charAt(0).toUpperCase();
-const grupos = new Map<string, typeof esps>();
-for (const e of esps) {
-  const l = inicial(e.nombre);
-  grupos.set(l, [...(grupos.get(l) ?? []), e]);
-}
-const letras = [...grupos.keys()].sort();
+// especialidades() ya llega en orden alfabético sin acentos (ORDER BY clave)
+const con = esps.filter((e) => e.total > 0);
+const sin = esps.filter((e) => e.total === 0);
 const medicosTxt = (n: number) => `${n} ${n === 1 ? 'médico' : 'médicos'}`;
 ---
 <Layout titulo="Especialidades" descripcion={`${res.especialidades} especialidades médicas de la Policlínica Maracaibo, de la A a la Z, con sus médicos en el directorio.`}>
   <PageHero titulo="Especialidades" lead={`${res.especialidades} especialidades, ${res.conMedicos} de ellas con médicos en el directorio. Elige una para ver sus médicos.`} migas={[{ texto: 'Especialidades' }]} />
 
-  <nav class="letras" aria-label="Ir a una letra">
-    <ul class="wrap">{letras.map((l) => <li><a href={`#letra-${l}`}>{l}</a></li>)}</ul>
-  </nav>
+  <!-- Herramientas (solo con JavaScript: filtran lo que el HTML ya trae) -->
+  <section class="herramientas" aria-label="Buscar una especialidad">
+    <div class="wrap herramientas__in">
+      <label class="busca" for="buscar-esp">
+        <Icon name="search" />
+        <span class="sr-only">Buscar una especialidad</span>
+        <input id="buscar-esp" type="search" placeholder="Por ejemplo: cardiología" maxlength="80" autocomplete="off" />
+      </label>
+      <label class="solo"><input type="checkbox" id="solo-con" /> Mostrar solo las que tienen médicos</label>
+      <p class="cuenta" id="cuenta-esp" aria-live="polite">{esps.length} especialidades</p>
+    </div>
+  </section>
 
   <section class="section lista">
     <div class="wrap">
-      <div class="abc">
-        {letras.map((l) => (
-          <section class="grupo" id={`letra-${l}`}>
-            <h2>{l}</h2>
-            <ul>
-              {grupos.get(l)!.map((e) => (
-                <li>
-                  {e.total > 0
-                    ? <a href={u(`/directorio/?esp=${e.slug}`)}><span>{e.nombre}</span><small>{medicosTxt(e.total)}</small></a>
-                    : <p><span>{e.nombre}</span><small>Sin médicos</small></p>}
-                </li>
-              ))}
-            </ul>
-          </section>
+      <h2 class="sr-only">Especialidades con médicos</h2>
+      <ul class="esp" id="lista-esp" data-stagger=".03">
+        {con.map((e) => (
+          <li data-n={clave(e.nombre)}>
+            <a href={u(`/directorio/?esp=${e.slug}`)}><span>{e.nombre}</span><small>{medicosTxt(e.total)}</small></a>
+          </li>
         ))}
+      </ul>
+
+      {sin.length > 0 && (
+        <div class="sin" id="sin-medicos">
+          <h2 class="sin__t" data-reveal="up">Por ahora sin médicos en el directorio</h2>
+          <ul class="esp" data-stagger=".03">
+            {sin.map((e) => <li data-n={clave(e.nombre)}><span>{e.nombre}</span></li>)}
+          </ul>
+        </div>
+      )}
+
+      <div class="vacio" id="vacio-esp" role="status" hidden>
+        <p id="vacio-nada">No encontramos «<b id="vacio-q"></b>». Prueba con otra palabra o busca en el <a class="link" id="vacio-dir" href={u('/directorio/')}>directorio médico</a>.</p>
+        <p id="vacio-sin" hidden>Hay coincidencias entre las especialidades que aún no tienen médicos: desmarca «Mostrar solo las que tienen médicos» para verlas.</p>
       </div>
+
       <p class="mas">¿Buscas a un médico por su nombre? <a class="link" href={u('/directorio/')}>Ir al directorio</a></p>
     </div>
   </section>
 </Layout>
 
-<style>
-  .letras { border-bottom: 1px solid var(--line); background: #fff; }
-  .letras ul { list-style: none; margin-block: 0; padding: .5rem 0; display: flex; flex-wrap: wrap; gap: 0 .2rem; }
-  .letras a { display: grid; place-items: center; min-width: 44px; min-height: 44px; border-radius: 2px; font: 600 1.05rem var(--font-head); color: var(--blue); }
-  .letras a:hover { background: var(--mist); text-decoration: underline; text-underline-offset: 4px; }
+<script>
+  import { ScrollTrigger } from '../scripts/motion.js';
+  import { termino } from '../components/directorio/buscar';
 
-  .lista { padding-top: clamp(2.5rem, 5vw, 4rem); }
-  .abc { columns: 3 19rem; column-gap: 3.5rem; }
-  .grupo { break-inside: avoid; margin-bottom: 2.5rem; scroll-margin-top: calc(var(--nav-h) + 16px); }
-  .grupo h2 { font: 300 3rem / 1 var(--font-head); letter-spacing: -.04em; color: var(--blue); margin-bottom: .6rem; }
-  .grupo ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
-  .grupo li { border-bottom: 1px solid var(--line); }
-  .grupo :is(a, p) { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; min-height: 48px; padding: .6rem .4rem; margin: 0; }
-  .grupo a { transition: background .2s; }
-  .grupo a:hover { background: var(--mist); }
-  .grupo a span { font-weight: 600; color: var(--navy); }
-  .grupo a:hover span { color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
-  .grupo p span { color: var(--text); }
-  .grupo small { flex: none; font-size: .9375rem; color: var(--text); text-align: right; }
-  .mas { margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: 1.0625rem; }
+  const q = document.querySelector<HTMLInputElement>('#buscar-esp');
+  const solo = document.querySelector<HTMLInputElement>('#solo-con');
+  const sinBloque = document.querySelector<HTMLElement>('#sin-medicos');
+  const filas = [...document.querySelectorAll<HTMLElement>('.lista .esp > li')];
+  const cuenta = document.getElementById('cuenta-esp');
+  const vacio = document.getElementById('vacio-esp');
+  const vacioQ = document.getElementById('vacio-q');
+  const vacioDir = document.querySelector<HTMLAnchorElement>('#vacio-dir');
+
+  if (q && solo && cuenta && vacio && vacioQ && vacioDir) {
+    const dirBase = vacioDir.getAttribute('href')!; // ya trae la base de la demo (u())
+    const aplicar = () => {
+      const t = termino(q.value.slice(0, 80));
+      let n = 0, enSin = 0, ocultas = 0;
+      for (const li of filas) {
+        const sinMedicos = !!sinBloque?.contains(li);
+        const coincide = !t || li.dataset.n!.includes(t);
+        const ok = coincide && !(sinMedicos && solo.checked);
+        ocultas += +(coincide && !ok);
+        li.hidden = !ok;
+        n += +ok;
+        enSin += +(ok && sinMedicos);
+      }
+      if (sinBloque) sinBloque.hidden = enSin === 0; // sin filas, tampoco su título
+      cuenta.textContent = n === filas.length ? `${n} especialidades` : `${n} de ${filas.length} especialidades`;
+      const buscado = q.value.trim();
+      vacio.hidden = n > 0;
+      document.getElementById('vacio-nada')!.hidden = ocultas > 0;
+      document.getElementById('vacio-sin')!.hidden = ocultas === 0;
+      vacioQ.textContent = buscado;
+      vacioDir.href = buscado ? `${dirBase}?q=${encodeURIComponent(buscado)}` : dirBase;
+      // la página cambia de alto: el motor recalcula dónde se activa cada aparición pendiente
+      ScrollTrigger.refresh();
+    };
+    let espera = 0;
+    q.addEventListener('input', () => { clearTimeout(espera); espera = window.setTimeout(aplicar, 120); });
+    solo.addEventListener('change', aplicar);
+    q.form?.addEventListener('submit', (e) => e.preventDefault());
+  }
+</script>
+
+<style>
+  /* sin JavaScript no hay buscador (la lista completa se lee igual) */
+  :global(html:not(.js)) .herramientas { display: none; }
+  .herramientas { position: sticky; top: var(--nav-h); z-index: 20; background: rgba(255, 255, 255, .94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); padding-block: .8rem; }
+  .herramientas__in { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.8rem; }
+  .busca { flex: 1 1 20rem; max-width: 32rem; display: flex; align-items: center; gap: .6rem; padding: .2rem 1rem; border-radius: 999px; background: #fff; color: var(--muted); border: 1.5px solid var(--line); }
+  .busca:focus-within { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(1, 77, 183, .12); }
+  .busca input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; min-height: 46px; color: var(--ink); }
+  .solo { display: inline-flex; align-items: center; gap: .6rem; min-height: 44px; font-weight: 600; color: var(--navy); cursor: pointer; }
+  .solo input { width: 1.3rem; height: 1.3rem; accent-color: var(--blue); }
+  .cuenta { margin-left: auto; font-size: .9375rem; color: var(--text); }
+
+  .lista { padding-top: clamp(2rem, 4vw, 3.5rem); }
+  /* una sola lista A–Z que se lee por filas: la cuadrícula rellena de izquierda a derecha y hacia abajo */
+  .esp { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); border-top: 1px solid var(--line); }
+  .esp li { border-bottom: 1px solid var(--line); }
+  .esp li[hidden], .sin[hidden], .vacio[hidden] { display: none; }
+  .esp :is(a, li > span) { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; min-height: 56px; padding: .8rem 1rem; }
+  .esp a { transition: background .2s; }
+  .esp a:hover { background: var(--mist); }
+  .esp a span { font-weight: 600; color: var(--navy); }
+  .esp a:hover span { color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
+  .esp small { flex: none; font-size: .9375rem; color: var(--text); text-align: right; }
+
+  .sin { margin-top: 3rem; }
+  .sin__t { margin-bottom: .8rem; font: 600 1.0625rem / 1.3 var(--font-head); letter-spacing: -.01em; color: var(--navy); }
+  .sin .esp li > span { color: var(--text); }
+
+  .vacio { padding-block: 2rem; }
+  .vacio p { font-size: 1.125rem; max-width: 48ch; }
+  .vacio b { color: var(--navy); font-weight: 600; overflow-wrap: anywhere; }
+  .mas { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: 1.0625rem; }
+
+  /* en el teléfono la barra ocuparía un cuarto de la pantalla: no se queda fija */
+  @media (max-width: 899px) { .herramientas { position: static; backdrop-filter: none; -webkit-backdrop-filter: none; } }
+  @media (max-width: 640px) { .cuenta { margin-left: 0; flex-basis: 100%; } }
 </style>
