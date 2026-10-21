@@ -1,11 +1,44 @@
 // API de telemedicina para los paneles (cliente y médico).
 // Servidor: GET /api/espera y /api/cola; las acciones son formularios POST normales.
-// Demo: sala de espera/cola simuladas con localStorage, incluidas salas opacas sin enlaces visibles.
+// Demo: login, sala de espera y cola se simulan en localStorage; no hay backend ni datos clínicos reales.
 // espera() → { consulta: null | { id, estado, posicion, sala, medico, creada, atendida } }
 // cola()   → { espera: [{ id, paciente, edad, motivo, creada }], enCurso: [{ …, sala }] }
 
 export const DEMO = document.documentElement.dataset.demo === '1';
 const BASE = (document.documentElement.dataset.base || '/').replace(/\/$/, '');
+const CLAVE_SESION = 'pm-demo-sesion';
+const CLAVE = 'pm-demo-tele';
+const RUTAS = { admin: '/admin/', medico: '/medico/', cliente: '/panel/', secretaria: '/secretaria/' };
+const CUENTAS = {
+  'admin@demo.policlinica': { rol: 'admin', clave: 'Demo2026!' },
+  'medico@demo.policlinica': { rol: 'medico', clave: 'Demo2026!' },
+  'cliente@demo.policlinica': { rol: 'cliente', clave: 'Demo2026!' },
+  'secretaria@demo.policlinica': { rol: 'secretaria', clave: 'Demo2026!' },
+};
+
+export const rutaDemo = (rol) => `${BASE}${RUTAS[rol] ?? '/acceso/'}`;
+export function sesionDemo() {
+  try {
+    const rol = localStorage.getItem(CLAVE_SESION);
+    return rol && Object.hasOwn(RUTAS, rol) ? rol : null;
+  } catch { return null; }
+}
+export function entrarDemo(usuario, clave) {
+  const cuenta = CUENTAS[String(usuario ?? '').trim().toLowerCase()];
+  if (!cuenta || clave !== cuenta.clave) return null;
+  try { localStorage.setItem(CLAVE_SESION, cuenta.rol); } catch {}
+  return cuenta.rol;
+}
+export function salirDemo() { try { localStorage.removeItem(CLAVE_SESION); } catch {} }
+
+function protegerDemo() {
+  if (!DEMO) return;
+  const esperado = document.body.dataset.demoRol;
+  if (!esperado) return;
+  const rol = sesionDemo();
+  if (!rol) { location.replace(`${BASE}/acceso/?volver=${encodeURIComponent(location.pathname)}`); return; }
+  if (rol !== esperado) location.replace(rutaDemo(rol));
+}
 
 async function json(ruta) {
   const r = await fetch(BASE + ruta, { headers: { accept: 'application/json' }, credentials: 'same-origin' });
@@ -18,7 +51,6 @@ export const espera = () => (DEMO ? demo.espera() : json('/api/espera'));
 export const cola = () => (DEMO ? demo.cola() : json('/api/cola'));
 export const alCambiar = (fn) => { if (DEMO) addEventListener('storage', (e) => e.key === CLAVE && fn()); };
 
-const CLAVE = 'pm-demo-tele';
 const sqlite = (d = new Date()) => d.toISOString().slice(0, 19).replace('T', ' ');
 const hace = (min) => sqlite(new Date(Date.now() - min * 60e3));
 const YO = { id: 3, nombre: 'María González', edad: 68 };
@@ -86,6 +118,7 @@ function aviso(texto) {
   d.showModal();
 }
 
+protegerDemo();
 if (DEMO) {
   document.addEventListener('submit', (e) => {
     const form = e.target;
@@ -93,7 +126,7 @@ if (DEMO) {
     e.preventDefault();
     const ruta = new URL(form.action, location.href).pathname;
     if (ruta.endsWith('/api/espera') || ruta.endsWith('/api/cola')) { location.href = demo.accion(ruta, new FormData(form, e.submitter)); return; }
-    if (new FormData(form, e.submitter).get('accion') === 'salir') { location.href = `${BASE}/acceso/`; return; }
+    if (new FormData(form, e.submitter).get('accion') === 'salir') { salirDemo(); location.href = `${BASE}/acceso/`; return; }
     aviso('Esto es una demostración en GitHub Pages: los datos son de ejemplo y no se guardan. En la versión con servidor esta acción se guarda de verdad.');
   }, true);
 }

@@ -27,7 +27,7 @@ const { titulo, zona, usuario } = Astro.props;
     <link rel="icon" href={u('/favicon.png')} type="image/png" />
     <slot name="head" />
   </head>
-  <body class="app">
+  <body class="app" data-demo-rol={DEMO && usuario ? usuario.rol : undefined}>
     {DEMO && <div class="app-demo" role="note">Demostración: datos de ejemplo, nada se guarda.</div>}
     <header class="app-bar">
       <div class="app-bar__in">
