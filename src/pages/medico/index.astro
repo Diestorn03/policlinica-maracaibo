@@ -42,7 +42,7 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
     <section class="t-azul" aria-labelledby="t-curso" data-curso-sec hidden={viva.enCurso.length === 0}>
       <div class="grid-bg" aria-hidden="true"></div>
       <h2 id="t-curso">En curso</h2>
-      <p class="t-aviso" role="status" data-tomado hidden={!tomado}>Ya es tu paciente. Abre la videollamada para atenderlo.</p>
+      <p class="t-aviso" role="status" data-tomado hidden={!tomado}>Ya es tu paciente. La videollamada se abre aquí automáticamente.</p>
       <ul class="medico__curso" data-curso>
         {viva.enCurso.map((c) => <EnCurso c={c} actual={String(c.id) === atendiendo} />)}
       </ul>
@@ -53,13 +53,6 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
       <h2 id="t-cola">Pacientes en espera</h2>
       <form id="cola" method="post" action={u('/api/cola')} class="medico__form">
         <input type="hidden" name="accion" value="atender" />
-        <!-- botón por defecto desactivado: Enter dentro del campo del enlace no atiende al primer paciente por accidente -->
-        <button type="submit" disabled hidden tabindex="-1" aria-hidden="true"></button>
-        <div class="t-campo medico__meet">
-          <label for="enlace">Tu enlace de Google Meet (opcional)</label>
-          <input class="input" type="url" id="enlace" name="enlace" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://meet.google.com/abc-defg-hij" pattern="https://meet\.google\.com/[a-z]{3}-[a-z]{4}-[a-z]{3}|https://meet\.jit\.si/[\w\-]{6,}" title="Un enlace de Google Meet (https://meet.google.com/abc-defg-hij) o de Jitsi" />
-          <small>Usa un enlace distinto para cada paciente. Si lo dejas vacío, se crea una sala nueva y privada.</small>
-        </div>
         <table class="t-tabla t-tabla--cola" data-tabla hidden={n === 0}>
           <caption class="sr-only">Pacientes en espera, por orden de llegada</caption>
           <thead><tr><th scope="col">Turno</th><th scope="col">Paciente</th><th scope="col">Edad</th><th scope="col">Esperando</th><th scope="col">Motivo</th><th scope="col"><span class="sr-only">Acción</span></th></tr></thead>
@@ -75,19 +68,11 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
 
     <template id="pl-fila"><FilaCola /></template>
     <template id="pl-curso"><EnCurso /></template>
-
-    <dialog class="t-dialogo" id="dialogo-fin" aria-labelledby="dialogo-fin-t">
-      <h2 id="dialogo-fin-t">¿Finalizar la consulta con <span data-dialogo-paciente></span>?</h2>
-      <form method="dialog">
-        <button class="btn btn--outline" value="no" autofocus>Cancelar</button>
-        <button class="btn btn--primary" value="si">Sí, finalizar</button>
-      </form>
-    </dialog>
   </div>
 
   <script>
     import { cola } from '../../scripts/api.js';
-    import { sondear, errorDeUrl, enlaceSeguro } from '../../components/tele/tele.js';
+    import { sondear, errorDeUrl } from '../../components/tele/tele.js';
     import { esperando } from '../../lib/sitio.ts';
     import { aFecha } from '../../lib/tele.ts';
 
@@ -121,19 +106,6 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
       addEventListener('pointerdown', abrirAudio, { once: true });
       addEventListener('keydown', abrirAudio, { once: true });
       btnSonido.addEventListener('click', () => { sonido = !sonido; guardado('pm-aviso', sonido ? '1' : '0'); pintarSonido(); abrirAudio(); audio?.resume(); tono(); });
-
-      // Finalizar con confirmación (sin JS el formulario se envía directo)
-      const dialogo = $<HTMLDialogElement>('#dialogo-fin');
-      let pendiente: HTMLFormElement | null = null;
-      raiz.addEventListener('click', (e) => {
-        const b = (e.target as HTMLElement).closest<HTMLElement>('[data-finalizar]');
-        if (!b || typeof dialogo.showModal !== 'function') return;
-        e.preventDefault();
-        pendiente = b.closest('form');
-        $('[data-dialogo-paciente]').textContent = b.closest('li')?.querySelector('h3')?.textContent ?? 'este paciente';
-        dialogo.showModal();
-      });
-      dialogo.addEventListener('close', () => { if (dialogo.returnValue === 'si') pendiente?.requestSubmit(); dialogo.returnValue = ''; pendiente = null; });
 
       // El reloj de cada fila (cada segundo) y su aviso de espera larga
       const reloj = () => {
@@ -192,10 +164,10 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
             poner(li, 'edad', c.edad == null ? 'Edad sin registrar' : `${c.edad} años`);
             poner(li, 'motivo', c.motivo || 'sin motivo indicado');
             $('[name="consulta"]', li).setAttribute('value', c.id);
-            $('[data-finalizar]', li).setAttribute('aria-label', `Finalizar consulta con ${c.paciente}`);
-            const url = enlaceSeguro(c.enlace);
-            if (url) li.querySelector('[data-campo="enlace"]')!.setAttribute('href', url);
-            $('[data-copiar]', li).dataset.copiar = url;
+            $('[data-enviar-diagnostico]', li).setAttribute('aria-label', `Guardar diagnóstico y finalizar consulta con ${c.paciente}`);
+            const video = li.querySelector<HTMLElement>('[data-video]');
+            const sala = String(c.sala ?? '');
+            if (video && video.dataset.sala !== sala) video.dataset.sala = sala;
             cards.set(String(c.id), li);
           }
           colocar(lista, li, i);
@@ -206,7 +178,7 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
         const actual = cards.get(atendiendo);
         cards.forEach((li) => (li === actual ? li.setAttribute('aria-current', 'true') : li.removeAttribute('aria-current')));
         $('[data-tomado]').hidden = !actual;
-        if (actual && !enfocado) { enfocado = true; $<HTMLElement>('[data-campo="enlace"]', actual).focus(); }
+        if (actual && !enfocado) { enfocado = true; $<HTMLElement>('[data-video]', actual).focus(); }
 
         // --- llegadas nuevas: aviso para lectores de pantalla, título de la pestaña y tono
         if (llegaron.length) { $('[data-anuncio]').textContent = `Llegó un paciente: ${llegaron.join(', ')}`; tono(); }
@@ -231,7 +203,6 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
   .medico__estado span { color: var(--navy); font-variant-numeric: tabular-nums; }
   .medico__curso { list-style: none; margin: 0; padding: 0; }
   .medico__form { display: grid; gap: 1.25rem; }
-  .medico__meet { max-width: 34rem; }
 
   @media (max-width: 640px) {
     .medico__cab .btn { width: 100%; }

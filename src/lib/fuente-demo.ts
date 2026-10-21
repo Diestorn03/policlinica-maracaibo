@@ -17,7 +17,8 @@ export async function getDB(): Promise<DB> {
       (4, 'cliente', 'José Pérez',                 'jose@ejemplo.test',        'V-5123456',  'demo', NULL, '0424-5550102', '1949-02-03', 'Sector Bella Vista, Maracaibo', '2027-03-01'),
       (5, 'cliente', 'Ana Rincón',                 'ana@ejemplo.test',         'V-18765432', 'demo', NULL, '0412-5550103', '1987-11-21', 'Urb. La Lago, Maracaibo', '2027-06-15'),
       (6, 'cliente', 'Luis Fernández',             'luis@ejemplo.test',        'V-10987654', 'demo', NULL, '0416-5550104', '1972-08-09', 'Av. Delicias, Maracaibo', '2026-09-30'),
-      (7, 'medico',  'Dra. Belinda Ocando',        'oftalmologia@policlinica.test', NULL,   'demo', NULL, '0414-6336385', NULL, '', NULL);
+      (7, 'medico',  'Dra. Belinda Ocando',        'oftalmologia@policlinica.test', NULL,   'demo', NULL, '0414-6336385', NULL, '', NULL),
+      (8, 'secretaria', 'Sara Secretaria',          'secretaria@policlinica.test', NULL,      'demo', NULL, '0414-5550105', NULL, '', NULL);
     UPDATE usuarios SET medico_id = (SELECT id FROM medicos WHERE nombre LIKE '%Belinda Ocando%') WHERE id = 7;
     INSERT INTO consultas (cliente_id, medico_id, estado, motivo, enlace, creada, visto, atendida, finalizada) VALUES
       (3, 2, 'finalizada', 'Control de tensión',       'https://meet.jit.si/PoliclinicaMaracaibo-demo1', datetime('now', '-21 days'), datetime('now', '-21 days'), datetime('now', '-21 days', '+6 minutes'), datetime('now', '-21 days', '+24 minutes')),

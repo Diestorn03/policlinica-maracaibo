@@ -10,6 +10,7 @@ const REGLAS: [string, Rol[]][] = [
   ['/admin', ['admin']],
   ['/medico', ['medico']],
   ['/panel', ['cliente']],
+  ['/secretaria', ['secretaria']],
   ['/api/cola', ['medico']],
   ['/api/espera', ['cliente']],
 ];

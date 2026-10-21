@@ -1,0 +1,60 @@
+---
+// /secretaria/ · alta acotada de clientes. La autorización de ruta vive en middleware y el servidor fuerza rol=cliente.
+export const prerender = false;
+import Privado from '../../layouts/Privado.astro';
+import { getDB, u, usuarioDe } from '../../lib/entorno';
+import { guardarUsuario, validarCliente } from '../../lib/usuarios';
+
+const yo = usuarioDe(Astro.locals, 'secretaria');
+const aqui = u('/secretaria/');
+const volver = (clave: 'ok' | 'error', texto: string) => Astro.redirect(`${aqui}?${clave}=${encodeURIComponent(texto)}`, 303);
+
+if (Astro.request.method === 'POST') {
+  const datos = validarCliente(await Astro.request.formData());
+  if (typeof datos === 'string') return volver('error', datos);
+  const creado = await guardarUsuario(await getDB(), datos);
+  if (typeof creado === 'string') return volver('error', creado);
+  return volver('ok', `${datos.nombre} quedó inscrito como cliente.`);
+}
+
+const p = Astro.url.searchParams;
+---
+<Privado titulo="Inscribir cliente" zona="Secretaría" usuario={yo}>
+  <section class="registro" aria-labelledby="registro-t">
+    <header class="registro__cab">
+      <p class="registro__eyebrow">Inscripción de afiliados</p>
+      <h1 id="registro-t">Registrar un nuevo cliente</h1>
+      <p>Esta cuenta podrá entrar al panel de cliente y a la sala de espera de telemedicina. No tienes acceso a historiales, médicos ni datos de otros clientes.</p>
+    </header>
+
+    {p.get('error') && <p class="alert alert--error" role="alert">{p.get('error')!.slice(0, 240)}</p>}
+    {p.get('ok') && <p class="alert alert--ok" role="status">{p.get('ok')!.slice(0, 240)}</p>}
+
+    <form class="registro__form" method="post" action={aqui}>
+      <div class="form-grid">
+        <label class="campo"><span>Nombre completo</span><input class="input" name="nombre" required maxlength="120" autocomplete="name" autofocus /><small>Como aparecerá en su historial y en la sala de espera.</small></label>
+        <label class="campo"><span>Cédula</span><input class="input" name="cedula" required maxlength="20" autocomplete="off" placeholder="V-12345678" /><small>Obligatoria para los clientes.</small></label>
+        <label class="campo"><span>Correo electrónico</span><input class="input" name="correo" type="email" required maxlength="120" autocomplete="email" /></label>
+        <label class="campo"><span>Teléfono</span><input class="input" name="telefono" type="tel" inputmode="tel" maxlength="40" autocomplete="tel" placeholder="0414-1234567" /></label>
+        <label class="campo"><span>Fecha de nacimiento</span><input class="input" name="nacimiento" type="date" autocomplete="bday" /></label>
+        <label class="campo"><span>Afiliación vigente hasta</span><input class="input" name="afiliacion_vence" type="date" /><small>Opcional. Una fecha vencida bloquea la telemedicina.</small></label>
+        <label class="campo full"><span>Dirección</span><input class="input" name="direccion" maxlength="200" autocomplete="street-address" /></label>
+        <label class="campo full"><span>Contraseña inicial</span><input class="input" name="clave" type="password" required minlength="8" autocomplete="new-password" /><small>Mínimo 8 caracteres. Entrégala al cliente de forma segura.</small></label>
+      </div>
+      <div class="registro__acciones">
+        <button class="btn btn--primary" type="submit">Inscribir cliente</button>
+      </div>
+    </form>
+  </section>
+</Privado>
+
+<style>
+  .registro { width: min(56rem, 100%); margin-inline: auto; display: grid; gap: 1.5rem; }
+  .registro__cab { display: grid; gap: .7rem; max-width: 48rem; }
+  .registro__cab h1 { font-size: clamp(2rem, 1.4rem + 2vw, 3rem); letter-spacing: -.045em; }
+  .registro__eyebrow { color: var(--blue); font: 600 .875rem var(--font-head); letter-spacing: .08em; text-transform: uppercase; }
+  .registro__form { display: grid; gap: 1.5rem; padding: clamp(1.25rem, 4vw, 2rem); border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); }
+  .registro__acciones { display: flex; justify-content: flex-end; }
+  .registro__acciones .btn { min-height: 52px; }
+  @media (max-width: 640px) { .registro__acciones .btn { width: 100%; } }
+</style>

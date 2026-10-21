@@ -80,4 +80,11 @@ assert.equal(sinPiso.length, 1, JSON.stringify(sinPiso.map((m) => m.consultorio)
 assert.equal(miniatura('/medicos/dr-x.jpg'), '/medicos/t/dr-x.webp');
 assert.equal(miniatura('/fotos/12?v=ab'), '/fotos/12?v=ab');
 
+// Regresión móvil: el listado de especialidades no puede conservar columnas de 15rem que salgan del fieldset.
+const adminCss = readFileSync('src/components/admin/admin.css', 'utf8');
+assert.ok(adminCss.includes('.adm .checks { columns: 1; column-count: 1; column-width: auto; max-height: none; overflow: visible; }'), 'en móvil las especialidades usan una sola columna sin recorte');
+const formularioMedicos = readFileSync('src/pages/admin/medicos.astro', 'utf8');
+assert.ok(formularioMedicos.includes('name="piso"') && formularioMedicos.includes('name="consultorios"'), 'el formulario registra piso y consultorio(s) por separado');
+assert.equal(formularioMedicos.includes('name="consultorio"'), false, 'no queda el campo libre de consultorio anterior');
+
 console.log('ok · sitio (teléfonos, WhatsApp, iniciales, horarios, fechas)');

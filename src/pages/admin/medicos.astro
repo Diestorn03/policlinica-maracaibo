@@ -1,12 +1,10 @@
 ---
-// /admin/medicos/ · el directorio médico: tabla, alta, edición (con foto) y baja con confirmación.
-// Servidor: POST real (accion=guardar|borrar) y 303 a esta página con ?ok= o ?error=. Demo (estática): ?editar=<id> se rellena
-// en el navegador con los data-* de la fila (edicion.ts) y api.js avisa de que nada se guarda. Sin JS todo sigue funcionando.
+// /admin/medicos/ · directorio médico: alta, edición (con foto), baja y ubicación estructurada por piso.
 export const prerender = false;
 import AdminShell from '../../components/admin/AdminShell.astro';
 import { getDB, u, usuarioDe } from '../../lib/entorno';
 import { borrarMedico, especialidades, guardarFoto, guardarMedico, medico, medicos, quitarFoto, validarMedico, type Medico } from '../../lib/db';
-import { iniciales, miniatura, ubicacion } from '../../lib/sitio';
+import { iniciales, miniatura, PISOS, ubicacion } from '../../lib/sitio';
 import { ficha } from '../../components/directorio/buscar';
 import { pl } from '../../components/admin/util';
 
@@ -38,9 +36,15 @@ const p = Astro.url.searchParams;
 const editando = todos.find((m) => String(m.id) === p.get('editar')) ?? null;
 const abierto = !!editando || p.get('nuevo') !== null;
 const fotoUrl = (m: Medico) => (m.foto ? u(miniatura(m.foto)) : '');
-const datosDe = (m: Medico) => JSON.stringify({ id: m.id, nombre: m.nombre, telefono: m.telefono, consultorio: m.consultorio, especialidades: m.especialidades.map((e) => e.id), foto_url: fotoUrl(m) });
+const ubicacionDe = (m?: Medico | null) => (m ? ubicacion(m.consultorio) : null);
+const pisoDe = (m?: Medico | null) => m?.piso || ubicacionDe(m)?.piso || '';
+const consultoriosDe = (m?: Medico | null) => m?.consultorios || ubicacionDe(m)?.puertas.join(', ') || '';
+const datosDe = (m: Medico) => JSON.stringify({
+  id: m.id, nombre: m.nombre, telefono: m.telefono, piso: pisoDe(m), consultorios: consultoriosDe(m), consultorio_original: m.consultorio,
+  especialidades: m.especialidades.map((e) => e.id), foto_url: fotoUrl(m),
+});
 ---
-<AdminShell titulo="Médicos" activa="medicos" usuario={yo} sub="El directorio que ven los pacientes. Agrega médicos, cambia su consultorio o su teléfono y sube su foto." ok={p.get('ok')} error={p.get('error')}>
+<AdminShell titulo="Médicos" activa="medicos" usuario={yo} sub="El directorio que ven los pacientes. Registra piso, consultorio, teléfono y foto de cada médico." ok={p.get('ok')} error={p.get('error')}>
   <details class="panel ficha" id="ficha" open={abierto} data-editando={editando?.id}>
     <summary>
       <h2 class="titulo">
@@ -52,10 +56,17 @@ const datosDe = (m: Medico) => JSON.stringify({ id: m.id, nombre: m.nombre, tele
     <div class="ficha__cuerpo">
       <form method="post" action={aqui} enctype="multipart/form-data">
         <input type="hidden" name="id" value={editando?.id ?? ''} />
+        <input type="hidden" name="consultorio_original" value={editando?.consultorio ?? ''} />
         <div class="form-grid">
           <label class="campo"><span>Nombre</span><input class="input" name="nombre" required maxlength="120" autocomplete="off" value={editando?.nombre ?? ''} autofocus={abierto} /><small>Con el título, por ejemplo «Dra. Ana Pérez».</small></label>
           <label class="campo"><span>Teléfono</span><input class="input" name="telefono" type="tel" inputmode="tel" maxlength="40" autocomplete="off" value={editando?.telefono ?? ''} /><small>Opcional. Por ejemplo 0414-1234567.</small></label>
-          <label class="campo full"><span>Consultorio</span><input class="input" name="consultorio" maxlength="80" autocomplete="off" value={editando?.consultorio ?? ''} /><small>Escribe el piso y el número, por ejemplo «2do piso, consultorio 28». Con eso el médico aparece en su piso del edificio y del directorio.</small></label>
+          <label class="campo"><span>Piso</span>
+            <select class="select" name="piso" required>
+              <option value="">Selecciona un piso</option>
+              {PISOS.map((piso) => <option value={piso.id} selected={piso.id === pisoDe(editando)}>{piso.nombre}</option>)}
+            </select>
+          </label>
+          <label class="campo"><span>Consultorio(s)</span><input class="input" name="consultorios" maxlength="80" autocomplete="off" inputmode="text" value={consultoriosDe(editando)} pattern="\d{1,3}\s*[ABab]?(?:\s*[,;]\s*\d{1,3}\s*[ABab]?)*" /><small>Opcional. Escribe 28, 28A o varios separados por coma: 13, 14, 14B.</small></label>
           <fieldset class="full">
             <legend>Especialidades (elige al menos una)</legend>
             <div class="checks">
@@ -142,7 +153,7 @@ const datosDe = (m: Medico) => JSON.stringify({ id: m.id, nombre: m.nombre, tele
       lienzo.width = lienzo.height = 480;
       lienzo.getContext('2d')!.drawImage(img, (img.width - lado) / 2, (img.height - lado) * 0.2, lado, lado, 0, 0, 480, 480);
       const blob = await new Promise<Blob | null>((r) => lienzo.toBlob(r, 'image/webp', 0.85));
-      if (blob?.type !== 'image/webp') return; // el navegador no sabe WebP: se envía el original y el servidor lo revisa
+      if (blob?.type !== 'image/webp') return;
       const lista = new DataTransfer();
       lista.items.add(new File([blob], 'foto.webp', { type: 'image/webp' }));
       entrada.files = lista.files;

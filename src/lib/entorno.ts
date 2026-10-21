@@ -16,6 +16,7 @@ export const DEMO_USUARIOS: Record<Rol, UsuarioSesion> = {
   admin: { id: 1, rol: 'admin', nombre: 'Administración Policlínica' },
   medico: { id: 2, rol: 'medico', nombre: 'Dr. Andy Atencio' },
   cliente: { id: 3, rol: 'cliente', nombre: 'María González' },
+  secretaria: { id: 8, rol: 'secretaria', nombre: 'Sara Secretaria' },
 };
 
 /** Usuario de la página privada: el de la sesión (servidor) o el de ejemplo (solo en la demo). */

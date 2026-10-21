@@ -94,8 +94,10 @@ details[open] > summary > .mas { transform: rotate(45deg); }
 .esp-lista { list-style: none; margin: 0; padding: 0; columns: 2 22rem; column-gap: 2.5rem; }
 .esp-lista li { break-inside: avoid; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 1rem; padding-block: .15rem; border-bottom: 1px solid var(--line); min-height: 52px; }
 .esp-lista .cuantos { color: var(--text); font-size: .9375rem; }
-.esp-lista .borrar { grid-column: 1 / -1; margin: 0 0 .8rem; padding-top: 0; border-top: 0; }
-.esp-lista .borrar > summary { font-size: .9375rem; }
+.esp-lista :is(.editar, .borrar) { grid-column: 1 / -1; margin: 0 0 .8rem; padding-top: 0; border-top: 0; }
+.esp-lista :is(.editar, .borrar) > summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 44px; color: var(--blue); font-size: .9375rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.esp-lista .editar form { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem 1rem; margin-top: .4rem; }
+.esp-lista .editar .campo { flex: 1 1 16rem; max-width: 28rem; }
 
 /* tablas en el teléfono: cada fila pasa a ser un bloque con sus rótulos */
 @media (max-width: 760px) {
@@ -114,6 +116,8 @@ details[open] > summary > .mas { transform: rotate(45deg); }
   .cifras { grid-template-columns: 1fr; gap: 1.8rem; }
   .cifras > section, .cifras > section:first-child { padding: 1.4rem 0 0; border-left: 0; border-top: 1px solid var(--line); }
   .cifras > section:first-child { padding-top: 0; border-top: 0; }
+  /* En pantallas estrechas, las tres columnas de especialidades se desbordaban y ocultaban el inicio de la primera opción. */
+  .adm .checks { columns: 1; column-count: 1; column-width: auto; max-height: none; overflow: visible; }
 }
 
 .adm .nombre { color: var(--navy); font-weight: 600; }

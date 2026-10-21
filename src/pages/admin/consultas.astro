@@ -20,7 +20,7 @@ const p = Astro.url.searchParams;
       </div>
       <div class="table-wrap">
         <table class="table adm-tabla">
-          <thead><tr><th scope="col">Fecha</th><th scope="col">Paciente</th><th scope="col">Médico</th><th scope="col">Motivo</th><th scope="col">Estado</th><th scope="col">Duración</th></tr></thead>
+          <thead><tr><th scope="col">Fecha</th><th scope="col">Paciente</th><th scope="col">Médico</th><th scope="col">Motivo</th><th scope="col">Diagnóstico</th><th scope="col">Estado</th><th scope="col">Duración</th></tr></thead>
           <tbody>
             {consultas.map((c) => {
               const min = c.atendida ? duracion(c.atendida, c.finalizada) : null;
@@ -30,6 +30,7 @@ const p = Astro.url.searchParams;
                   <td data-label="Paciente"><b class="nombre">{c.paciente}</b></td>
                   <td data-label="Médico">{c.medico ?? <span class="sin">Sin atender</span>}</td>
                   <td data-label="Motivo">{c.motivo || <span class="sin">Sin motivo</span>}</td>
+                  <td data-label="Diagnóstico">{c.diagnostico || <span class="sin">{c.estado === 'finalizada' ? 'Sin diagnóstico registrado' : '—'}</span>}</td>
                   <td data-label="Estado"><span class:list={['estado', { 'estado--on': c.estado === 'atendiendo', 'estado--fin': c.estado === 'finalizada' || c.estado === 'cancelada' }]}>{ESTADOS[c.estado]}</span></td>
                   <td data-label="Duración">{min !== null ? `${min} min` : <span class="sin">Sin dato</span>}</td>
                 </tr>

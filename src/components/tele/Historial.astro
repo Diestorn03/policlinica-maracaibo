@@ -17,15 +17,17 @@ const quien = cliente ? 'Médico' : 'Paciente';
   ) : (
     <table class="t-tabla">
       <caption class="sr-only">{cliente ? 'Tus consultas por videollamada' : 'Consultas que has atendido por videollamada'}</caption>
-      <thead><tr><th scope="col">Fecha</th><th scope="col">Hora</th><th scope="col">{quien}</th><th scope="col">Duración</th><th scope="col">Estado</th></tr></thead>
+      <thead><tr><th scope="col">Fecha</th><th scope="col">Hora</th><th scope="col">{quien}</th><th scope="col">Diagnóstico</th><th scope="col">Duración</th><th scope="col">Estado</th></tr></thead>
       <tbody>
         {filas.map((i) => {
           const min = i.atendida ? duracion(i.atendida, i.finalizada) : null;
+          const diagnostico = i.diagnostico || (i.estado === 'finalizada' ? 'Sin diagnóstico registrado' : '—');
           return (
             <tr>
               <td data-etiqueta="Fecha">{fechaCaracas(i.creada)}</td>
               <td data-etiqueta="Hora">{fechaCaracas(i.creada, 'hora')}</td>
               <td data-etiqueta={quien}>{(cliente ? i.medico : i.paciente) || 'Sin médico'}</td>
+              <td data-etiqueta="Diagnóstico">{diagnostico}</td>
               <td data-etiqueta="Duración">{min == null ? '—' : `${min} min`}</td>
               <td data-etiqueta="Estado">{i.estado === 'finalizada' ? 'Finalizada' : 'Sin atender'}</td>
             </tr>

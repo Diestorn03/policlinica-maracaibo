@@ -1,4 +1,4 @@
-// Usuarios con rol: admin (gestiona todo), médico (atiende la sala de espera), cliente (afiliado con telemedicina).
+// Usuarios con rol: admin (gestiona todo), médico (atiende la sala de espera), cliente (afiliado con telemedicina) y secretaria (solo inscribe clientes).
 import type { DB } from './db.ts';
 import { hashClave, type Rol } from './auth.ts';
 
@@ -11,7 +11,7 @@ export interface UsuarioInput {
   telefono: string; nacimiento: string | null; direccion: string; afiliacion_vence: string | null; clave: string | null;
 }
 
-export const ROLES: Record<Rol, string> = { admin: 'Administrador', medico: 'Médico', cliente: 'Cliente afiliado' };
+export const ROLES: Record<Rol, string> = { admin: 'Administrador', medico: 'Médico', cliente: 'Cliente afiliado', secretaria: 'Secretaria' };
 const CAMPOS = 'id, rol, nombre, correo, cedula, activo, medico_id, telefono, nacimiento, direccion, afiliacion_vence, creado';
 
 /** "v-12.345.678" / "12345678" → "V-12345678" */
@@ -70,6 +70,16 @@ export function validarUsuario(f: FormData, nuevo: boolean): UsuarioInput | stri
   };
 }
 
+/** Alta exclusiva de secretaria: descarta los campos de privilegio y fuerza un cliente activo. */
+export function validarCliente(f: FormData): UsuarioInput | string {
+  const cliente = new FormData();
+  for (const [nombre, valor] of f.entries()) {
+    if (!['rol', 'medico_id', 'activo'].includes(nombre)) cliente.append(nombre, valor);
+  }
+  cliente.set('rol', 'cliente');
+  return validarUsuario(cliente, true);
+}
+
 const otrosAdmins = async (db: DB, id: number) =>
   Number((await db.prepare("SELECT COUNT(*) AS n FROM usuarios WHERE rol = 'admin' AND activo = 1 AND id != ?1").bind(id).first())?.n ?? 0);
 
@@ -111,12 +121,11 @@ export function edad(nacimiento: string | null, hoy = new Date()): number | null
   return hoy.getFullYear() - a - (hoy.getMonth() + 1 < m || (hoy.getMonth() + 1 === m && hoy.getDate() < d) ? 1 : 0);
 }
 
-/** Cifras del resumen del admin. «Ahora» usa las mismas ventanas que tele.ts (5 min sin latido en la sala, 4 h en curso)
- *  para no contar a quien ya cerró la página. Fechas en hora de Maracaibo (UTC−4). */
+/** Cifras del admin. «Ahora» usa las mismas ventanas que tele.ts (5 min sin latido en la sala, 4 h en curso). */
 export async function resumenAdmin(db: DB, ahora = new Date()) {
   const hoy = new Date(ahora.getTime() - 4 * 3600e3).toISOString().slice(0, 10);
   const en30 = new Date(Date.parse(hoy) + 30 * 864e5).toISOString().slice(0, 10);
-  const inicio = new Date(Date.parse(hoy) + 4 * 3600e3), fin = new Date(inicio.getTime() + 864e5); // el día de Maracaibo, en UTC
+  const inicio = new Date(Date.parse(hoy) + 4 * 3600e3), fin = new Date(inicio.getTime() + 864e5);
   const sql = (d: Date) => d.toISOString().slice(0, 19).replace('T', ' ');
   const n = async (q: string, ...v: unknown[]) => Number((await db.prepare(q).bind(...v).first())?.n ?? 0);
   const [medicos, especialidades, sinMedicos, vigentes, enEspera, atendiendo, consultasHoy, porVencer] = await Promise.all([

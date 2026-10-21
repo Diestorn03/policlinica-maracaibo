@@ -4,7 +4,7 @@ export const prerender = false;
 import AdminShell from '../../components/admin/AdminShell.astro';
 import { getDB, u, usuarioDe } from '../../lib/entorno';
 import { pl } from '../../components/admin/util';
-import { borrarEspecialidad, crearEspecialidad, especialidades } from '../../lib/db';
+import { borrarEspecialidad, crearEspecialidad, editarEspecialidad, especialidades } from '../../lib/db';
 
 const yo = usuarioDe(Astro.locals, 'admin');
 const db = await getDB();
@@ -13,12 +13,20 @@ const volver = (clave: 'ok' | 'error', texto: string) => Astro.redirect(`${aqui}
 
 if (Astro.request.method === 'POST') {
   const f = await Astro.request.formData();
-  if (f.get('accion') === 'borrar') {
+  const accion = String(f.get('accion') ?? '');
+  if (accion === 'borrar') {
     const error = await borrarEspecialidad(db, Number(f.get('id')) || 0);
     return error ? volver('error', error) : volver('ok', 'La especialidad se borró.');
   }
-  const error = await crearEspecialidad(db, String(f.get('nombre') ?? ''));
-  return error ? volver('error', error) : volver('ok', 'La especialidad se agregó.');
+  if (accion === 'editar') {
+    const error = await editarEspecialidad(db, Number(f.get('id')) || 0, String(f.get('nombre') ?? ''));
+    return error ? volver('error', error) : volver('ok', 'La especialidad se actualizó.');
+  }
+  if (accion === 'crear') {
+    const error = await crearEspecialidad(db, String(f.get('nombre') ?? ''));
+    return error ? volver('error', error) : volver('ok', 'La especialidad se agregó.');
+  }
+  return volver('error', 'Acción no válida.');
 }
 
 const lista = await especialidades(db);
@@ -44,6 +52,14 @@ const p = Astro.url.searchParams;
         <li>
           <span><b class="nombre">{e.nombre}</b></span>
           <span class="cuantos">{e.total === 0 ? 'Sin médicos' : <a class="link" href={u(`/directorio/?esp=${e.slug}`)}>{e.total} {e.total === 1 ? 'médico' : 'médicos'}</a>}</span>
+          <details class="editar">
+            <summary>Editar <span class="sr-only">{e.nombre}</span></summary>
+            <form method="post" action={aqui}>
+              <input type="hidden" name="id" value={e.id} />
+              <label class="campo"><span>Nombre</span><input class="input" name="nombre" required minlength="3" maxlength="80" autocomplete="off" value={e.nombre} /></label>
+              <button class="btn btn--primary btn--sm" type="submit" name="accion" value="editar">Guardar cambio</button>
+            </form>
+          </details>
           {e.total === 0 && (
             <details class="borrar">
               <summary>Borrar <span class="sr-only">{e.nombre}</span></summary>

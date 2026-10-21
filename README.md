@@ -8,10 +8,11 @@ afiliación y telemedicina con sala de espera. Astro 7 + GSAP + Lenis sobre Clou
 |---|---|
 | `/`, `/servicios/…`, `/especialidades/`, `/afiliacion/`, `/nosotros/` | Páginas públicas (estáticas) |
 | `/directorio/` | Directorio médico con buscador y filtro por especialidad (sale de la base de datos) |
-| `/acceso/` | Inicio de sesión único: cada rol cae en su panel |
-| `/admin/` | Administrador: usuarios con roles, clientes afiliados, médicos del directorio, especialidades, consultas |
-| `/medico/` | Panel del médico: sala de espera en vivo, atender por videollamada, historial |
-| `/panel/` | Panel del cliente: entrar a la videollamada (sala de espera) e historial de conexiones |
+| `/acceso/` | Inicio de sesión único: administrador, médico, cliente o secretaria caen en su panel |
+| `/admin/` | Administrador: usuarios con roles, clientes afiliados, médicos, especialidades y consultas con diagnóstico |
+| `/secretaria/` | Secretaria: registra nuevos clientes; no puede ver ni modificar historiales, médicos o administración |
+| `/medico/` | Panel del médico: sala de espera, videollamada Jitsi embebida y diagnóstico obligatorio al finalizar |
+| `/panel/` | Panel del cliente: sala de espera, videollamada automática embebida e historial con médico y diagnóstico |
 
 ## Desarrollo
 ```bash
@@ -35,6 +36,8 @@ node tools/usuario.mjs --rol admin --nombre "…" --correo … --remote
 npm run deploy
 ```
 El dominio puede seguir registrado donde está (cPanel): basta con apuntarlo a Cloudflare.
+
+> **Videollamadas:** el proyecto genera una sala Jitsi automática y no muestra enlaces. La integración usa `meet.jit.si` público, adecuada para demostración universitaria; para datos clínicos reales se debe usar una instancia gestionada/propia con autenticación (JWT o lobby) y revisar los requisitos de privacidad del proveedor.
 
 ## Datos
 - `tools/scrape.mjs` sacó el directorio del WordPress anterior → `src/data/medicos.json` + fotos en `public/medicos/`.

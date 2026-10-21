@@ -8,8 +8,8 @@ import { cedula } from '../src/lib/usuarios.ts';
 
 const arg = (k) => { const i = process.argv.indexOf(`--${k}`); return i > 0 ? process.argv[i + 1] : undefined; };
 const rol = arg('rol'), nombre = arg('nombre'), correo = arg('correo')?.toLowerCase();
-if (!['admin', 'medico', 'cliente'].includes(rol) || !nombre || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo ?? '')) {
-  console.error('Uso: node tools/usuario.mjs --rol admin|medico|cliente --nombre "…" --correo … [--cedula V-123] [--medico-id N] [--vence AAAA-MM-DD] [--nacimiento AAAA-MM-DD] [--remote]');
+if (!['admin', 'medico', 'cliente', 'secretaria'].includes(rol) || !nombre || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo ?? '')) {
+  console.error('Uso: node tools/usuario.mjs --rol admin|medico|cliente|secretaria --nombre "…" --correo … [--cedula V-123] [--medico-id N] [--vence AAAA-MM-DD] [--nacimiento AAAA-MM-DD] [--remote]');
   process.exit(1);
 }
 const clave = process.env.NUEVA_CLAVE || randomBytes(9).toString('base64url');

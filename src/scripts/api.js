@@ -1,12 +1,8 @@
 // API de telemedicina para los paneles (cliente y médico).
-//  · Servidor: GET /api/espera y /api/cola; las acciones son formularios POST normales (funcionan sin JS).
-//  · Demo (GitHub Pages, <html data-demo>): no hay servidor. La sala de espera y la cola se simulan en localStorage,
-//    compartidas entre pestañas: abre /panel/ en una y /medico/ en otra y se ven en vivo. Los demás formularios
-//    privados (admin, salir) muestran un aviso en vez de enviarse.
-// Uso:  import { espera, cola, alCambiar } from '../scripts/api.js'
-//       espera() → { consulta: null | { id, estado, posicion, enlace, medico, creada, atendida } }
-//       cola()   → { espera: [{ id, paciente, edad, motivo, creada }], enCurso: [{ …, enlace }] }
-//       alCambiar(fn) → avisa al instante cuando otra pestaña cambia la simulación (en servidor no hace nada)
+// Servidor: GET /api/espera y /api/cola; las acciones son formularios POST normales.
+// Demo: sala de espera/cola simuladas con localStorage, incluidas salas opacas sin enlaces visibles.
+// espera() → { consulta: null | { id, estado, posicion, sala, medico, creada, atendida } }
+// cola()   → { espera: [{ id, paciente, edad, motivo, creada }], enCurso: [{ …, sala }] }
 
 export const DEMO = document.documentElement.dataset.demo === '1';
 const BASE = (document.documentElement.dataset.base || '/').replace(/\/$/, '');
@@ -22,13 +18,12 @@ export const espera = () => (DEMO ? demo.espera() : json('/api/espera'));
 export const cola = () => (DEMO ? demo.cola() : json('/api/cola'));
 export const alCambiar = (fn) => { if (DEMO) addEventListener('storage', (e) => e.key === CLAVE && fn()); };
 
-// ---------------------------------------------------------------- simulación (solo demo)
 const CLAVE = 'pm-demo-tele';
-// "2026-10-19 19:20:00" (UTC, como SQLite) para que los paneles traten igual las fechas de la demo y las del servidor
 const sqlite = (d = new Date()) => d.toISOString().slice(0, 19).replace('T', ' ');
 const hace = (min) => sqlite(new Date(Date.now() - min * 60e3));
-const YO = { id: 3, nombre: 'María González', edad: 68 }; // cliente de ejemplo (DEMO_USUARIOS)
+const YO = { id: 3, nombre: 'María González', edad: 68 };
 const MEDICO = 'Dr. Andy Atencio';
+const sala = () => `pm-${Array.from({ length: 24 }, () => Math.floor(Math.random() * 36).toString(36)).join('')}`;
 
 function leer() {
   try {
@@ -41,7 +36,6 @@ function leer() {
   ] };
 }
 function guardar(s) { try { localStorage.setItem(CLAVE, JSON.stringify(s)); } catch {} }
-const jitsi = () => 'https://meet.jit.si/PoliclinicaMaracaibo-demo-' + Math.random().toString(36).slice(2, 10);
 
 const demo = {
   async espera() {
@@ -49,15 +43,12 @@ const demo = {
     const c = s.consultas.find((x) => x.clienteId === YO.id && (x.estado === 'espera' || x.estado === 'atendiendo'));
     if (!c) return { consulta: null };
     const posicion = s.consultas.filter((x) => x.estado === 'espera' && x.id <= c.id).length;
-    return { consulta: { id: c.id, estado: c.estado, posicion, enlace: c.enlace ?? null, medico: c.medico ?? null, creada: c.creada, atendida: c.atendida ?? null } };
+    return { consulta: { id: c.id, estado: c.estado, posicion, sala: c.sala ?? '', medico: c.medico ?? null, creada: c.creada, atendida: c.atendida ?? null } };
   },
   async cola() {
     const s = leer();
-    const fila = ({ id, paciente, edad, motivo, creada, enlace }) => ({ id, paciente, edad, motivo, creada, enlace });
-    return {
-      espera: s.consultas.filter((x) => x.estado === 'espera').map(fila),
-      enCurso: s.consultas.filter((x) => x.estado === 'atendiendo').map(fila),
-    };
+    const fila = ({ id, paciente, edad, motivo, creada, sala }) => ({ id, paciente, edad, motivo, creada, sala });
+    return { espera: s.consultas.filter((x) => x.estado === 'espera').map(fila), enCurso: s.consultas.filter((x) => x.estado === 'atendiendo').map(fila) };
   },
   accion(ruta, f) {
     const s = leer();
@@ -70,11 +61,16 @@ const demo = {
       guardar(s);
       return `${BASE}/panel/`;
     }
-    if (f.get('accion') === 'finalizar') { if (c) Object.assign(c, { estado: 'finalizada', finalizada: sqlite() }); guardar(s); return `${BASE}/medico/`; }
+    if (f.get('accion') === 'finalizar') {
+      const diagnostico = String(f.get('diagnostico') ?? '').trim();
+      if (diagnostico.length < 3) return `${BASE}/medico/?error=${encodeURIComponent('Escribe el diagnóstico antes de finalizar la consulta.')}`;
+      if (c) Object.assign(c, { estado: 'finalizada', diagnostico, finalizada: sqlite() });
+      guardar(s);
+      return `${BASE}/medico/`;
+    }
     if (!c || c.estado !== 'espera') return `${BASE}/medico/?error=${encodeURIComponent('Ese paciente ya fue tomado por otro médico o salió de la sala.')}`;
-    const pegado = String(f.get('enlace') || '').trim();
-    if (pegado && !/^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/.test(pegado)) return `${BASE}/medico/?error=${encodeURIComponent('El enlace debe ser de Google Meet (https://meet.google.com/abc-defg-hij) o de Jitsi.')}`;
-    Object.assign(c, { estado: 'atendiendo', enlace: pegado || jitsi(), medico: MEDICO, atendida: sqlite() });
+    if (s.consultas.some((otra) => otra.estado === 'atendiendo' && otra.medico === MEDICO)) return `${BASE}/medico/?error=${encodeURIComponent('El médico ya está atendiendo otra consulta.')}`;
+    Object.assign(c, { estado: 'atendiendo', sala: sala(), medico: MEDICO, atendida: sqlite() });
     guardar(s);
     return `${BASE}/medico/?atendiendo=${id}`;
   },

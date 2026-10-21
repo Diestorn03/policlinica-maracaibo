@@ -5,7 +5,10 @@ const CONOCIDOS: (string | RegExp)[] = [
   'Tu usuario no está habilitado para telemedicina.',
   /^Tu afiliación venció el \d{2}\/\d{2}\/\d{4}\. Escríbenos para renovarla\.$/,
   'Consulta no válida.',
-  'El enlace debe ser de Google Meet (https://meet.google.com/abc-defg-hij) o de Jitsi.',
+  'Acción no válida.',
+  'Escribe el diagnóstico antes de finalizar la consulta.',
+  'No está atendiendo esta consulta o ya fue finalizada.',
+  'El médico ya está atendiendo otra consulta.',
   'Ese paciente ya fue tomado por otro médico o salió de la sala.',
 ];
 

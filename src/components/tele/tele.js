@@ -1,4 +1,4 @@
-// Ayudas de los paneles de telemedicina (cliente y médico): sondeo, aviso de la URL y «Copiar enlace».
+// Ayudas de los paneles de telemedicina: sondeo y avisos de URL.
 // La API (espera, cola, alCambiar) y la simulación de la demo viven en src/scripts/api.js; aquí no se hace fetch a mano.
 import { alCambiar } from '../../scripts/api.js';
 import { errorConocido } from './avisos.ts';
@@ -20,8 +20,7 @@ export function sondear(tarea, enLinea = () => {}) {
   vuelta();
 }
 
-/** ?error=… de la URL en su aviso (solo mensajes conocidos, ver avisos.ts). En servidor el HTML ya lo trae; en la demo (página estática) lo pone el navegador.
- *  Devuelve el texto mostrado. Nunca lanza: un aviso no puede tumbar el sondeo que viene después. */
+/** ?error=… de la URL en su aviso (solo mensajes conocidos, ver avisos.ts). */
 export function errorDeUrl(el) {
   const v = errorConocido(new URLSearchParams(location.search).get('error'));
   if (!el || !v) return '';
@@ -31,16 +30,3 @@ export function errorDeUrl(el) {
   el.focus();
   return p.textContent.trim();
 }
-
-/** Valida que sea una videollamada https antes de ponerla en un href (defensa en profundidad: el servidor ya lo exige). */
-export const enlaceSeguro = (s) => (typeof s === 'string' && /^https:\/\/[^\s]+$/.test(s) ? s : '');
-
-// «Copiar enlace»: cualquier botón con data-copiar="<url>" (y, opcional, un hijo [data-txt] con su texto)
-document.addEventListener('click', async (e) => {
-  const b = e.target.closest('[data-copiar]');
-  if (!b?.dataset.copiar) return;
-  const txt = b.querySelector('[data-txt]') ?? b;
-  txt.dataset.antes ??= txt.textContent;
-  try { await navigator.clipboard.writeText(b.dataset.copiar); txt.textContent = 'Copiado'; } catch { txt.textContent = 'No se pudo copiar'; }
-  setTimeout(() => (txt.textContent = txt.dataset.antes), 2000);
-});

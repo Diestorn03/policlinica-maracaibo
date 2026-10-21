@@ -2,7 +2,7 @@
 // La cookie lleva id.version.vence.firma; el middleware además relee el usuario en D1 (activo y misma versión),
 // así desactivar a alguien o cambiarle la clave lo saca al instante.
 
-export type Rol = 'admin' | 'medico' | 'cliente';
+export type Rol = 'admin' | 'medico' | 'cliente' | 'secretaria';
 export interface Sesion { id: number; version: number }
 
 export const COOKIE = 'pm_sesion';
@@ -56,4 +56,4 @@ export async function leerSesion(secreto: string | undefined, token: string | un
 export const cookieOpts = { httpOnly: true, secure: true, sameSite: 'lax' as const, path: '/', maxAge: DURACION / 1000 };
 
 /** Panel al que va cada rol después de entrar */
-export const inicioDe = (rol: Rol) => ({ admin: '/admin/', medico: '/medico/', cliente: '/panel/' })[rol];
+export const inicioDe = (rol: Rol) => ({ admin: '/admin/', medico: '/medico/', cliente: '/panel/', secretaria: '/secretaria/' })[rol];
