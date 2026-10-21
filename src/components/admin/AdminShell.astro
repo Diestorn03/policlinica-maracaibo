@@ -14,6 +14,12 @@ const PESTANAS = [
 ];
 ---
 <Privado titulo={titulo} zona="Administración" usuario={usuario}>
+  <!-- Protege el formulario móvil incluso cuando un navegador conserva una hoja _astro previa en caché. -->
+  <style is:inline>
+    @media (max-width: 760px) {
+      .adm .checks { columns: 1 !important; column-count: 1 !important; column-width: auto !important; max-height: none !important; overflow: visible !important; }
+    }
+  </style>
   <div class="adm">
     <header class="adm-cab">
       <h1>{titulo}</h1>
