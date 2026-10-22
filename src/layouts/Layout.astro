@@ -37,7 +37,7 @@ const jsonld = {
 };
 ---
 <!doctype html>
-<html lang="es-VE" data-demo={DEMO ? '1' : undefined} data-base={import.meta.env.BASE_URL}>
+<html lang="es-VE" data-demo={DEMO ? '1' : undefined} data-vivo={import.meta.env.PUBLIC_PHP === '1' ? '1' : undefined} data-base={import.meta.env.BASE_URL}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -66,6 +66,6 @@ const jsonld = {
     <a class="wa-float" href={waHref()} target="_blank" rel="noopener" aria-label="¿Necesitas ayuda? Escríbenos por WhatsApp">
       <i><Icon name="whatsapp" /></i><span>¿Necesitas ayuda?</span>
     </a>
-    <script>import '../scripts/motion.js';</script>
+    <script>import '../scripts/motion.js'; import '../components/directorio/vivo.ts';</script>
   </body>
 </html>

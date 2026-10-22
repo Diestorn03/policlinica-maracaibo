@@ -34,8 +34,8 @@ const encuadre: Record<string, string> = { 'Vista desde la calle': '50% 52%', 'E
     <div class="wrap">
       <ul class="cifras__lista" data-stagger=".1">
         <li><b data-count={anos()}>{anos()}</b><span>años de atención</span></li>
-        <li><b data-count={res.medicos}>{res.medicos}</b><span>médicos en el directorio</span></li>
-        <li><b data-count={res.conMedicos}>{res.conMedicos}</b><span>especialidades con médicos</span></li>
+        <li><b data-count={res.medicos} data-vivo-n="medicos">{res.medicos}</b><span>médicos en el directorio</span></li>
+        <li><b data-count={res.conMedicos} data-vivo-n="conMedicos">{res.conMedicos}</b><span>especialidades con médicos</span></li>
         <li><b data-count="24">24</b><span>horas de emergencias, todos los días</span></li>
       </ul>
     </div>

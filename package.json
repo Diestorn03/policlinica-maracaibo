@@ -8,6 +8,8 @@
     "dev:demo": "astro dev --mode demo --port 4331",
     "build": "astro build",
     "build:demo": "astro build --mode demo",
+    "build:php": "astro build --mode php",
+    "empaquetar:php": "node tools/empaquetar-php.mjs",
     "dev:node": "astro dev --mode node",
     "build:node": "astro build --mode node",
     "start": "node --env-file-if-exists=.env dist/server/entry.mjs",
@@ -16,7 +18,7 @@
     "db:local": "wrangler d1 migrations apply policlinica --local",
     "db:remote": "wrangler d1 migrations apply policlinica --remote",
     "seed": "node tools/seed.mjs",
-    "test": "node tests/db.check.mjs && node tests/sitio.check.mjs",
+    "test": "node tests/db.check.mjs && node tests/sitio.check.mjs && node tests/senal.check.mjs",
     "types": "wrangler types src/worker-configuration.d.ts"
   },
   "dependencies": {

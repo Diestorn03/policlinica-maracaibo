@@ -1,4 +1,4 @@
-// Telemedicina: sala de espera → el médico atiende y el servidor crea una sala Jitsi opaca.
+// Telemedicina: sala de espera → el médico atiende y el servidor crea una sala opaca y la videollamada va directo entre los dos navegadores (WebRTC, ver senal.ts).
 // "En vivo" = los paneles consultan /api/espera y /api/cola cada pocos segundos.
 import type { DB } from './db.ts';
 import { edad } from './usuarios.ts';
@@ -50,7 +50,7 @@ export async function cola(db: DB, medicoId: number): Promise<{ espera: EnCola[]
   return { espera: espera.results.map(fila), enCurso: enCurso.results.map(fila) };
 }
 
-/** Identificador impredecible, sin URL ni datos personales, usado solo por la IFrame API de Jitsi. */
+/** Identificador impredecible, sin URL ni datos personales, que identifica la videollamada de una consulta. */
 export function salaVideo(): string {
   return `pm-${[...crypto.getRandomValues(new Uint8Array(24))].map((b) => (b % 36).toString(36)).join('').slice(0, 24)}`;
 }

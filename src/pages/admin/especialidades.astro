@@ -32,6 +32,7 @@ if (Astro.request.method === 'POST') {
 const lista = await especialidades(db);
 const vacias = lista.filter((e) => e.total === 0).length;
 const p = Astro.url.searchParams;
+import '../../styles/paginas/admin-especialidades.css';
 ---
 <AdminShell titulo="Especialidades" activa="especialidades" usuario={yo} sub="Las especialidades que se pueden asignar a un médico. Una especialidad se borra solo cuando ya no tiene médicos." ok={p.get('ok')} error={p.get('error')}>
   <section class="panel" aria-labelledby="nueva-t">
@@ -76,8 +77,3 @@ const p = Astro.url.searchParams;
   </section>
 </AdminShell>
 
-<style>
-  .nueva { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem 1rem; margin-top: 1rem; }
-  .nueva .campo { flex: 1 1 18rem; max-width: 28rem; }
-  @media (max-width: 640px) { .nueva .btn { width: 100%; } }
-</style>

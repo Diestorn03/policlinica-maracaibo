@@ -27,6 +27,7 @@ const roles = [
   { href: '/panel/', titulo: 'Entrar como cliente', sub: 'Videollamada con un médico' },
   { href: '/secretaria/', titulo: 'Entrar como secretaria', sub: 'Inscripción de clientes afiliados' },
 ];
+import '../styles/paginas/acceso.css';
 ---
 <Privado titulo="Entrar">
   <div class="acceso">
@@ -70,52 +71,7 @@ const roles = [
   </div>
 
   <script>
-    // Los mensajes de la URL (?error=…, ?salio=1) también en el navegador; el servidor ya pinta el suyo
-    const f = document.querySelector<HTMLFormElement>('[data-acceso]');
-    if (f) {
-      const q = new URLSearchParams(location.search);
-      const cual = q.get('salio') === '1' ? 'salio' : q.get('error');
-      const aviso = [...f.querySelectorAll<HTMLElement>('[data-aviso]')].find((n) => n.dataset.aviso === cual);   // sin selector: ?error= puede traer comillas
-      if (aviso) aviso.hidden = false;
-      f.querySelector<HTMLElement>('[data-aviso]:not([hidden])')?.focus();
-
-      // «Mostrar» la contraseña
-      const clave = f.querySelector<HTMLInputElement>('#clave')!, ver = f.querySelector<HTMLElement>('[data-ver]')!;
-      ver.closest('button')!.addEventListener('click', () => {
-        const visible = clave.type === 'text';
-        clave.type = visible ? 'password' : 'text';
-        ver.textContent = visible ? 'Mostrar' : 'Ocultar';
-      });
-
-      // «Entrando…» al enviar (y se restablece si vuelven con «atrás»)
-      const entrar = f.querySelector<HTMLElement>('[data-entrar]')!;
-      f.addEventListener('submit', () => { entrar.setAttribute('aria-busy', 'true'); entrar.textContent = 'Entrando…'; });
-      addEventListener('pageshow', (e) => { if (e.persisted) { entrar.removeAttribute('aria-busy'); entrar.textContent = 'Entrar'; } });
-    }
+    import '../scripts/paginas/acceso.ts';
   </script>
 </Privado>
 
-<style>
-  /* Centrado y sin adorno: el logo, una hoja con el formulario y la ayuda. La barra del layout sobra aquí (el logo ya es el enlace al inicio). */
-  :global(.app-bar) { display: none; }
-  .acceso { width: min(26rem, 100%); margin-inline: auto; display: grid; gap: 1.75rem; justify-items: center; padding-top: clamp(.5rem, 4vh, 3rem); }
-  .acceso__logo { display: block; line-height: 0; border-radius: 2px; }
-  .acceso__logo :global(img) { height: 44px; width: auto; }
-  .acceso__hoja { width: 100%; display: grid; gap: 1.25rem; padding: clamp(1.5rem, 5vw, 2.25rem); border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
-  .acceso__hoja h1 { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.25rem); letter-spacing: -.04em; }
-  .acceso__form { display: grid; gap: 1.25rem; }
-  .acceso__campo { display: grid; gap: .4rem; }
-  .acceso__campo label { font: 600 .9375rem var(--font-head); color: var(--navy); }
-  .acceso__campo .input { min-height: 54px; font-size: 1.0625rem; }
-  .acceso__clave { position: relative; }
-  .acceso__clave .input { padding-right: 6.5rem; }
-  .acceso__ver { position: absolute; top: 5px; right: 5px; bottom: 5px; min-width: 5.5rem; padding: 0 .8rem; border: 0; border-radius: 999px; background: var(--mist); color: var(--navy); font: 600 .9375rem var(--font-head); cursor: pointer; }
-  .acceso__ver:hover { background: #dfe3f6; }
-  .acceso__form .btn { min-height: 56px; font-size: 1.05rem; }
-  .acceso__aviso { margin: 0; text-wrap: wrap; padding: .85rem 1rem; border-radius: var(--radius); background: var(--mist); color: var(--navy); font-weight: 600; }
-  :global(html:not(.js)) .js-solo { display: none; }   /* sin JS «Mostrar» no haría nada */
-  .acceso__roles { display: grid; gap: .8rem; }
-  .acceso__roles .btn { justify-content: center; }
-  .acceso__ayuda { display: grid; gap: .5rem; justify-items: center; text-align: center; font-size: .9375rem; color: var(--navy); }   /* --muted no llega a 4.5:1 sobre el lavanda */
-  .acceso__sos { color: var(--red); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
-</style>

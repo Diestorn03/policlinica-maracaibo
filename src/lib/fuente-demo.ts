@@ -31,4 +31,4 @@ export async function getDB(): Promise<DB> {
   return (base = db);
 }
 
-export const getEnv = async () => ({}) as { SESSION_SECRET?: string; JITSI_DOMAIN?: string; LOGIN_LIMIT?: { limit(o: { key: string }): Promise<{ success: boolean }> } };
+export const getEnv = async () => ({}) as { SESSION_SECRET?: string; ICE_SERVERS?: string; LOGIN_LIMIT?: { limit(o: { key: string }): Promise<{ success: boolean }> } };

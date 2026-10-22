@@ -1,0 +1,4 @@
+/* Estilos de «admin-especialidades», extraídos de src/pages/admin/especialidades.astro (antes con ámbito de página, ahora globales: los nombres llevan prefijo propio). */
+  .nueva { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem 1rem; margin-top: 1rem; }
+  .nueva .campo { flex: 1 1 18rem; max-width: 28rem; }
+  @media (max-width: 640px) { .nueva .btn { width: 100%; } }

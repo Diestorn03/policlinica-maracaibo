@@ -1,0 +1,12 @@
+/* Estilos de «medico», extraídos de src/pages/medico/index.astro (antes con ámbito de página, ahora globales: los nombres llevan prefijo propio). */
+  .medico__cab { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem 2rem; }
+  .medico__cab .t-titulo { font-size: clamp(1.8rem, 1.2rem + 2vw, 2.6rem); }
+  .medico__estado { display: flex; flex-wrap: wrap; gap: .1rem 1.25rem; margin-top: .5rem; }
+  .medico__estado b { font: 600 1.15rem var(--font-head); color: var(--navy); }
+  .medico__estado span { color: var(--navy); font-variant-numeric: tabular-nums; }
+  .medico__curso { list-style: none; margin: 0; padding: 0; }
+  .medico__form { display: grid; gap: 1.25rem; }
+
+  @media (max-width: 640px) {
+    .medico__cab .btn { width: 100%; }
+  }

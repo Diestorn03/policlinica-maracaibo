@@ -12,8 +12,8 @@ import { clinica } from '../data/site';
 import { ROLES } from '../lib/usuarios';
 import type { Rol } from '../lib/auth';
 
-interface Props { titulo: string; zona?: string; usuario?: { nombre: string; rol: Rol } }
-const { titulo, zona, usuario } = Astro.props;
+interface Props { titulo: string; zona?: string; usuario?: { nombre: string; rol: Rol }; rolTexto?: string }
+const { titulo, zona, usuario, rolTexto } = Astro.props; // rolTexto: el marco de PHP pone aquí su marca @@USUARIO_ROL@@
 ---
 <!doctype html>
 <html lang="es-VE" data-demo={DEMO ? '1' : undefined} data-base={import.meta.env.BASE_URL}>
@@ -35,7 +35,7 @@ const { titulo, zona, usuario } = Astro.props;
         {zona && <span class="app-bar__zona">{zona}</span>}
         {usuario && (
           <div class="app-bar__user">
-            <span class="app-bar__who"><Icon name="user" size={18} /> <b>{usuario.nombre}</b> <small>{ROLES[usuario.rol]}</small></span>
+            <span class="app-bar__who"><Icon name="user" size={18} /> <b>{usuario.nombre}</b> <small>{rolTexto ?? ROLES[usuario.rol]}</small></span>
             <form method="post" action={u('/api/sesion')}>
               <input type="hidden" name="accion" value="salir" />
               <button class="btn btn--outline btn--sm" type="submit"><Icon name="logout" size={18} /> Salir</button>

@@ -1,0 +1,14 @@
+---
+// Marco de /acceso/ para la versión PHP: la página real la dibuja php/app/pages/acceso.php dentro de esta cáscara.
+// Las marcas @@…@@ las rellena php/app/shell.php. Solo se compila con `npm run build:php` (ver docs/PHP.md).
+import Privado from '../layouts/Privado.astro';
+import '../styles/paginas/acceso.css';
+---
+<Privado titulo="@@TITULO@@">
+  <Fragment slot="head" set:html="@@HEAD@@" />
+  <Fragment set:html="@@CONTENIDO@@" />
+</Privado>
+
+<script>
+  import '../scripts/paginas/acceso.ts';
+</script>

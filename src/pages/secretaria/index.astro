@@ -18,6 +18,7 @@ if (Astro.request.method === 'POST') {
 }
 
 const p = Astro.url.searchParams;
+import '../../styles/paginas/secretaria.css';
 ---
 <Privado titulo="Inscribir cliente" zona="Secretaría" usuario={yo}>
   <section class="registro" aria-labelledby="registro-t">
@@ -48,13 +49,3 @@ const p = Astro.url.searchParams;
   </section>
 </Privado>
 
-<style>
-  .registro { width: min(56rem, 100%); margin-inline: auto; display: grid; gap: 1.5rem; }
-  .registro__cab { display: grid; gap: .7rem; max-width: 48rem; }
-  .registro__cab h1 { font-size: clamp(2rem, 1.4rem + 2vw, 3rem); letter-spacing: -.045em; }
-  .registro__eyebrow { color: var(--blue); font: 600 .875rem var(--font-head); letter-spacing: .08em; text-transform: uppercase; }
-  .registro__form { display: grid; gap: 1.5rem; padding: clamp(1.25rem, 4vw, 2rem); border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); }
-  .registro__acciones { display: flex; justify-content: flex-end; }
-  .registro__acciones .btn { min-height: 52px; }
-  @media (max-width: 640px) { .registro__acciones .btn { width: 100%; } }
-</style>

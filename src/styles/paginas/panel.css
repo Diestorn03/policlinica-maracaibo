@@ -1,0 +1,18 @@
+/* Estilos de «panel», extraídos de src/pages/panel/index.astro (antes con ámbito de página, ahora globales: los nombres llevan prefijo propio). */
+  /* Mientras la demo averigua en qué paso está el paciente, el bloque azul espera oculto (con JS; sin JS nunca se oculta) */
+  html.js [data-cargando] [data-estado] { visibility: hidden; }
+  .panel__entrar { display: grid; gap: 1.25rem; max-width: 34rem; justify-items: start; }
+  .panel__entrar .t-campo { width: 100%; }
+  .panel__entrar .input { min-height: 54px; }
+  .panel__cifras { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, max-content)); gap: 1rem 4.5rem; }
+  .panel__cifras dt { font-size: .9375rem; font-weight: 600; color: #bcd0f3; }
+  .panel__cifras dd { margin: 0; }
+  .panel__n { font: 300 clamp(3.4rem, 2rem + 6vw, 5.5rem) / 1 var(--font-head); letter-spacing: -.05em; color: #fff; font-variant-numeric: tabular-nums; }
+  .panel__sub { font-size: 1.15rem; margin-bottom: -.6rem; }
+  .panel__tips { list-style: none; margin: 0; padding: 0; max-width: 40rem; }
+  .panel__tips li { padding-block: .7rem; border-top: 1px solid rgba(255, 255, 255, .22); }
+  .panel__tips li:last-child { border-bottom: 1px solid rgba(255, 255, 255, .22); }
+  .panel__afiliacion { font-size: .9375rem; color: var(--navy); }
+  @media (max-width: 640px) {
+    .panel__entrar .btn, .panel__ir { width: 100%; }
+  }

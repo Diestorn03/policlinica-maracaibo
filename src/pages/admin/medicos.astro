@@ -43,6 +43,7 @@ const datosDe = (m: Medico) => JSON.stringify({
   id: m.id, nombre: m.nombre, telefono: m.telefono, piso: pisoDe(m), consultorios: consultoriosDe(m), consultorio_original: m.consultorio,
   especialidades: m.especialidades.map((e) => e.id), foto_url: fotoUrl(m),
 });
+import '../../styles/paginas/admin-medicos.css';
 ---
 <AdminShell titulo="Médicos" activa="medicos" usuario={yo} sub="El directorio que ven los pacientes. Registra piso, consultorio, teléfono y foto de cada médico." ok={p.get('ok')} error={p.get('error')}>
   <details class="panel ficha" id="ficha" open={abierto} data-editando={editando?.id}>
@@ -129,42 +130,6 @@ const datosDe = (m: Medico) => JSON.stringify({
 </AdminShell>
 
 <script>
-  import { iniciarEdicion } from '../../components/admin/edicion';
-
-  const panel = document.getElementById('ficha') as HTMLDetailsElement;
-  iniciarEdicion(panel);
-
-  // Al menos una especialidad: se avisa en el propio formulario, sin viajar al servidor ni perder lo escrito (el servidor valida igual)
-  const esps = [...panel.querySelectorAll<HTMLInputElement>('[name=especialidades]')];
-  const revisar = () => esps[0]?.setCustomValidity(esps.some((e) => e.checked) ? '' : 'Elige al menos una especialidad.');
-  esps.forEach((e) => e.addEventListener('change', revisar));
-  revisar();
-
-  // Foto: se recorta al cuadrado (más arriba que al centro, donde están las caras) y se reduce a 480×480 WebP antes de enviarla.
-  const entrada = panel.querySelector<HTMLInputElement>('input[type=file]')!;
-  const vista = panel.querySelector<HTMLImageElement>('.foto__vista')!;
-  entrada.addEventListener('change', async () => {
-    const archivo = entrada.files?.[0];
-    if (!archivo) return;
-    try {
-      const img = await createImageBitmap(archivo);
-      const lado = Math.min(img.width, img.height);
-      const lienzo = document.createElement('canvas');
-      lienzo.width = lienzo.height = 480;
-      lienzo.getContext('2d')!.drawImage(img, (img.width - lado) / 2, (img.height - lado) * 0.2, lado, lado, 0, 0, 480, 480);
-      const blob = await new Promise<Blob | null>((r) => lienzo.toBlob(r, 'image/webp', 0.85));
-      if (blob?.type !== 'image/webp') return;
-      const lista = new DataTransfer();
-      lista.items.add(new File([blob], 'foto.webp', { type: 'image/webp' }));
-      entrada.files = lista.files;
-      vista.src = URL.createObjectURL(blob);
-      vista.hidden = false;
-    } catch { /* sin reducir: se envía tal cual */ }
-  });
+  import '../../scripts/paginas/admin-medicos.ts';
 </script>
 
-<style>
-  .foto { display: flex; align-items: flex-start; gap: 1.2rem; }
-  .foto__vista { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; flex: none; background: var(--mist); }
-  .foto .campo { flex: 1; }
-</style>

@@ -1,0 +1,24 @@
+---
+// Marco de la zona «admin» para la versión PHP: el contenido lo dibuja php/app/pages/ dentro de esta cáscara.
+// Las marcas @@…@@ las rellena php/app/shell.php. Solo se compila con `npm run build:php` (ver docs/PHP.md).
+import Privado from '../layouts/Privado.astro';
+import '../components/admin/admin.css';
+import '../styles/paginas/admin-medicos.css';
+import '../styles/paginas/admin-especialidades.css';
+---
+<Privado titulo="@@TITULO@@" zona="@@ZONA@@" usuario={{ nombre: '@@USUARIO_NOMBRE@@', rol: 'admin' }} rolTexto="@@USUARIO_ROL@@">
+  <Fragment slot="head" set:html="@@HEAD@@" />
+  <!-- Protege el formulario móvil incluso cuando un navegador conserva una hoja _astro previa en caché (igual que AdminShell). -->
+  <style is:inline>
+    @media (max-width: 760px) {
+      .adm .checks { columns: 1 !important; column-count: 1 !important; column-width: auto !important; max-height: none !important; overflow: visible !important; }
+    }
+  </style>
+  <Fragment set:html="@@CONTENIDO@@" />
+</Privado>
+
+<script>
+  import '../scripts/paginas/admin-marco.ts';
+  import '../scripts/paginas/admin-medicos.ts';
+  import '../scripts/paginas/admin-usuarios.ts';
+</script>

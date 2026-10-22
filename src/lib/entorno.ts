@@ -6,6 +6,8 @@ import type { Rol } from './auth.ts';
 export { getDB, getEnv } from '#fuente';
 
 export const DEMO = import.meta.env.PUBLIC_DEMO === '1';
+/** Compilación para el hosting PHP: sitio estático con los datos del directorio; las zonas privadas las sirve PHP (docs/PHP.md). */
+export const PHP = import.meta.env.PUBLIC_PHP === '1';
 
 /** Antepone la base del sitio (GitHub Pages lo sirve en /policlinica-maracaibo/). Usar en TODO href/src interno y en las fotos de la BD. */
 export const u = (path: string) => (path.startsWith('/') && !path.startsWith('//') ? import.meta.env.BASE_URL.replace(/\/$/, '') + path : path);
@@ -22,6 +24,6 @@ export const DEMO_USUARIOS: Record<Rol, UsuarioSesion> = {
 /** Usuario de la página privada: el de la sesión (servidor) o el de ejemplo (solo en la demo). */
 export function usuarioDe(locals: App.Locals, rol: Rol): UsuarioSesion {
   if (locals.usuario) return locals.usuario;
-  if (DEMO) return DEMO_USUARIOS[rol];
+  if (DEMO || PHP) return DEMO_USUARIOS[rol]; // en PHP solo se usa al compilar las copias estáticas que luego se descartan
   throw new Error(`Página privada sin sesión (${rol}): debe estar protegida en src/middleware.ts`);
 }

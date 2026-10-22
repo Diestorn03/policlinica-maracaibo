@@ -61,7 +61,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
     <div class="wrap hero__grid">
       <div class="hero__texto">
         <h1 class="h-display">Atención médica en Maracaibo desde {clinica.desde}</h1>
-        <p class="lead"><span data-count={res.medicos}>{res.medicos}</span> médicos de <span data-count={res.conMedicos}>{res.conMedicos}</span> especialidades, laboratorio, estudios por imágenes y emergencias las 24 horas, en la {clinica.direccion}.</p>
+        <p class="lead"><span data-count={res.medicos} data-vivo-n="medicos">{res.medicos}</span> médicos de <span data-count={res.conMedicos} data-vivo-n="conMedicos">{res.conMedicos}</span> especialidades, laboratorio, estudios por imágenes y emergencias las 24 horas, en la {clinica.direccion}.</p>
         <div class="hero__tareas">
           <a class="btn btn--sos btn--tarea" href={clinica.emergencias.href}>Llamar a emergencias <small>{clinica.emergencias.texto}</small></a>
           <a class="btn btn--white btn--tarea" href={waHref()} target="_blank" rel="noopener">Pedir cita por WhatsApp <small>Lunes a viernes, 8:00 a. m. a 4:00 p. m.</small></a>
@@ -137,11 +137,11 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
               </ul>
             </details>
           ))}
-          <p class="hoja__mas"><a class="link" href={u('/directorio/')}>Ver los {res.medicos} médicos en el directorio</a></p>
+          <p class="hoja__mas"><a class="link" href={u('/directorio/')}>Ver los <span data-vivo-n="medicos">{res.medicos}</span> médicos en el directorio</a></p>
         </div>
       </div>
       <details class="wrap edificio__esps">
-        <summary>Ver las {res.especialidades} especialidades</summary>
+        <summary>Ver las <span data-vivo-n="especialidades">{res.especialidades}</span> especialidades</summary>
         <ul>{esps.map((e) => <li><a href={u(`/directorio/?esp=${e.slug}`)}>{e.nombre}</a></li>)}</ul>
       </details>
     </div>
@@ -175,7 +175,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
           </li>
         ))}
       </ul>
-      <p class="servicios__esp" data-reveal="up"><b>Especialidades</b> {res.conMedicos} especialidades con médicos en el directorio. <a class="link" href={u('/especialidades/')}>Ver las especialidades</a></p>
+      <p class="servicios__esp" data-reveal="up"><b>Especialidades</b> <span data-vivo-n="conMedicos">{res.conMedicos}</span> especialidades con médicos en el directorio. <a class="link" href={u('/especialidades/')}>Ver las especialidades</a></p>
     </div>
   </section>
 

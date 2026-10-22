@@ -167,7 +167,7 @@ function initCounters() {
   gsap.utils.toArray('[data-count]').forEach((el) => {
     const target = parseFloat(el.dataset.count);
     const o = { v: 0 };
-    gsap.to(o, { v: target, duration: 2, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true }, onUpdate: () => { el.textContent = String(Math.round(o.v)); } });
+    gsap.to(o, { v: target, duration: 2, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true }, onUpdate: () => { el.textContent = String(Math.round(o.v)); }, onComplete: () => { el.textContent = String(Math.round(parseFloat(el.dataset.count))); } });
   });
 }
 

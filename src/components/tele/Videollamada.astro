@@ -1,36 +1,17 @@
 ---
-// Contenedor común de Jitsi para médico y cliente. El script observa tanto el HTML inicial como tarjetas que llegan por sondeo.
-// El servidor Jitsi sale de JITSI_DOMAIN (por defecto el público meet.jit.si, que corta las llamadas incrustadas a los 5 minutos).
+// Contenedor común de la videollamada (WebRTC propio, sin cuentas) para médico y cliente. El script observa tanto el HTML inicial como tarjetas que llegan por sondeo.
+// ICE_SERVERS (JSON, opcional) añade servidores TURN para redes que bloquean la conexión directa; por defecto solo STUN público.
 import { getEnv } from '../../lib/entorno';
 interface Props { sala?: string; rol: 'medico' | 'cliente' }
 const { sala = '', rol } = Astro.props;
-const dominio = (await getEnv()).JITSI_DOMAIN || 'meet.jit.si';
+const ice = (await getEnv()).ICE_SERVERS || '';
 ---
-<div class="t-video" data-video data-sala={sala} data-rol={rol} data-dominio={dominio} tabindex="-1">
+<div class="t-video" data-video data-sala={sala} data-rol={rol} data-ice={ice} tabindex="-1">
   <p class="t-video__estado" data-video-estado role="status">Preparando la videollamada…</p>
   <div class="t-video__marco" data-video-marco></div>
-  <p class="t-video__nota">La sala se crea automáticamente para esta consulta. Permite cámara y micrófono cuando el navegador lo solicite.</p>
+  <p class="t-video__nota">La videollamada se conecta sola, sin cuentas ni contraseñas. Permite cámara y micrófono cuando el navegador lo solicite.</p>
 </div>
 
 <script>
-  import { desmontarVideollamada, montarVideollamada } from '../../scripts/jitsi.ts';
-
-  const iniciar = (video: HTMLElement) => montarVideollamada(video, video.dataset.sala ?? '', video.dataset.rol === 'medico' ? 'medico' : 'cliente', video.dataset.dominio || 'meet.jit.si');
-  const recorrer = (raiz: ParentNode) => {
-    if (raiz instanceof HTMLElement && raiz.matches('[data-video]')) iniciar(raiz);
-    raiz.querySelectorAll<HTMLElement>('[data-video]').forEach(iniciar);
-  };
-  recorrer(document);
-  const observador = new MutationObserver((cambios) => {
-    for (const cambio of cambios) {
-      if (cambio.type === 'attributes' && cambio.target instanceof HTMLElement && cambio.oldValue !== cambio.target.dataset.sala) {
-        desmontarVideollamada(cambio.target);
-        iniciar(cambio.target);
-      }
-      cambio.addedNodes.forEach(recorrer);
-      cambio.removedNodes.forEach((n) => { if (n instanceof HTMLElement) n.querySelectorAll<HTMLElement>('[data-video]').forEach(desmontarVideollamada); });
-    }
-  });
-  observador.observe(document.body, { childList: true, subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['data-sala'] });
-  addEventListener('pagehide', () => observador.disconnect(), { once: true });
+  import '../../scripts/videollamada-auto.ts';
 </script>

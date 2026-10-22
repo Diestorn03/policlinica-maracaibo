@@ -33,6 +33,7 @@ const vence = ficha?.afiliacion_vence ?? null;
 const dias = vence ? Math.round((Date.parse(vence) - Date.parse(hoy)) / 864e5) : null;
 const fechaVence = vence ? new Intl.DateTimeFormat('es-VE', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(vence)) : '';
 const afiliacion = dias == null ? '' : dias < 0 ? `Tu afiliación venció el ${fechaVence}.` : dias <= 30 ? `Tu afiliación vence el ${fechaVence}.` : `Tu afiliación está vigente hasta el ${fechaVence}.`;
+import '../../styles/paginas/panel.css';
 ---
 <Privado titulo="Mi panel" zona="Panel del paciente" usuario={yo}>
   {!DEMO && consulta?.estado === 'espera' && <noscript slot="head"><meta http-equiv="refresh" content="10" /></noscript>}
@@ -110,104 +111,7 @@ const afiliacion = dias == null ? '' : dias < 0 ? `Tu afiliación venció el ${f
   </div>
 
   <script>
-    import { espera } from '../../scripts/api.js';
-    import { sondear, errorDeUrl } from '../../components/tele/tele.js';
-    import { esperando } from '../../lib/sitio.ts';
-    import { aFecha } from '../../lib/tele.ts';
-
-    const raiz = document.querySelector<HTMLElement>('[data-estados]');
-    if (raiz) {
-      const $ = <T extends HTMLElement = HTMLElement>(s: string, r: ParentNode = raiz) => r.querySelector<T>(s)!;
-      const secc = Object.fromEntries(['inicio', 'espera', 'atiende'].map((e) => [e, $(`[data-estado="${e}"]`)]));
-      const base = document.title;
-      let actual = raiz.dataset.actual!;
-      let posicion = Number($('[data-posicion]').textContent) || 0;
-      let candado: WakeLockSentinel | null = null;
-
-      // ?error=… y ?fin=…: el servidor ya los pinta; en la demo (página estática) los pone el navegador
-      const textoError = errorDeUrl($('[data-error]'));
-      $('[data-renovar]').hidden = !textoError.includes('afiliación');
-      const fin = new URLSearchParams(location.search).get('fin');
-      raiz.querySelectorAll<HTMLElement>('[data-fin]').forEach((p) => { if (p.dataset.fin === fin) p.hidden = false; });
-
-      // «Entrando…» al pulsar el botón grande (y se restablece si vuelven con «atrás»)
-      const btn = $('[data-entrar] .btn'), etiqueta = btn.querySelector('span')!;
-      $('[data-entrar]').addEventListener('submit', () => { btn.setAttribute('aria-busy', 'true'); etiqueta.textContent = 'Entrando…'; });
-      addEventListener('pageshow', (e) => { if (e.persisted) { btn.removeAttribute('aria-busy'); etiqueta.textContent = 'Entrar a la videollamada'; } });
-
-      // La pantalla del teléfono no se apaga mientras esperas (si se apaga, el móvil congela la pestaña y te sacan de la cola)
-      const pedirCandado = async () => { try { if (!candado || candado.released) candado = (await navigator.wakeLock?.request('screen')) ?? null; } catch {} };
-      const soltarCandado = () => { candado?.release().catch(() => {}); candado = null; };
-      document.addEventListener('visibilitychange', () => { if (!document.hidden && actual === 'espera') pedirCandado(); });
-
-      const ir = (e: string) => {
-        const antes = actual;
-        actual = e;
-        for (const [k, s] of Object.entries(secc)) s.hidden = k !== e;
-        document.title = e === 'atiende' ? '¡Te están esperando!' : base;
-        if (e === 'espera') pedirCandado(); else soltarCandado();
-        if (antes === e) return;
-        $(e === 'atiende' ? '[data-video]' : 'h1', secc[e]).focus();
-        if (e === 'atiende') navigator.vibrate?.([200, 100, 200]);
-      };
-
-      const pintar = (c: any) => {
-        if (!c) {
-          // la consulta terminó o saliste de la sala: se recarga con el aviso y el historial al día
-          if (actual !== 'inicio') location.replace(`${location.pathname}?fin=${actual === 'atiende' ? 'termino' : 'fuera'}`);
-          return;
-        }
-        if (c.estado === 'espera') {
-          const antes = Math.max(0, c.posicion - 1);
-          $('[data-posicion]').textContent = c.posicion;
-          $('[data-linea]').textContent = antes === 0 ? 'Eres el siguiente.' : `Hay ${antes} ${antes === 1 ? 'persona' : 'personas'} antes que tú.`;
-          $('[data-reloj]').dataset.creada = c.creada;
-          if (posicion && c.posicion !== posicion) $('[data-anuncio]').textContent = `Tu turno cambió: ${antes === 0 ? 'eres el siguiente' : `ahora hay ${antes} ${antes === 1 ? 'persona' : 'personas'} antes que tú`}.`;
-          posicion = c.posicion;
-          if (actual !== 'espera') ir('espera');
-        } else {
-          secc.atiende.querySelectorAll('[data-medico]').forEach((n) => (n.textContent = c.medico || 'Un médico'));
-          const video = $<HTMLElement>('[data-video]', secc.atiende);
-          const sala = String(c.sala ?? '');
-          if (video.dataset.sala !== sala) video.dataset.sala = sala;
-          if (actual !== 'atiende') ir('atiende');
-        }
-      };
-
-      // Reloj de la espera (cada segundo) y aviso de «tarda más de lo normal» pasados 10 minutos
-      setInterval(() => {
-        const t = $('[data-reloj]');
-        if (actual !== 'espera' || !t.dataset.creada) return;
-        t.textContent = esperando(t.dataset.creada);
-        if (Date.now() - aFecha(t.dataset.creada).getTime() > 10 * 6e4) $('[data-largo]').hidden = false;
-      }, 1000);
-
-      sondear(
-        async () => {
-          try { const r = await espera(); if (r) pintar(r.consulta); } finally { raiz.removeAttribute('data-cargando'); }
-        },
-        (ok) => { $('[data-sin-conexion]').hidden = ok; },
-      );
-    }
+    import '../../scripts/paginas/panel.ts';
   </script>
 </Privado>
 
-<style>
-  /* Mientras la demo averigua en qué paso está el paciente, el bloque azul espera oculto (con JS; sin JS nunca se oculta) */
-  :global(html.js) [data-cargando] [data-estado] { visibility: hidden; }
-  .panel__entrar { display: grid; gap: 1.25rem; max-width: 34rem; justify-items: start; }
-  .panel__entrar .t-campo { width: 100%; }
-  .panel__entrar .input { min-height: 54px; }
-  .panel__cifras { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, max-content)); gap: 1rem 4.5rem; }
-  .panel__cifras dt { font-size: .9375rem; font-weight: 600; color: #bcd0f3; }
-  .panel__cifras dd { margin: 0; }
-  .panel__n { font: 300 clamp(3.4rem, 2rem + 6vw, 5.5rem) / 1 var(--font-head); letter-spacing: -.05em; color: #fff; font-variant-numeric: tabular-nums; }
-  .panel__sub { font-size: 1.15rem; margin-bottom: -.6rem; }
-  .panel__tips { list-style: none; margin: 0; padding: 0; max-width: 40rem; }
-  .panel__tips li { padding-block: .7rem; border-top: 1px solid rgba(255, 255, 255, .22); }
-  .panel__tips li:last-child { border-bottom: 1px solid rgba(255, 255, 255, .22); }
-  .panel__afiliacion { font-size: .9375rem; color: var(--navy); }
-  @media (max-width: 640px) {
-    .panel__entrar .btn, .panel__ir { width: 100%; }
-  }
-</style>

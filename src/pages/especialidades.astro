@@ -71,7 +71,7 @@ const medicosTxt = (n: number) => `${n} ${n === 1 ? 'médico' : 'médicos'}`;
   const q = document.querySelector<HTMLInputElement>('#buscar-esp');
   const solo = document.querySelector<HTMLInputElement>('#solo-con');
   const sinBloque = document.querySelector<HTMLElement>('#sin-medicos');
-  const filas = [...document.querySelectorAll<HTMLElement>('.lista .esp > li')];
+  let filas = [...document.querySelectorAll<HTMLElement>('.lista .esp > li')];
   const cuenta = document.getElementById('cuenta-esp');
   const vacio = document.getElementById('vacio-esp');
   const vacioQ = document.getElementById('vacio-q');
@@ -106,6 +106,8 @@ const medicosTxt = (n: number) => `${n} ${n === 1 ? 'médico' : 'médicos'}`;
     q.addEventListener('input', () => { clearTimeout(espera); espera = window.setTimeout(aplicar, 120); });
     solo.addEventListener('change', aplicar);
     q.form?.addEventListener('submit', (e) => e.preventDefault());
+    // versión PHP: vivo.ts cambió la lista por la de la base real
+    document.addEventListener('pm:datos', () => { filas = [...document.querySelectorAll<HTMLElement>('.lista .esp > li')]; aplicar(); });
   }
 </script>
 

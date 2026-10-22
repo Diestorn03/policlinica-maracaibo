@@ -13,6 +13,7 @@ const REGLAS: [string, Rol[]][] = [
   ['/secretaria', ['secretaria']],
   ['/api/cola', ['medico']],
   ['/api/espera', ['cliente']],
+  ['/api/senal', ['medico', 'cliente']],
 ];
 const bajo = (path: string, p: string) => path === p || path.startsWith(p + '/');
 

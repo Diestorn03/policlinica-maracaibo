@@ -66,7 +66,8 @@ Reglas para que una página funcione en los dos:
 | `GET /api/espera` | cliente | JSON `{ consulta }` (= `estado()`); además es el **latido**: llamarlo cada 4 s mientras está en la sala o lo sacan a los 5 min |
 | `POST /api/espera` | cliente | `accion=entrar` + `motivo` (opcional) · `accion=cancelar` → 303 `/panel/` (o `/panel/?error=…`, p. ej. afiliación vencida) |
 | `GET /api/cola` | médico | JSON = `cola()`; sondear cada 4 s |
-| `POST /api/cola` | médico | `accion=atender` + `consulta` + `enlace` (vacío = Jitsi automático; o pegar uno de Google Meet) → 303 `/medico/?atendiendo=<id>` · `accion=finalizar` + `consulta` → `/medico/`; errores `/medico/?error=…` |
+| `GET/POST /api/senal` | médico, cliente | Señalización de la videollamada WebRTC (sondeo largo `?sala=&sesion=`; POST JSON `{sala, tipo, datos}`) |
+| `POST /api/cola` | médico | `accion=atender` + `consulta` (crea la sala sola) o `accion=finalizar` + `consulta` + `diagnostico` → 303 `/medico/` |
 | `GET /fotos/<id>` | — | foto subida desde el admin |
 
 ## Flujo de telemedicina (lo que deben mostrar los paneles)

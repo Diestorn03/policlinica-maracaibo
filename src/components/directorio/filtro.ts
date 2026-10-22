@@ -8,7 +8,7 @@ const form = document.querySelector<HTMLFormElement>('#buscar');
 const lista = document.getElementById('lista');
 if (form && lista) {
   const [q, esp, piso] = ['q', 'esp', 'piso'].map((n) => form.elements.namedItem(n) as HTMLInputElement & HTMLSelectElement);
-  const fichas = [...lista.children] as HTMLElement[];
+  let fichas = [...lista.children] as HTMLElement[];
   const cuenta = document.getElementById('cuenta')!;
   const vacio = document.getElementById('vacio')!;
   const quitar = document.getElementById('quitar')!;
@@ -49,6 +49,16 @@ if (form && lista) {
       q.focus();
     });
   }
+
+  // Versión PHP: vivo.ts cambió las fichas y las opciones por las de la base real
+  document.addEventListener('pm:datos', () => {
+    const [vq, vesp, vpiso] = [q.value, esp.value, piso.value];
+    fichas = [...lista.children] as HTMLElement[];
+    esp.value = [...esp.options].some((o) => o.value === vesp) ? vesp : '';
+    q.value = vq;
+    piso.value = vpiso;
+    aplicar();
+  });
 
   // Estado inicial: la URL manda (en la demo el HTML trae a todos)
   const p = new URLSearchParams(location.search);

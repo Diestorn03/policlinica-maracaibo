@@ -1,0 +1,4 @@
+/* Estilos de «admin-medicos», extraídos de src/pages/admin/medicos.astro (antes con ámbito de página, ahora globales: los nombres llevan prefijo propio). */
+  .foto { display: flex; align-items: flex-start; gap: 1.2rem; }
+  .foto__vista { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; flex: none; background: var(--mist); }
+  .foto .campo { flex: 1; }

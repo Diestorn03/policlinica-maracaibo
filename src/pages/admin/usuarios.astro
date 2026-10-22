@@ -122,14 +122,5 @@ const datosDe = (x: Usuario) => JSON.stringify({ id: x.id, rol: x.rol, nombre: x
 </AdminShell>
 
 <script>
-  import { iniciarEdicion } from '../../components/admin/edicion';
-
-  const panel = document.getElementById('ficha') as HTMLDetailsElement;
-  const rol = panel.querySelector<HTMLSelectElement>('[name=rol]')!;
-  const { editando, nuevo } = iniciarEdicion(panel);
-  if (!editando && nuevo && [...rol.options].some((o) => o.value === nuevo)) rol.value = nuevo; // demo: el HTML no trae el rol de ?nuevo=
-  // Cada rol usa sus campos: afiliación para clientes, ficha del directorio para médicos (el servidor valida todo igual)
-  const ver = () => panel.querySelectorAll<HTMLElement>('[data-rol]').forEach((e) => (e.hidden = e.dataset.rol !== rol.value));
-  rol.addEventListener('change', ver);
-  ver();
+  import '../../scripts/paginas/admin-usuarios.ts';
 </script>

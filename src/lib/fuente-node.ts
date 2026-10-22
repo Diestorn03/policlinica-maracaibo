@@ -24,7 +24,7 @@ export async function getDB(): Promise<DB> {
 
 export const getEnv = async () => ({
   SESSION_SECRET: e.SESSION_SECRET,
-  JITSI_DOMAIN: e.JITSI_DOMAIN,
+  ICE_SERVERS: e.ICE_SERVERS,
   // 5 intentos de inicio de sesión por minuto e IP (en memoria: basta con un solo proceso)
   LOGIN_LIMIT: {
     limit: async ({ key }: { key: string }) => {
@@ -35,4 +35,4 @@ export const getEnv = async () => ({
       return { success: l.length <= 5 };
     },
   },
-}) as { SESSION_SECRET?: string; JITSI_DOMAIN?: string; LOGIN_LIMIT?: { limit(o: { key: string }): Promise<{ success: boolean }> } };
+}) as { SESSION_SECRET?: string; ICE_SERVERS?: string; LOGIN_LIMIT?: { limit(o: { key: string }): Promise<{ success: boolean }> } };

@@ -1,0 +1,28 @@
+# Hosting Apache de Webuzo: páginas públicas = HTML estático; lo demás pasa por index.php
+Options -Indexes
+DirectoryIndex index.html index.php
+AddDefaultCharset utf-8
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+# el código y el marco de las páginas nunca se sirven directamente
+RewriteRule ^app(/|$) - [F,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+<FilesMatch "\.(sql|lock|log|md)$">
+  Require all denied
+</FilesMatch>
+
+# los archivos de Astro llevan hash en el nombre: se pueden guardar un año
+<IfModule mod_headers.c>
+  <If "%{REQUEST_URI} =~ m#^/_astro/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript text/javascript application/json image/svg+xml
+</IfModule>

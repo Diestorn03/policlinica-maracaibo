@@ -1,6 +1,5 @@
-# Arma el paquete del servidor Node (sitio + login + videollamada) y lo deja como artefacto descargable.
-# Sube el contenido del ZIP a la carpeta de la app en el servidor y sigue docs/DESPLIEGUE.md.
-# El dominio sale de la variable del repositorio SITE_URL (Settings → Variables); por defecto el temporal del profesor.
+# Arma el paquete del hosting PHP + MariaDB (sitio estático + zonas privadas en PHP) y lo deja como artefacto descargable.
+# Se sube public_html/ a la carpeta del dominio y se sigue docs/DESPLIEGUE.md. Dominio: variable del repositorio SITE_URL (Settings → Variables).
 name: Paquete del servidor
 
 on:
@@ -11,19 +10,37 @@ on:
 jobs:
   paquete:
     runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: policlinica_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=5s --health-timeout=5s --health-retries=20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_mysql
       - run: npm ci
       - run: npm test
-      - run: npm run build:node
+      - run: php php/tests/libs.php
+        env:
+          PM_DB_HOST: 127.0.0.1
+          PM_DB_NAME: policlinica_test
+          PM_DB_USER: root
+          PM_DB_PASS: root
+      - run: node tools/empaquetar-php.mjs
         env:
           SITE_URL: ${{ vars.SITE_URL || 'https://proyecto.pmaracaibo.com' }}
-      - run: mkdir paquete && cp -r dist migrations package.json package-lock.json paquete/
       - uses: actions/upload-artifact@v4
         with:
-          name: policlinica-servidor
-          path: paquete
+          name: policlinica-php
+          path: paquete/policlinica-php.zip
