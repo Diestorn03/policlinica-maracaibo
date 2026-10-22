@@ -14,7 +14,7 @@ const estado = (contenedor: HTMLElement, texto: string, oculto = false) => {
   if (aviso) { aviso.textContent = texto; aviso.hidden = oculto; }
 };
 
-function cargarApi(): Promise<ConstructorJitsi> {
+function cargarApi(dominio: string): Promise<ConstructorJitsi> {
   if (window.JitsiMeetExternalAPI) return Promise.resolve(window.JitsiMeetExternalAPI);
   if (cargando) return cargando;
   cargando = new Promise((resolve, reject) => {
@@ -22,7 +22,7 @@ function cargarApi(): Promise<ConstructorJitsi> {
     const listo = () => window.JitsiMeetExternalAPI ? resolve(window.JitsiMeetExternalAPI) : reject(new Error('La API de Jitsi no se cargó.'));
     if (previo) { previo.addEventListener('load', listo, { once: true }); previo.addEventListener('error', () => reject(new Error('No se pudo cargar Jitsi.')), { once: true }); return; }
     const script = document.createElement('script');
-    script.src = 'https://meet.jit.si/external_api.js';
+    script.src = `https://${dominio}/external_api.js`;
     script.async = true;
     script.dataset.pmJitsi = '1';
     script.addEventListener('load', listo, { once: true });
@@ -33,7 +33,7 @@ function cargarApi(): Promise<ConstructorJitsi> {
 }
 
 /** Monta una sala dentro del contenedor. Los nombres mostrados son genéricos para reducir datos personales enviados a Jitsi. */
-export async function montarVideollamada(contenedor: HTMLElement, sala: string, rol: RolVideo) {
+export async function montarVideollamada(contenedor: HTMLElement, sala: string, rol: RolVideo, dominio = 'meet.jit.si') {
   if (document.documentElement.dataset.demo === '1') { estado(contenedor, 'Demostración: la videollamada se abrirá automáticamente en la versión con servidor.'); return; }
   if (!SALA.test(sala)) { estado(contenedor, 'Esperando la sala de videollamada.'); return; }
   if (sesiones.has(contenedor)) return;
@@ -41,9 +41,9 @@ export async function montarVideollamada(contenedor: HTMLElement, sala: string, 
   if (!marco) return;
   estado(contenedor, 'Conectando la videollamada…');
   try {
-    const Jitsi = await cargarApi();
+    const Jitsi = await cargarApi(dominio);
     if (sesiones.has(contenedor)) return;
-    const api = new Jitsi('meet.jit.si', {
+    const api = new Jitsi(dominio, {
       roomName: sala,
       width: '100%',
       height: '100%',

@@ -3,4 +3,4 @@ import { env } from 'cloudflare:workers';
 import type { DB } from './db.ts';
 
 export const getDB = async (): Promise<DB> => env.DB as unknown as DB;
-export const getEnv = async () => env as { SESSION_SECRET?: string; LOGIN_LIMIT?: { limit(o: { key: string }): Promise<{ success: boolean }> } };
+export const getEnv = async () => env as { SESSION_SECRET?: string; JITSI_DOMAIN?: string; LOGIN_LIMIT?: { limit(o: { key: string }): Promise<{ success: boolean }> } };

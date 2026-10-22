@@ -2,7 +2,9 @@
 // y la base de ejemplo del modo demo (GitHub Pages).
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import * as db from '../src/lib/db.ts';
 import * as u from '../src/lib/usuarios.ts';
 import * as tele from '../src/lib/tele.ts';
@@ -271,5 +273,16 @@ raw.exec("UPDATE consultas SET visto = datetime('now', '-6 minutes') WHERE estad
 assert.equal((await tele.cola(D1, doc)).espera.length, 0);
 assert.equal((await tele.historial(D1, { clienteId: cli }))[0].estado, 'cancelada');
 assert.equal(tele.aFecha('2026-10-19 19:20:00').toISOString(), '2026-10-19T19:20:00.000Z');
+
+// modo Node: la base vive en un archivo y reabrirla no repite las migraciones ni borra datos
+const dirTmp = mkdtempSync(join(tmpdir(), 'pm-'));
+const archivo = join(dirTmp, 'policlinica.db');
+const a = d1Local('migrations', archivo);
+a.raw.exec("INSERT INTO especialidades (nombre, slug, clave) VALUES ('Prueba de archivo', 'prueba-archivo', 'prueba archivo')");
+a.raw.close();
+const b = d1Local('migrations', archivo);
+assert.equal((await b.db.prepare("SELECT count(*) n FROM especialidades WHERE slug = 'prueba-archivo'").first()).n, 1, 'reabrir el archivo conserva los datos');
+b.raw.close();
+rmSync(dirTmp, { recursive: true, force: true });
 
 console.log('ok · directorio, usuarios, sesión y telemedicina');

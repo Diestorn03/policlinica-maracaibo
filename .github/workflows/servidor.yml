@@ -1,0 +1,29 @@
+# Arma el paquete del servidor Node (sitio + login + videollamada) y lo deja como artefacto descargable.
+# Sube el contenido del ZIP a la carpeta de la app en el servidor y sigue docs/DESPLIEGUE.md.
+# El dominio sale de la variable del repositorio SITE_URL (Settings → Variables); por defecto el temporal del profesor.
+name: Paquete del servidor
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  paquete:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:node
+        env:
+          SITE_URL: ${{ vars.SITE_URL || 'https://proyecto.pmaracaibo.com' }}
+      - run: mkdir paquete && cp -r dist migrations package.json package-lock.json paquete/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: policlinica-servidor
+          path: paquete

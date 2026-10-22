@@ -26,6 +26,10 @@ npm test                           # prueba la base de datos, la sesión y la te
 En Windows, si la ruta del proyecto es muy larga, el D1 local falla: poner `CF_STATE=C:/pm-state` en `.env`
 y añadir `--persist-to C:/pm-state` a los comandos de wrangler.
 
+## Servidor propio (Webuzo del profesor)
+`npm run build:node` compila la versión con login real: SQLite en archivo, sesiones y videollamada, sin Cloudflare.
+`npm start` la levanta (lee `.env`, ver `.env.servidor.example`). Guía completa en [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md).
+
 ## Publicar en Cloudflare (gratis)
 ```bash
 npx wrangler login

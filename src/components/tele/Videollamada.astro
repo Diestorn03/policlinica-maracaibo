@@ -1,9 +1,12 @@
 ---
 // Contenedor común de Jitsi para médico y cliente. El script observa tanto el HTML inicial como tarjetas que llegan por sondeo.
+// El servidor Jitsi sale de JITSI_DOMAIN (por defecto el público meet.jit.si, que corta las llamadas incrustadas a los 5 minutos).
+import { getEnv } from '../../lib/entorno';
 interface Props { sala?: string; rol: 'medico' | 'cliente' }
 const { sala = '', rol } = Astro.props;
+const dominio = (await getEnv()).JITSI_DOMAIN || 'meet.jit.si';
 ---
-<div class="t-video" data-video data-sala={sala} data-rol={rol} tabindex="-1">
+<div class="t-video" data-video data-sala={sala} data-rol={rol} data-dominio={dominio} tabindex="-1">
   <p class="t-video__estado" data-video-estado role="status">Preparando la videollamada…</p>
   <div class="t-video__marco" data-video-marco></div>
   <p class="t-video__nota">La sala se crea automáticamente para esta consulta. Permite cámara y micrófono cuando el navegador lo solicite.</p>
@@ -12,7 +15,7 @@ const { sala = '', rol } = Astro.props;
 <script>
   import { desmontarVideollamada, montarVideollamada } from '../../scripts/jitsi.ts';
 
-  const iniciar = (video: HTMLElement) => montarVideollamada(video, video.dataset.sala ?? '', video.dataset.rol === 'medico' ? 'medico' : 'cliente');
+  const iniciar = (video: HTMLElement) => montarVideollamada(video, video.dataset.sala ?? '', video.dataset.rol === 'medico' ? 'medico' : 'cliente', video.dataset.dominio || 'meet.jit.si');
   const recorrer = (raiz: ParentNode) => {
     if (raiz instanceof HTMLElement && raiz.matches('[data-video]')) iniciar(raiz);
     raiz.querySelectorAll<HTMLElement>('[data-video]').forEach(iniciar);

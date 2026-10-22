@@ -7,3 +7,5 @@ dist/
 .vite-*/
 .env
 src/worker-configuration.d.ts
+data/
+paquete/

@@ -1,7 +1,7 @@
 // POST usuario (correo o cédula) + clave [+ volver] → abre la sesión y lleva a su panel.  POST accion=salir → la cierra.
 // El formulario vive en /acceso/, que muestra ?error=datos | ?error=limite | ?salio=1
 import type { APIRoute } from 'astro';
-import { env } from 'cloudflare:workers';
+import { getDB, getEnv } from '../../lib/entorno';
 import { COOKIE, cookieOpts, crearSesion, inicioDe, verificarClave } from '../../lib/auth';
 import { porLogin } from '../../lib/usuarios';
 
@@ -13,10 +13,11 @@ export const POST: APIRoute = async ({ request, cookies, redirect, clientAddress
     cookies.delete(COOKIE, { path: '/' });
     return redirect('/acceso/?salio=1', 303);
   }
+  const env = await getEnv();
   const { success } = (await env.LOGIN_LIMIT?.limit({ key: clientAddress })) ?? { success: true };
   if (!success) return redirect('/acceso/?error=limite', 303);
 
-  const u = await porLogin(env.DB, String(form.get('usuario') ?? ''));
+  const u = await porLogin(await getDB(), String(form.get('usuario') ?? ''));
   const ok = await verificarClave(String(form.get('clave') ?? ''), u?.clave_hash);
   if (!u || !ok || !u.activo || !env.SESSION_SECRET) return redirect('/acceso/?error=datos', 303);
 
