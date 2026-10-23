@@ -1,0 +1,8 @@
+---
+// Médico sin foto: silueta neutra. La web oficial deja el hueco vacío; en una cuadrícula de retratos un hueco parece una imagen
+// rota y las iniciales parecían un dato más. Decorativa: el nombre del médico siempre está al lado.
+// El color sale de currentColor y el tamaño lo pone quien la usa; el mismo marcado lo arma vivo.ts en el navegador.
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+---
+<svg class:list={['sinfoto', cls]} viewBox="0 0 100 100" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="50" cy="38" r="17" /><path d="M14 100c0-25 16-38 36-38s36 13 36 38z" /></svg>

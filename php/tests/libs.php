@@ -284,6 +284,14 @@ igual($nuevoUsuario(['rol' => 'admin', 'nombre' => 'An', 'correo' => 'a@b.co']),
 igual($nuevoUsuario(['rol' => 'admin', 'nombre' => 'Ana Pérez', 'correo' => 'a@b']), 'El correo no es válido.');
 coincide('/fecha de nacimiento/', $nuevoUsuario(['rol' => 'admin', 'nombre' => 'Ana Pérez', 'correo' => 'a@b.co', 'nacimiento' => '2999-01-01']));
 coincide('/fecha de nacimiento/', $nuevoUsuario(['rol' => 'admin', 'nombre' => 'Ana Pérez', 'correo' => 'a@b.co', 'nacimiento' => '2026-02-30']));
+// cada error señala su campo, para que el formulario vuelva con lo escrito y marque solo ese (igual que en tests/db.check.mjs)
+$campoDe = fn(array $o) => campoDelError($nuevoUsuario($o + ['rol' => 'cliente', 'nombre' => 'Ana Pérez', 'correo' => 'ana@correo.test', 'cedula' => 'V-11111111']));
+igual(
+    [$campoDe(['rol' => 'root']), $campoDe(['nombre' => 'A']), $campoDe(['correo' => 'ana@']), $campoDe(['cedula' => 'abc']), $campoDe(['cedula' => '']), $campoDe(['telefono' => 'llámame']),
+        $campoDe(['nacimiento' => '2999-01-01']), $campoDe(['afiliacion_vence' => 'mañana']), $campoDe(['clave' => 'corta'])],
+    ['rol', 'nombre', 'correo', 'cedula', 'cedula', 'telefono', 'nacimiento', 'afiliacion_vence', 'clave'], 'campoDelError');
+igual(campoDelError('Debe quedar al menos un administrador activo.'), null);
+igual([PATRON_CEDULA, PATRON_TELEFONO], ['[VvEeJjPpGg]?[ .\-]*(?:[0-9][ .\-]*){5,10}', '[0-9 \(\)+\-]{7,}'], 'los pattern son los de usuarios.ts');
 coincide('/fecha de vencimiento/', $nuevoUsuario(['rol' => 'cliente', 'nombre' => 'Ana Pérez', 'correo' => 'a@b.co', 'cedula' => '1234567', 'afiliacion_vence' => 'mañana']));
 coincide('/teléfono/', $nuevoUsuario(['rol' => 'admin', 'nombre' => 'Ana Pérez', 'correo' => 'a@b.co', 'telefono' => 'abc']));
 $edicion = validarUsuario(['rol' => 'admin', 'nombre' => 'Ana Pérez', 'correo' => 'A@B.co'], false);

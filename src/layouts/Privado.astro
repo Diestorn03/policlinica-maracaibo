@@ -31,7 +31,7 @@ const { titulo, zona, usuario, rolTexto } = Astro.props; // rolTexto: el marco d
     {DEMO && <div class="app-demo" role="note">Demostración: datos de ejemplo, nada se guarda.</div>}
     <header class="app-bar">
       <div class="app-bar__in">
-        <a class="app-bar__logo" href={u('/')} aria-label={`${clinica.nombre}, sitio público`}><Image src={logo} alt="" height={34} /></a>
+        <a class="app-bar__logo" href={u('/')} aria-label={`${clinica.nombre}, sitio público`}><Image src={logo} alt="" height={34} densities={[1, 2]} /></a>
         {zona && <span class="app-bar__zona">{zona}</span>}
         {usuario && (
           <div class="app-bar__user">

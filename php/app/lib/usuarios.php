@@ -79,6 +79,20 @@ function validarUsuario(array $post, bool $nuevo): array|string {
     ];
 }
 
+/** Las mismas reglas de cédula y teléfono como `pattern` de los formularios: el navegador marca el campo antes de enviar.
+ *  Iguales a PATRON_CEDULA y PATRON_TELEFONO de usuarios.ts. */
+const PATRON_CEDULA = '[VvEeJjPpGg]?[ .\-]*(?:[0-9][ .\-]*){5,10}';
+const PATRON_TELEFONO = '[0-9 \(\)+\-]{7,}';
+
+/** El campo que causó un error de validarUsuario() o guardarUsuario() (null si no es de un campo): el formulario vuelve con
+ *  lo escrito y marca solo ese. Sale del texto del mensaje, como campoDelError() de usuarios.ts (la prueba lo cubre). */
+function campoDelError(string $mensaje): ?string {
+    $tabla = ['/\brol\b/u' => 'rol', '/nombre/u' => 'nombre', '/correo/u' => 'correo', '/cédula/u' => 'cedula', '/teléfono/u' => 'telefono',
+        '/nacimiento/u' => 'nacimiento', '/vencimiento/u' => 'afiliacion_vence', '/contraseña/u' => 'clave'];
+    foreach ($tabla as $re => $campo) if (preg_match($re, $mensaje)) return $campo;
+    return null;
+}
+
 /** Alta exclusiva de secretaria: descarta los campos de privilegio y fuerza un cliente activo. */
 function validarCliente(array $post): array|string {
     foreach (['rol', 'medico_id', 'activo'] as $k) unset($post[$k]);

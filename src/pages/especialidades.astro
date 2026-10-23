@@ -1,6 +1,6 @@
 ---
-// Especialidades de la A a la Z en UNA sola lista, en orden de lectura (de izquierda a derecha y hacia abajo), cada una enlazada
-// a su lista de médicos en el directorio, con su cuenta. Las que aún no tienen médicos van al final, aparte.
+// Especialidades de la A a la Z, agrupadas por letra como un índice: cada una es una tarjeta con su cuenta de médicos que lleva
+// a su lista en el directorio. Las que aún no tienen médicos van al final, aparte, sin enlace.
 //  · Buscador que filtra al escribir (sin acentos) y casilla «solo las que tienen médicos»: todo en el navegador, así funciona en la demo estática.
 //  · prerender = false como la portada: en servidor las cuentas son en vivo; en la demo se fijan al compilar.
 export const prerender = false;
@@ -9,6 +9,7 @@ import PageHero from '../components/ui/PageHero.astro';
 import Icon from '../components/ui/Icon.astro';
 import { getDB, u } from '../lib/entorno';
 import { clave, especialidades, resumen } from '../lib/db';
+import { waHref } from '../lib/sitio';
 
 const db = await getDB();
 const [esps, res] = await Promise.all([especialidades(db), resumen(db)]);
@@ -17,6 +18,7 @@ const [esps, res] = await Promise.all([especialidades(db), resumen(db)]);
 const con = esps.filter((e) => e.total > 0);
 const sin = esps.filter((e) => e.total === 0);
 const medicosTxt = (n: number) => `${n} ${n === 1 ? 'médico' : 'médicos'}`;
+const letras = Map.groupBy(con, (e) => clave(e.nombre).charAt(0).toUpperCase());
 ---
 <Layout titulo="Especialidades" descripcion={`${res.especialidades} especialidades médicas de la Policlínica Maracaibo, de la A a la Z, con sus médicos en el directorio.`}>
   <PageHero titulo="Especialidades" lead={`${res.especialidades} especialidades, ${res.conMedicos} de ellas con médicos en el directorio. Elige una para ver sus médicos.`} migas={[{ texto: 'Especialidades' }]} />
@@ -36,19 +38,32 @@ const medicosTxt = (n: number) => `${n} ${n === 1 ? 'médico' : 'médicos'}`;
 
   <section class="section lista">
     <div class="wrap">
-      <h2 class="sr-only">Especialidades con médicos</h2>
-      <ul class="esp" id="lista-esp" data-stagger=".03">
-        {con.map((e) => (
-          <li data-n={clave(e.nombre)}>
-            <a href={u(`/directorio/?esp=${e.slug}`)}><span>{e.nombre}</span><small>{medicosTxt(e.total)}</small></a>
-          </li>
+      <h2 class="lista__t">Con médicos en el directorio <small>{con.length}</small></h2>
+      <p class="lista__ayuda">Elige una especialidad para ver a sus médicos, su consultorio y su teléfono.</p>
+      <div id="lista-esp">
+        {[...letras].map(([letra, items]) => (
+          <div class="letra">
+            <h3 class="letra__t">{letra}</h3>
+            <ul class="esp" data-stagger=".04">
+              {items.map((e) => (
+                <li data-n={clave(e.nombre)}>
+                  <a href={u(`/directorio/?esp=${e.slug}`)}>
+                    <span class="esp__nombre">{e.nombre}</span>
+                    <span class="esp__n"><Icon name="users" size={16} />{medicosTxt(e.total)}</span>
+                    <span class="esp__ir" aria-hidden="true"><Icon name="arrow" size={16} /></span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
 
       {sin.length > 0 && (
         <div class="sin" id="sin-medicos">
-          <h2 class="sin__t" data-reveal="up">Por ahora sin médicos en el directorio</h2>
-          <ul class="esp" data-stagger=".03">
+          <h2 class="lista__t" data-reveal="up">Sin médicos en el directorio por ahora <small>{sin.length}</small></h2>
+          <p class="lista__ayuda">Todavía no hay médicos de estas especialidades en el directorio. Para preguntar por una, <a class="link" href={waHref('Información sobre una especialidad')} target="_blank" rel="noopener">escríbenos por WhatsApp</a>.</p>
+          <ul class="esp esp--sin" data-stagger=".03">
             {sin.map((e) => <li data-n={clave(e.nombre)}><span>{e.nombre}</span></li>)}
           </ul>
         </div>
@@ -72,6 +87,7 @@ const medicosTxt = (n: number) => `${n} ${n === 1 ? 'médico' : 'médicos'}`;
   const solo = document.querySelector<HTMLInputElement>('#solo-con');
   const sinBloque = document.querySelector<HTMLElement>('#sin-medicos');
   let filas = [...document.querySelectorAll<HTMLElement>('.lista .esp > li')];
+  let grupos = [...document.querySelectorAll<HTMLElement>('.letra')];
   const cuenta = document.getElementById('cuenta-esp');
   const vacio = document.getElementById('vacio-esp');
   const vacioQ = document.getElementById('vacio-q');
@@ -92,6 +108,7 @@ const medicosTxt = (n: number) => `${n} ${n === 1 ? 'médico' : 'médicos'}`;
         enSin += +(ok && sinMedicos);
       }
       if (sinBloque) sinBloque.hidden = enSin === 0; // sin filas, tampoco su título
+      grupos.forEach((g) => (g.hidden = !g.querySelector('li:not([hidden])'))); // ni la letra
       cuenta.textContent = n === filas.length ? `${n} especialidades` : `${n} de ${filas.length} especialidades`;
       const buscado = q.value.trim();
       vacio.hidden = n > 0;
@@ -107,7 +124,11 @@ const medicosTxt = (n: number) => `${n} ${n === 1 ? 'médico' : 'médicos'}`;
     solo.addEventListener('change', aplicar);
     q.form?.addEventListener('submit', (e) => e.preventDefault());
     // versión PHP: vivo.ts cambió la lista por la de la base real
-    document.addEventListener('pm:datos', () => { filas = [...document.querySelectorAll<HTMLElement>('.lista .esp > li')]; aplicar(); });
+    document.addEventListener('pm:datos', () => {
+      filas = [...document.querySelectorAll<HTMLElement>('.lista .esp > li')];
+      grupos = [...document.querySelectorAll<HTMLElement>('.letra')];
+      aplicar();
+    });
   }
 </script>
 
@@ -123,28 +144,47 @@ const medicosTxt = (n: number) => `${n} ${n === 1 ? 'médico' : 'médicos'}`;
   .solo input { width: 1.3rem; height: 1.3rem; accent-color: var(--blue); }
   .cuenta { margin-left: auto; font-size: .9375rem; color: var(--text); }
 
-  .lista { padding-top: clamp(2rem, 4vw, 3.5rem); }
-  /* una sola lista A–Z que se lee por filas: la cuadrícula rellena de izquierda a derecha y hacia abajo */
-  .esp { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); border-top: 1px solid var(--line); }
-  .esp li { border-bottom: 1px solid var(--line); }
-  .esp li[hidden], .sin[hidden], .vacio[hidden] { display: none; }
-  .esp :is(a, li > span) { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; min-height: 56px; padding: .8rem 1rem; }
-  .esp a { transition: background .2s; }
-  .esp a:hover { background: var(--mist); }
-  .esp a span { font-weight: 600; color: var(--navy); }
-  .esp a:hover span { color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
-  .esp small { flex: none; font-size: .9375rem; color: var(--text); text-align: right; }
+  .lista { padding-top: clamp(2rem, 4vw, 3.5rem); background: var(--mist); }
+  .lista__t { font-size: clamp(1.4rem, 1.1rem + 1vw, 1.9rem); }
+  /* la cuenta va pegada al final del título aunque este ocupe dos líneas */
+  .lista__t small { display: inline-block; vertical-align: .3em; margin-left: .5rem; font: 600 .9375rem var(--font-body); color: var(--blue); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: .1rem .7rem; letter-spacing: 0; }
+  .lista__ayuda { margin-top: .4rem; max-width: 60ch; }
+  /* índice A–Z como el de un diccionario: tres columnas que se leen de arriba abajo, cada letra con sus tarjetas debajo
+     (en el teléfono, una sola columna). Las tarjetas no se parten entre columnas; la letra no se queda sola al pie */
+  #lista-esp { margin-top: 1.4rem; columns: 3 17rem; column-gap: 1.5rem; }
+  .letra { break-inside: avoid; } /* cada letra entera en su columna: sin tarjetas huérfanas arriba de la siguiente */
+  .letra + .letra { margin-top: 1rem; }
+  .letra__t { display: flex; align-items: center; gap: .8rem; margin-bottom: .7rem; font-size: 1.6rem; line-height: 1.1; letter-spacing: -.03em; color: var(--blue); break-after: avoid; }
+  .letra__t::after { content: ''; flex: 1; height: 1px; background: #d5dcef; }
+  .esp { list-style: none; margin: 0; padding: 0; }
+  .esp li { break-inside: avoid; padding-bottom: .6rem; }
+  .esp li[hidden], .sin[hidden], .vacio[hidden], .letra[hidden] { display: none; }
+  .esp a { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .25rem .8rem; min-height: 4.25rem; padding: .75rem .9rem .75rem 1.1rem; background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: 0 1px 2px rgba(24, 35, 63, .06); transition: border-color .2s, box-shadow .3s var(--ease-out), transform .3s var(--ease-out); }
+  .esp a:hover, .esp a:focus-visible { border-color: var(--blue); box-shadow: var(--shadow); transform: translateY(-2px); }
+  .esp__nombre { grid-column: 1; font: 600 1.0625rem/1.3 var(--font-head); letter-spacing: -.015em; color: var(--navy); }
+  .esp a:hover .esp__nombre { color: var(--blue); }
+  .esp__n { grid-column: 1; display: inline-flex; align-items: center; gap: .4rem; font-size: .9rem; color: var(--text); }
+  .esp__n :global(svg) { color: var(--slate); }
+  .esp__ir { grid-column: 2; grid-row: 1 / 3; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--mist); color: var(--blue); transition: background-color .2s, color .2s; }
+  .esp a:hover .esp__ir, .esp a:focus-visible .esp__ir { background: var(--blue); color: #fff; }
 
-  .sin { margin-top: 3rem; }
-  .sin__t { margin-bottom: .8rem; font: 600 1.0625rem / 1.3 var(--font-head); letter-spacing: -.01em; color: var(--navy); }
-  .sin .esp li > span { color: var(--text); }
+  /* sin médicos: solo nombres, en etiquetas discretas (no son enlaces) */
+  .sin { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #d5dcef; }
+  .esp--sin { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+  .esp--sin li { padding-bottom: 0; }
+  .esp--sin li > span { display: inline-flex; align-items: center; min-height: 40px; padding: .3rem 1rem; border-radius: 999px; border: 1px dashed #b9c4de; color: var(--text); background: rgba(255, 255, 255, .6); }
 
   .vacio { padding-block: 2rem; }
   .vacio p { font-size: 1.125rem; max-width: 48ch; }
   .vacio b { color: var(--navy); font-weight: 600; overflow-wrap: anywhere; }
   .mas { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: 1.0625rem; }
+  .mas .link { white-space: nowrap; }
 
   /* en el teléfono la barra ocuparía un cuarto de la pantalla: no se queda fija */
   @media (max-width: 899px) { .herramientas { position: static; backdrop-filter: none; -webkit-backdrop-filter: none; } }
-  @media (max-width: 640px) { .cuenta { margin-left: 0; flex-basis: 100%; } }
+  @media (max-width: 640px) {
+    .cuenta { margin-left: 0; flex-basis: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .esp a { transition: none; } .esp a:hover, .esp a:focus-visible { transform: none; } }
 </style>

@@ -7,8 +7,13 @@ const rol = panel?.querySelector<HTMLSelectElement>('[name=rol]') ?? null;
 if (panel && rol) {
   const { editando, nuevo } = iniciarEdicion(panel);
   if (!editando && nuevo && [...rol.options].some((o) => o.value === nuevo)) rol.value = nuevo; // demo: el HTML no trae el rol de ?nuevo=
-  // Cada rol usa sus campos: afiliación para clientes, ficha del directorio para médicos (el servidor valida todo igual)
-  const ver = () => panel.querySelectorAll<HTMLElement>('[data-rol]').forEach((e) => (e.hidden = e.dataset.rol !== rol.value));
+  // Cada rol usa sus campos: afiliación para clientes, ficha del directorio para médicos (el servidor valida todo igual).
+  // Como en el servidor, la cédula es obligatoria solo para los clientes: el navegador lo avisa sin borrar nada.
+  const cedula = panel.querySelector<HTMLInputElement>('[name=cedula]')!;
+  const ver = () => {
+    panel.querySelectorAll<HTMLElement>('[data-rol]').forEach((e) => (e.hidden = e.dataset.rol !== rol.value));
+    cedula.required = rol.value === 'cliente';
+  };
   rol.addEventListener('change', ver);
   ver();
 }

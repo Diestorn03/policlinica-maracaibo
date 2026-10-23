@@ -3,7 +3,7 @@
 // y actualiza las cifras de la portada y de «Nosotros» (data-vivo-n). Solo corre si <html data-vivo="1">; en la demo y en los demás modos no hace nada.
 // Si la petición falla se queda el HTML estático. Todo se construye con nodos del DOM (nunca innerHTML) porque los textos vienen de la base.
 import { clave } from '../../lib/db.ts';
-import { PISOS, iniciales, telHref, ubicacion } from '../../lib/sitio.ts';
+import { PISOS, telHref, ubicacion } from '../../lib/sitio.ts';
 import { ficha } from './buscar';
 
 interface Esp { id: number; slug: string; nombre: string; total: number }
@@ -21,6 +21,20 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLEl
   return e;
 }
 
+// Astro marca los elementos de cada componente con data-astro-cid-* y sus estilos solo valen con esa marca: lo que se arma aquí
+// copia la del HTML estático (sin esto, las tarjetas y la lista rehechas quedaban sin estilo)
+const cidsDe = (ref: Element | null) => (ref ? [...ref.attributes].filter((a) => a.name.startsWith('data-astro-cid-')).map((a) => a.name) : []);
+const marcar = (raiz: Element, cids: string[]) => { for (const e of [raiz, ...raiz.querySelectorAll('*')]) for (const c of cids) e.setAttribute(c, ''); };
+
+/** Médico sin foto: la misma silueta que SinFoto.astro (decorativa, el nombre va al lado). */
+function silueta() {
+  const ns = 'http://www.w3.org/2000/svg';
+  const nodo = (tag: string, attrs: Record<string, string>) => { const n = document.createElementNS(ns, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); return n; };
+  const svg = nodo('svg', { class: 'sinfoto medico__sin', viewBox: '0 0 100 100', fill: 'currentColor', 'aria-hidden': 'true', focusable: 'false' });
+  svg.append(nodo('circle', { cx: '50', cy: '38', r: '17' }), nodo('path', { d: 'M14 100c0-25 16-38 36-38s36 13 36 38z' }));
+  return svg;
+}
+
 /** Huella de una ficha: sirve para saber si lo que trae la base ya es lo que dibujó el HTML estático. */
 const huellaMed = (m: Med) => [ficha(m.nombre, ...m.especialidades.map((e) => e.nombre)), m.especialidades.map((e) => e.slug).join(' '), pisoDe(m), lugarDe(m), m.telefono, m.foto].join('~');
 const huellaLi = (li: HTMLElement) => [
@@ -30,11 +44,10 @@ const huellaLi = (li: HTMLElement) => [
   li.querySelector('.medico__foto img')?.getAttribute('src') ?? '',
 ].join('~');
 
-function tarjeta(m: Med, iconos: { pin: Element | null; tel: Element | null }, ansiosa: boolean) {
+function tarjeta(m: Med, iconos: { pin: Element | null; tel: Element | null }, cids: { lista: string[]; tarjeta: string[] }, ansiosa: boolean) {
   const foto = m.foto
     ? el('img', { src: m.foto, alt: `Foto de ${m.nombre}`, width: 480, height: 480, loading: ansiosa ? 'eager' : 'lazy', decoding: 'async' })
-    : el('span', { className: 'medico__ini', textContent: iniciales(m.nombre) }, '');
-  if (!m.foto) foto.setAttribute('aria-hidden', 'true');
+    : silueta();
   const lugar = lugarDe(m);
   const cuerpo = el('div', { className: 'medico__body' },
     el('h3', { className: 'medico__nombre', textContent: m.nombre }),
@@ -45,7 +58,9 @@ function tarjeta(m: Med, iconos: { pin: Element | null; tel: Element | null }, a
   const art = el('article', { className: 'medico' }, el('div', { className: 'medico__foto' }, foto), cuerpo);
   art.dataset.clave = clave([m.nombre, ...m.especialidades.map((e) => e.nombre)].join(' '));
   art.dataset.esp = m.especialidades.map((e) => e.slug).join(' ');
+  marcar(art, cids.tarjeta);
   const li = el('li', {}, art);
+  for (const c of cids.lista) li.setAttribute(c, '');
   li.dataset.ficha = ficha(m.nombre, ...m.especialidades.map((e) => e.nombre));
   li.dataset.esp = art.dataset.esp;
   li.dataset.piso = pisoDe(m);
@@ -61,7 +76,8 @@ function directorio(d: Datos) {
   const iguales = actuales.length === d.medicos.length && actuales.every((li, i) => huellaLi(li) === huellaMed(d.medicos[i]));
   if (iguales) return;
   const iconos = { pin: document.querySelector('.medico__dato svg'), tel: document.querySelector('.medico__tel svg') };
-  lista.replaceChildren(...d.medicos.map((m, i) => tarjeta(m, iconos, i < 4)));
+  const cids = { lista: cidsDe(lista.firstElementChild), tarjeta: cidsDe(lista.querySelector('.medico')) };
+  lista.replaceChildren(...d.medicos.map((m, i) => tarjeta(m, iconos, cids, i < 4)));
   // opciones de los desplegables con las cuentas de la base
   const esp = form.elements.namedItem('esp') as HTMLSelectElement;
   const piso = form.elements.namedItem('piso') as HTMLSelectElement;
@@ -80,19 +96,39 @@ function especialidades(d: Datos) {
   const conDatos = d.especialidades.filter((e) => e.total > 0);
   const sinDatos = d.especialidades.filter((e) => e.total === 0);
   const huella = (xs: { n: string; t: string }[]) => xs.map((x) => `${x.n}:${x.t}`).join('|');
-  const actualCon = [...con.children].map((li) => ({ n: (li as HTMLElement).dataset.n ?? '', t: li.querySelector('small')?.textContent ?? '' }));
+  const actualCon = [...con.querySelectorAll<HTMLElement>('li')].map((li) => ({ n: li.dataset.n ?? '', t: li.querySelector('.esp__n')?.textContent?.trim() ?? '' }));
   const nuevoCon = conDatos.map((e) => ({ n: clave(e.nombre), t: medicosTxt(e.total) }));
   const actualSin = sinUl ? [...sinUl.children].map((li) => ({ n: (li as HTMLElement).dataset.n ?? '', t: '' })) : [];
   const nuevoSin = sinDatos.map((e) => ({ n: clave(e.nombre), t: '' }));
   if (huella(actualCon) === huella(nuevoCon) && huella(actualSin) === huella(nuevoSin)) return;
-  con.replaceChildren(...conDatos.map((e) => {
-    const li = el('li', {}, el('a', { href: `/directorio/?esp=${encodeURIComponent(e.slug)}` }, el('span', { textContent: e.nombre }), el('small', { textContent: medicosTxt(e.total) })));
-    li.dataset.n = clave(e.nombre);
-    return li;
+  // el mismo índice A–Z del HTML estático: una letra con sus tarjetas (iconos copiados de las que ya están)
+  const cids = cidsDe(con);
+  const iconos = { n: con.querySelector('.esp__n svg'), ir: con.querySelector('.esp__ir svg') };
+  const letras = new Map<string, Esp[]>();
+  for (const e of conDatos) { const l = clave(e.nombre).charAt(0).toUpperCase(); letras.set(l, [...(letras.get(l) ?? []), e]); }
+  con.replaceChildren(...[...letras].map(([letra, items]) => {
+    const ul = el('ul', { className: 'esp' }, ...items.map((e) => {
+      const ir = el('span', { className: 'esp__ir' }, ...(iconos.ir ? [iconos.ir.cloneNode(true)] : []));
+      ir.setAttribute('aria-hidden', 'true');
+      const li = el('li', {}, el('a', { href: `/directorio/?esp=${encodeURIComponent(e.slug)}` },
+        el('span', { className: 'esp__nombre', textContent: e.nombre }),
+        el('span', { className: 'esp__n' }, ...(iconos.n ? [iconos.n.cloneNode(true)] : []), medicosTxt(e.total)),
+        ir));
+      li.dataset.n = clave(e.nombre);
+      return li;
+    }));
+    const grupo = el('div', { className: 'letra' }, el('h3', { className: 'letra__t', textContent: letra }), ul);
+    marcar(grupo, cids);
+    return grupo;
   }));
   if (sinUl) {
-    sinUl.replaceChildren(...sinDatos.map((e) => { const li = el('li', {}, el('span', { textContent: e.nombre })); li.dataset.n = clave(e.nombre); return li; }));
+    const cidsSin = cidsDe(sinUl);
+    sinUl.replaceChildren(...sinDatos.map((e) => { const li = el('li', {}, el('span', { textContent: e.nombre })); li.dataset.n = clave(e.nombre); marcar(li, cidsSin); return li; }));
   }
+  // las cuentas junto a los títulos: «Con médicos en el directorio 42» y «Sin médicos en el directorio por ahora 8»
+  const [cuentaCon, cuentaSin] = document.querySelectorAll<HTMLElement>('.lista__t small');
+  if (cuentaCon) cuentaCon.textContent = String(conDatos.length);
+  if (cuentaSin) cuentaSin.textContent = String(sinDatos.length);
   const lead = document.querySelector('.page-hero .lead');
   if (lead && /^\d+ especialidades, \d+ de ellas/.test(lead.textContent ?? '')) {
     lead.textContent = `${d.especialidades.length} especialidades, ${conDatos.length} de ellas con médicos en el directorio. Elige una para ver sus médicos.`;

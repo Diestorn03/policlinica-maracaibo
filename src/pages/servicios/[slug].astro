@@ -6,6 +6,7 @@ export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
 import PageHero from '../../components/ui/PageHero.astro';
 import MedicoCard from '../../components/ui/MedicoCard.astro';
+import Icon from '../../components/ui/Icon.astro';
 import Tareas from '../../components/inner/Tareas.astro';
 import Foto from '../../components/inner/Foto.astro';
 import { nb, citasLista } from '../../components/inner/texto';
@@ -42,7 +43,8 @@ if (s?.especialidad) {
   total = todos.length;
   lista = todos.slice(0, MAX);
 }
-const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
+// en el carril, Especialidades (la única sin foto) va al final, después de los servicios
+const otros = indiceServicios.filter((x) => x.slug !== s?.slug).sort((a, b) => +!a.imagen - +!b.imagen);
 ---
 {!s ? (
   <Layout titulo="Especialidades" descripcion="Las especialidades tienen su propia página." noindex>
@@ -70,7 +72,7 @@ const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
           <Tareas motivo={`Solicitud de cita - ${s.nombre}`} />
         </div>
         <figure class="servicio__foto">
-          <Foto src={s.imagen} alt={s.alt} pos={s.pos} widths={[ancho, ancho * 2]} sizes={`(max-width: ${ancho}px) 100vw, ${ancho}px`} loading="eager" />
+          <Foto src={s.imagen} alt={s.alt} pos={s.pos} widths={[ancho, ancho * 2]} sizes={`(max-width: ${ancho}px) 100vw, ${Math.round(ancho * 1.35)}px`} loading="eager" />
         </figure>
       </div>
     </section>
@@ -86,14 +88,57 @@ const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
       </section>
     )}
 
+    <!-- Otros servicios: carril de tarjetas flotantes. Scroll horizontal nativo con imán (táctil, trackpad, teclado);
+         las flechas solo aparecen con JavaScript y cuando las tarjetas no caben -->
     <nav class="section otros" aria-labelledby="otros-t">
-      <div class="wrap">
-        <h2 class="h-lg" id="otros-t" data-split="lines">Otros servicios</h2>
-        <ul data-stagger=".05">{otros.map((x) => <li><a class="link" href={u(x.href)}>{x.nombre}</a></li>)}</ul>
+      <div class="wrap otros__head">
+        <h2 class="h-xl" id="otros-t" data-split="lines">Otros servicios</h2>
+        <div class="otros__flechas" hidden>
+          <button class="flecha" type="button" data-dir="-1" aria-controls="otros-carril" aria-label="Servicios anteriores"><Icon name="arrow" /></button>
+          <button class="flecha" type="button" data-dir="1" aria-controls="otros-carril" aria-label="Más servicios"><Icon name="arrow" /></button>
+        </div>
       </div>
+      <ul class="carril" id="otros-carril" data-stagger=".06">
+        {otros.map((x) => (
+          <li>
+            <a class="tarjeta" href={u(x.href)}>
+              {x.imagen
+                ? <Foto src={x.imagen} pos={x.pos} ratio="4/3" widths={[320, 640]} sizes="(max-width: 640px) 80vw, 300px" reveal="" />
+                : <span class="tarjeta__icono" aria-hidden="true"><Icon name="stethoscope" size={48} /></span>}
+              <span class="tarjeta__txt"><b>{x.nombre}</b><small>{nb(x.dato)}</small></span>
+              <span class="tarjeta__ir" aria-hidden="true"><Icon name="arrow" size={18} /></span>
+            </a>
+          </li>
+        ))}
+      </ul>
     </nav>
   </Layout>
 )}
+
+<script>
+  import { reduced } from '../../scripts/motion.js';
+
+  // Flechas del carril: un paso = una tarjeta más el espacio entre tarjetas; se apagan en los extremos
+  const carril = document.querySelector<HTMLElement>('#otros-carril');
+  const caja = document.querySelector<HTMLElement>('.otros__flechas');
+  if (carril && caja) {
+    const [atras, adelante] = caja.querySelectorAll<HTMLButtonElement>('.flecha');
+    const paso = () => (carril.querySelector('li')?.offsetWidth ?? carril.clientWidth) + parseFloat(getComputedStyle(carril).columnGap || '0');
+    const estado = () => {
+      const max = carril.scrollWidth - carril.clientWidth;
+      caja.hidden = max <= 2;
+      atras.disabled = carril.scrollLeft <= 2;
+      adelante.disabled = carril.scrollLeft >= max - 2;
+    };
+    caja.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.flecha');
+      if (b) carril.scrollBy({ left: +b.dataset.dir! * paso(), behavior: reduced ? 'auto' : 'smooth' });
+    });
+    carril.addEventListener('scroll', estado, { passive: true });
+    addEventListener('resize', estado);
+    estado();
+  }
+</script>
 
 <style>
   .servicio { padding-block: clamp(3rem, 6vw, 5rem); }
@@ -107,7 +152,7 @@ const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
   .hechos + .datos { border-top: 0; margin-top: -2rem; } /* la regla final de la lista hace de arriba de la tabla */
   .datos dt { font-weight: 600; color: var(--navy); }
   .datos dd { margin: 0; }
-  .datos .link { display: inline-flex; align-items: center; min-height: 44px; }
+  .datos .link { padding-block: .7em; margin-block: -.7em; } /* zona táctil alta sin agrandar el renglón de la dirección */
   .servicio__foto { margin: 0; position: sticky; top: calc(var(--nav-h) + 1.5rem); } /* acompaña la lectura en escritorio */
 
   .especialistas { background: var(--mist); }
@@ -116,9 +161,31 @@ const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
   .especialistas__mas { margin-top: 1.4rem; }
   .especialistas__mas .link { display: inline-flex; align-items: center; min-height: 44px; }
 
-  .otros { padding-block: clamp(2.5rem, 5vw, 4rem); }
-  .otros ul { list-style: none; margin: 1rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .2rem 1.8rem; }
-  .otros .link { display: inline-flex; align-items: center; min-height: 44px; }
+  /* otros servicios: tarjetas que flotan sobre el fondo claro (blanco si arriba ya va la banda clara de especialistas) */
+  .otros { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(1.5rem, 3vw, 2.5rem); background: var(--mist); }
+  .especialistas + .otros { background: #fff; }
+  .otros__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem 2rem; }
+  .otros__flechas { display: flex; gap: .6rem; }
+  .otros__flechas[hidden] { display: none; }
+  .flecha { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--line); background: #fff; color: var(--blue); cursor: pointer; box-shadow: var(--shadow); transition: background-color .2s, color .2s, border-color .2s, opacity .2s; }
+  .flecha:hover:not(:disabled) { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .flecha:disabled { opacity: .35; cursor: default; box-shadow: none; }
+  .flecha[data-dir='-1'] :global(svg) { transform: rotate(180deg); }
+  /* el carril va de borde a borde, pero la primera tarjeta arranca alineada con el contenido (.wrap: 1200 px y 1.25 rem) */
+  .carril { --borde: max(1.25rem, (100% - 1200px) / 2); list-style: none; margin: 1rem 0 0; padding: 1rem var(--borde) 2.5rem; display: grid; grid-auto-flow: column; grid-auto-columns: clamp(15rem, 24vw, 18.5rem); gap: 1.25rem;
+    overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--borde); scrollbar-width: thin; scrollbar-color: #b9c8e6 transparent; }
+  .carril li { display: grid; scroll-snap-align: start; }
+  .tarjeta { position: relative; display: grid; grid-template-rows: auto 1fr; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+    transition: transform .4s var(--ease-out), box-shadow .4s var(--ease-out); }
+  .tarjeta:hover, .tarjeta:focus-visible { transform: translateY(-6px); box-shadow: var(--shadow-2); }
+  .tarjeta :global(.marco) { border-radius: 0; }
+  .tarjeta__icono { aspect-ratio: 4 / 3; display: grid; place-items: center; background: linear-gradient(135deg, var(--blue), var(--navy)); color: #fff; }
+  .tarjeta__txt { display: grid; gap: .3rem; align-content: start; padding: 1rem 3.6rem 1.3rem 1.2rem; }
+  .tarjeta__txt b { font: 600 1.125rem/1.25 var(--font-head); letter-spacing: -.02em; color: var(--navy); }
+  .tarjeta__txt small { font-size: .9375rem; line-height: 1.45; color: var(--text); }
+  .tarjeta__ir { position: absolute; right: 1rem; bottom: 1.2rem; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: var(--mist); color: var(--blue); transition: background-color .25s, color .25s, transform .4s var(--ease-out); }
+  .tarjeta:hover .tarjeta__ir, .tarjeta:focus-visible .tarjeta__ir { background: var(--blue); color: #fff; transform: translateX(3px); }
+  @media (prefers-reduced-motion: reduce) { .tarjeta, .tarjeta__ir { transition: none; } .tarjeta:hover, .tarjeta:focus-visible { transform: none; } }
 
   @media (max-width: 1100px) {
     .servicio__grid { grid-template-columns: minmax(0, 1fr); }
@@ -128,6 +195,7 @@ const otros = indiceServicios.filter((x) => x.slug !== s?.slug);
   @media (max-width: 900px) { .especialistas__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 640px) {
     .datos > div { grid-template-columns: 1fr; gap: .1rem; }
-    .especialistas__lista { grid-template-columns: 1fr; }
+    .especialistas__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; } /* dos por fila, como en el directorio */
+    .carril { grid-auto-columns: 80%; }
   }
 </style>

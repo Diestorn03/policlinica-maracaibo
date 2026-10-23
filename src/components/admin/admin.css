@@ -73,7 +73,7 @@ details[open] > summary > .mas { transform: rotate(45deg); }
 .adm-tabla .quien img, .adm .ini { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; flex: none; }
 .adm .ini { display: grid; place-items: center; background: var(--navy); color: #fff; font-size: .8rem; font-weight: 600; }
 .adm .sin { color: var(--muted); }
-.adm-vacio { padding: 1.4rem 1rem; color: var(--text); }
+.adm-vacio { padding: 1.4rem 0; color: var(--text); }
 
 /* estados: azul lleno = en marcha, contorno = pendiente, gris = terminado */
 .estado { display: inline-block; padding: .1rem .55rem; border-radius: 2px; font-size: .8125rem; font-weight: 600; line-height: 1.6; border: 1px solid var(--navy); color: var(--navy); background: #fff; white-space: nowrap; }
@@ -93,9 +93,13 @@ details[open] > summary > .mas { transform: rotate(45deg); }
 /* especialidades: lista en dos columnas con el recuento al lado */
 .esp-lista { list-style: none; margin: 0; padding: 0; columns: 2 22rem; column-gap: 2.5rem; }
 .esp-lista li { break-inside: avoid; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 1rem; padding-block: .15rem; border-bottom: 1px solid var(--line); min-height: 52px; }
-.esp-lista .cuantos { color: var(--text); font-size: .9375rem; }
-.esp-lista :is(.editar, .borrar) { grid-column: 1 / -1; margin: 0 0 .8rem; padding-top: 0; border-top: 0; }
+.esp-lista .cuantos { color: var(--text); font-size: .9375rem; min-height: 44px; display: flex; align-items: center; } /* «Sin médicos» a la altura del enlace */
+/* Editar y Borrar en el mismo renglón; abiertos ocupan todo el ancho */
+.esp-lista :is(.editar, .borrar) { margin: 0 0 .8rem; padding-top: 0; border-top: 0; }
+.esp-lista .borrar { justify-self: end; }
+.esp-lista :is(.editar, .borrar)[open] { grid-column: 1 / -1; justify-self: stretch; }
 .esp-lista :is(.editar, .borrar) > summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 44px; color: var(--blue); font-size: .9375rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.esp-lista .borrar > summary { color: var(--red); }
 .esp-lista .editar form { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem 1rem; margin-top: .4rem; }
 .esp-lista .editar .campo { flex: 1 1 16rem; max-width: 28rem; }
 
@@ -105,7 +109,9 @@ details[open] > summary > .mas { transform: rotate(45deg); }
   .adm-tabla thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .adm-tabla tr { padding: .8rem 1rem; border-bottom: 1px solid var(--line); }
   .adm-tabla tr[hidden] { display: none; }
-  .adm-tabla td { display: grid; grid-template-columns: 6.5rem 1fr; gap: .6rem; padding: .2rem 0; border: 0; }
+  /* .table.adm-tabla: la regla general .table td (privado.css, cargada después) le ganaba y dejaba relleno y raya en cada dato */
+  .table.adm-tabla td { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: .6rem; align-items: baseline; padding: .2rem 0; border: 0; }
+  .adm-tabla td > .estado { justify-self: start; white-space: normal; }
   .adm-tabla td::before { content: attr(data-label); color: var(--muted); font-size: .875rem; }
   .adm-tabla td:first-child:has(.quien, .nombre) { grid-template-columns: 1fr; padding-bottom: .35rem; }
   .adm-tabla td:first-child:has(.quien, .nombre)::before { content: none; }

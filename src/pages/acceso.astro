@@ -31,7 +31,7 @@ import '../styles/paginas/acceso.css';
 ---
 <Privado titulo="Entrar">
   <div class="acceso">
-    <a class="acceso__logo" href={u('/')} aria-label={`${clinica.nombre}, ir al inicio`}><Image src={logo} alt="" height={44} /></a>
+    <a class="acceso__logo" href={u('/')} aria-label={`${clinica.nombre}, ir al inicio`}><Image src={logo} alt="" height={44} densities={[1, 2]} /></a>
 
     <section class="acceso__hoja" aria-labelledby="acceso-t">
       <h1 id="acceso-t">{DEMO ? 'Elige un panel' : 'Entrar a tu panel'}</h1>

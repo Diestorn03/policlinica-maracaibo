@@ -30,6 +30,11 @@ function pagina(string $area, string $titulo, string $zona, string $contenido, ?
     exit;
 }
 
+/** Atributos del campo que falló al enviar un formulario: marcado, descrito por el aviso y con el foco (como marca() en Astro). */
+function marcaCampo(?string $fallo, string $campo): string {
+    return $fallo === $campo ? ' aria-invalid="true" aria-describedby="aviso-error" autofocus' : '';
+}
+
 /** Aviso ?ok= / ?error= de la URL (máx. 240 caracteres) como lo pintan las páginas de Astro. */
 function avisoUrl(): array {
     $ok = isset($_GET['ok']) ? mb_substr((string) $_GET['ok'], 0, 240) : null;

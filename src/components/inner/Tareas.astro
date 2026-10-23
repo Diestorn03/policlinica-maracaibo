@@ -14,5 +14,6 @@ const { motivo = 'Solicitud de cita' } = Astro.props;
 
 <style>
   .tareas { display: flex; flex-wrap: wrap; gap: .8rem; }
-  @media (max-width: 640px) { .tareas { display: grid; width: 100%; } .tareas .btn { width: 100%; } }
+  .tareas .btn { flex: 1 1 15rem; max-width: 22rem; } /* si no caben juntos, quedan uno sobre otro con el mismo ancho */
+  @media (max-width: 640px) { .tareas { display: grid; width: 100%; } .tareas .btn { width: 100%; max-width: none; } }
 </style>

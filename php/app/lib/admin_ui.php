@@ -13,14 +13,16 @@ const ADMIN_ESTADOS = ['espera' => 'En espera', 'atendiendo' => 'En videollamada
 /**
  * Página completa de /admin/*: cabecera (h1 + subtítulo), pestañas, caja de aviso (?error= / ?ok=) y el contenido.
  * $activa: resumen | medicos | clientes | usuarios | especialidades | consultas. $contenido ya viene escapado.
+ * $fallo: el error de un POST que vuelve a mostrar la página con lo escrito (en vez de redirigir con ?error=).
  */
-function adminMarco(string $titulo, string $activa, string $contenido, array $yo, ?string $sub = null): never {
+function adminMarco(string $titulo, string $activa, string $contenido, array $yo, ?string $sub = null, ?string $fallo = null): never {
     [$ok, $error] = avisoUrl();
+    if ($fallo !== null) $error = mb_substr($fallo, 0, 240);
     $pestanas = '';
     foreach (ADMIN_PESTANAS as [$id, $texto, $href]) {
         $pestanas .= '<a href="' . e(u($href)) . '"' . ($id === $activa ? ' aria-current="page"' : '') . '>' . e($texto) . '</a>';
     }
-    $aviso = ($error !== null && $error !== '') ? '<p class="alert alert--error">' . e($error) . '</p>'
+    $aviso = ($error !== null && $error !== '') ? '<p class="alert alert--error" id="aviso-error">' . e($error) . '</p>'
         : (($ok !== null && $ok !== '') ? '<p class="alert alert--ok">' . e($ok) . '</p>' : '');
     // el <style> protege el formulario móvil incluso cuando un navegador conserva una hoja de estilos previa en caché
     $html = '<style>
