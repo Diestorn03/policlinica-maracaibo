@@ -70,6 +70,19 @@ export function validarUsuario(f: FormData, nuevo: boolean): UsuarioInput | stri
   };
 }
 
+/** Las mismas reglas de cédula y teléfono, como `pattern` de los formularios: el navegador marca el campo antes de enviar.
+ *  (Más estrictas en el orden que cedula(), que ignora cualquier otro carácter, pero aceptan los formatos de siempre.) */
+export const PATRON_CEDULA = '[VvEeJjPpGg]?[ .\\-]*(?:[0-9][ .\\-]*){5,10}';
+export const PATRON_TELEFONO = '[0-9 \\(\\)+\\-]{7,}';
+
+/** El campo que causó un error de validarUsuario o guardarUsuario (null si no es de un campo): el formulario vuelve con lo
+ *  escrito y marca solo ese. Sale del texto del mensaje: si se cambia un mensaje, revisar esta tabla (la prueba lo cubre). */
+const CAMPO_DEL_ERROR: [RegExp, string][] = [
+  [/\brol\b/, 'rol'], [/nombre/, 'nombre'], [/correo/, 'correo'], [/cédula/, 'cedula'], [/teléfono/, 'telefono'],
+  [/nacimiento/, 'nacimiento'], [/vencimiento/, 'afiliacion_vence'], [/contraseña/, 'clave'],
+];
+export const campoDelError = (mensaje: string) => CAMPO_DEL_ERROR.find(([re]) => re.test(mensaje))?.[1] ?? null;
+
 /** Alta exclusiva de secretaria: descarta los campos de privilegio y fuerza un cliente activo. */
 export function validarCliente(f: FormData): UsuarioInput | string {
   const cliente = new FormData();

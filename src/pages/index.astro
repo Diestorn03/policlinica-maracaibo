@@ -12,7 +12,8 @@ import { getDB, u } from '../lib/entorno';
 import { clave, especialidades, medicos, resumen, retratosDelDia, type Medico } from '../lib/db';
 import { nb } from '../components/inner/texto';
 import { afiliacion, anos, clinica, servicios, testimonios } from '../data/site';
-import { iniciales, miniatura, PISOS, telHref, ubicacion, waHref, type Piso } from '../lib/sitio';
+import SinFoto from '../components/ui/SinFoto.astro';
+import { miniatura, PISOS, telHref, ubicacion, waHref, type Piso } from '../lib/sitio';
 import entrada from '../assets/img/inst-3.jpg';
 import accesoEmergencia from '../assets/img/inst-5.jpg';
 
@@ -132,7 +133,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
               <ul class="hoja__lista">
                 {p.filas.map(({ m, puertas, donde }) => (
                   <li data-puertas={puertas.join(' ')}>
-                    {m.foto ? <img src={u(miniatura(m.foto))} alt="" width="56" height="56" loading="lazy" decoding="async" /> : <span class="ini" aria-hidden="true">{iniciales(m.nombre)}</span>}
+                    {m.foto ? <img src={u(miniatura(m.foto))} alt="" width="56" height="56" loading="lazy" decoding="async" /> : <span class="sin"><SinFoto /></span>}
                     <div>
                       <b>{m.nombre}</b>
                       <span>{especialidadDe(m)}{donde && `, ${donde}`}</span>
@@ -509,8 +510,9 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
   .hoja__filtro { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .2rem 1rem; margin-top: .8rem; padding: .35rem .5rem .35rem 1rem; border-radius: 999px; background: var(--mist); }
   .hoja__filtro p { font: 600 .95rem var(--font-head); color: var(--navy); }
   .hoja__filtro button { font: inherit; font-size: .9375rem; min-height: 40px; padding-inline: .5rem; background: none; border: 0; cursor: pointer; }
-  .hoja__lista img, .ini { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; }
-  .ini { display: grid; place-items: center; background: var(--navy); color: #fff; font: 600 1rem var(--font-head); }
+  .hoja__lista img, .sin { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; }
+  .sin { display: grid; place-items: end center; overflow: hidden; background: linear-gradient(180deg, #eef2fb, #d8e2f5); color: #bccae6; } /* sin foto: silueta, como en las fichas */
+  .sin :global(.sinfoto) { width: 80%; }
   .hoja__lista b { display: block; color: var(--navy); font-family: var(--font-head); font-weight: 600; }
   .hoja__lista span { display: block; font-size: .9375rem; }
   .hoja__lista a { position: relative; color: var(--blue); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }

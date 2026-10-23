@@ -1,9 +1,10 @@
 ---
-// Tarjeta de médico (directorio y portada). Sin foto: iniciales sobre degradado de marca.
+// Tarjeta de médico (directorio y portada). Sin foto: silueta neutra (SinFoto.astro).
 // data-clave y data-esp sirven al filtro del navegador (directorio estático en la demo).
 import Icon from './Icon.astro';
+import SinFoto from './SinFoto.astro';
 import { u } from '../../lib/entorno';
-import { iniciales, telHref } from '../../lib/sitio';
+import { telHref } from '../../lib/sitio';
 import { clave, type Medico } from '../../lib/db';
 
 interface Props { medico: Medico; lazy?: boolean }
@@ -14,7 +15,7 @@ const busca = clave([m.nombre, ...m.especialidades.map((e) => e.nombre)].join(' 
   <div class="medico__foto">
     {m.foto
       ? <img src={u(m.foto)} alt={`Foto de ${m.nombre}`} width="480" height="480" loading={lazy ? 'lazy' : 'eager'} decoding="async" />
-      : <span class="medico__ini" aria-hidden="true">{iniciales(m.nombre)}</span>}
+      : <SinFoto class="medico__sin" />}
   </div>
   <div class="medico__body">
     <h3 class="medico__nombre">{m.nombre}</h3>
@@ -30,9 +31,9 @@ const busca = clave([m.nombre, ...m.especialidades.map((e) => e.nombre)].join(' 
   .medico__foto { aspect-ratio: 1; background: var(--navy); display: grid; place-items: center; overflow: hidden; }
   .medico__foto img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease-out); }
   .medico:hover .medico__foto img { transform: scale(1.05); }
-  /* sin foto: iniciales sobre un degradado claro de marca (el navy plano parecía un hueco entre los retratos) */
-  .medico__foto:has(.medico__ini) { background: linear-gradient(135deg, #e6edfb, #cfdcf6); }
-  .medico__ini { font-family: var(--font-head); font-weight: 600; font-size: 3rem; color: var(--navy); letter-spacing: .02em; }
+  /* sin foto: silueta clara sobre el mismo fondo gris azulado de los retratos de estudio */
+  .medico__foto:has(.medico__sin) { background: linear-gradient(180deg, #eef2fb, #d8e2f5); }
+  .medico__foto :global(.medico__sin) { width: 74%; align-self: end; color: #bccae6; }
   /* el teléfono va al pie de la ficha: en una fila de fichas todos quedan a la misma altura */
   .medico__body { padding: 1.1rem 1.2rem 1.3rem; display: flex; flex-direction: column; align-items: flex-start; gap: .55rem; }
   .medico__tel { margin-top: auto; }

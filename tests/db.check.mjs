@@ -194,6 +194,19 @@ const cli2 = await u.guardarUsuario(D1, nuevoUsuario({ rol: 'cliente', nombre: '
 assert.ok([admin, doc, cli, cli2].every(Number.isInteger));
 assert.match(await u.guardarUsuario(D1, nuevoUsuario({ rol: 'cliente', nombre: 'Otro', correo: 'pedro@correo.test', cedula: '999999' })), /correo/);
 assert.match(await u.guardarUsuario(D1, nuevoUsuario({ rol: 'cliente', nombre: 'Otro', correo: 'x@correo.test', cedula: 'V12345678' })), /cédula/);
+// Cada error señala su campo, para que el formulario vuelva con lo escrito y marque solo ese
+const campoDe = (o) => u.campoDelError(nuevoUsuario({ rol: 'cliente', nombre: 'Ana Pérez', correo: 'ana@correo.test', cedula: 'V-11111111', ...o }));
+assert.deepEqual(
+  [campoDe({ rol: 'root' }), campoDe({ nombre: 'A' }), campoDe({ correo: 'ana@' }), campoDe({ cedula: 'abc' }), campoDe({ cedula: '' }), campoDe({ telefono: 'llámame' }),
+    campoDe({ nacimiento: '2999-01-01' }), campoDe({ afiliacion_vence: 'mañana' }), campoDe({ clave: 'corta' })],
+  ['rol', 'nombre', 'correo', 'cedula', 'cedula', 'telefono', 'nacimiento', 'afiliacion_vence', 'clave']);
+assert.equal(u.campoDelError(await u.guardarUsuario(D1, nuevoUsuario({ rol: 'cliente', nombre: 'Otro', correo: 'pedro@correo.test', cedula: '999999' }))), 'correo');
+assert.equal(u.campoDelError('Debe quedar al menos un administrador activo.'), null);
+// Los pattern de los formularios compilan como en el navegador (modo v) y aceptan lo mismo que el servidor
+const patron = (p) => new RegExp(`^(?:${p})$`, 'v');
+for (const c of ['V-12345678', '12.345.678', 'v 12345678', 'V-12-345-678']) assert.ok(patron(u.PATRON_CEDULA).test(c) && u.cedula(c), c);
+for (const c of ['abc', 'V-1']) assert.ok(!patron(u.PATRON_CEDULA).test(c), c);
+assert.ok(patron(u.PATRON_TELEFONO).test('(0261) 700-5100') && !patron(u.PATRON_TELEFONO).test('llámame'));
 assert.equal((await u.porLogin(D1, 'v-12345678')).id, cli, 'entra con cédula en cualquier formato');
 assert.equal((await u.porLogin(D1, 'admin@clinica.test')).id, admin, 'correo sin distinguir mayúsculas');
 assert.equal((await u.usuario(D1, cli)).cedula, 'V-12345678');

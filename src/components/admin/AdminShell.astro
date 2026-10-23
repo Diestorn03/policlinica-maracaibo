@@ -29,7 +29,7 @@ const PESTANAS = [
       {PESTANAS.map(([id, texto, href]) => <a href={u(href)} aria-current={id === activa ? 'page' : undefined}>{texto}</a>)}
     </nav>
     <div class="adm-aviso" id="aviso" role="status">
-      {error ? <p class="alert alert--error">{error.slice(0, 240)}</p> : ok ? <p class="alert alert--ok">{ok.slice(0, 240)}</p> : null}
+      {error ? <p class="alert alert--error" id="aviso-error">{error.slice(0, 240)}</p> : ok ? <p class="alert alert--ok">{ok.slice(0, 240)}</p> : null}
     </div>
     <slot />
   </div>
