@@ -78,3 +78,5 @@ export function ubicacion(raw: string): { piso: Piso | null; puertas: string[]; 
 
 /** Miniatura 160 px de la foto importada (public/medicos/t/*.webp); las subidas desde el admin ya son pequeñas */
 export const miniatura = (foto: string) => foto.replace(/^\/medicos\/([^/]+)\.jpg$/, '/medicos/t/$1.webp');
+/** Médico sin foto: la imagen que usa la web oficial (el logo de la clínica sobre blanco), con su miniatura como las demás fotos. */
+export const SIN_FOTO = '/medicos/sin-foto.jpg';
