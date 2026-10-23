@@ -16,7 +16,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if (!is_string($creado)) $volver('ok', $datos['nombre'] . ' quedó inscrito como cliente.');
     $previo = $_POST;
     $fallo = $creado;
-    http_response_code(422);
 }
 
 [$ok, $error] = avisoUrl();
@@ -58,4 +57,4 @@ ob_start();
     </form>
   </section>
 <?php
-pagina('secretaria', 'Inscribir cliente', 'Secretaría', (string) ob_get_clean(), $yo);
+pagina('secretaria', 'Inscribir cliente', 'Secretaría', (string) ob_get_clean(), $yo, '', $fallo !== null ? 422 : 200);

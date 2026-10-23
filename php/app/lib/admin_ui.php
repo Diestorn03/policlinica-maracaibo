@@ -39,7 +39,7 @@ function adminMarco(string $titulo, string $activa, string $contenido, array $yo
     <div class="adm-aviso" id="aviso" role="status">' . $aviso . '</div>
 ' . $contenido . '
   </div>';
-    pagina('admin', $titulo, 'Administración', $html, $yo);
+    pagina('admin', $titulo, 'Administración', $html, $yo, '', $fallo !== null ? 422 : 200);
 }
 
 /** Redirección 303 a la misma página con el aviso en la URL (?ok=… o ?error=…) y, si hace falta, algo más («&editar=5»). */

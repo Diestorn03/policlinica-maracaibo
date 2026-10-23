@@ -22,7 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_string($r)) adminVolver($aqui, 'ok', $id ? 'Cambios guardados.' : "{$datos['nombre']} ya tiene su usuario.");
     $previo = $_POST;
     $fallo = $r;
-    http_response_code(422);
 }
 
 $todos = usuarios();
