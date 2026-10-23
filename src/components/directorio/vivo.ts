@@ -3,7 +3,7 @@
 // y actualiza las cifras de la portada y de «Nosotros» (data-vivo-n). Solo corre si <html data-vivo="1">; en la demo y en los demás modos no hace nada.
 // Si la petición falla se queda el HTML estático. Todo se construye con nodos del DOM (nunca innerHTML) porque los textos vienen de la base.
 import { clave } from '../../lib/db.ts';
-import { PISOS, telHref, ubicacion } from '../../lib/sitio.ts';
+import { PISOS, SIN_FOTO, telHref, ubicacion } from '../../lib/sitio.ts';
 import { ficha } from './buscar';
 
 interface Esp { id: number; slug: string; nombre: string; total: number }
@@ -26,17 +26,8 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLEl
 const cidsDe = (ref: Element | null) => (ref ? [...ref.attributes].filter((a) => a.name.startsWith('data-astro-cid-')).map((a) => a.name) : []);
 const marcar = (raiz: Element, cids: string[]) => { for (const e of [raiz, ...raiz.querySelectorAll('*')]) for (const c of cids) e.setAttribute(c, ''); };
 
-/** Médico sin foto: la misma silueta que SinFoto.astro (decorativa, el nombre va al lado). */
-function silueta() {
-  const ns = 'http://www.w3.org/2000/svg';
-  const nodo = (tag: string, attrs: Record<string, string>) => { const n = document.createElementNS(ns, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); return n; };
-  const svg = nodo('svg', { class: 'sinfoto medico__sin', viewBox: '0 0 100 100', fill: 'currentColor', 'aria-hidden': 'true', focusable: 'false' });
-  svg.append(nodo('circle', { cx: '50', cy: '38', r: '17' }), nodo('path', { d: 'M14 100c0-25 16-38 36-38s36 13 36 38z' }));
-  return svg;
-}
-
-/** Huella de una ficha: sirve para saber si lo que trae la base ya es lo que dibujó el HTML estático. */
-const huellaMed = (m: Med) => [ficha(m.nombre, ...m.especialidades.map((e) => e.nombre)), m.especialidades.map((e) => e.slug).join(' '), pisoDe(m), lugarDe(m), m.telefono, m.foto].join('~');
+/** Huella de una ficha: sirve para saber si lo que trae la base ya es lo que dibujó el HTML estático (que sin foto pone SIN_FOTO). */
+const huellaMed = (m: Med) => [ficha(m.nombre, ...m.especialidades.map((e) => e.nombre)), m.especialidades.map((e) => e.slug).join(' '), pisoDe(m), lugarDe(m), m.telefono, m.foto || SIN_FOTO].join('~');
 const huellaLi = (li: HTMLElement) => [
   li.dataset.ficha, li.dataset.esp, li.dataset.piso,
   li.querySelector('.medico__dato')?.textContent?.trim() ?? '',
@@ -45,9 +36,8 @@ const huellaLi = (li: HTMLElement) => [
 ].join('~');
 
 function tarjeta(m: Med, iconos: { pin: Element | null; tel: Element | null }, cids: { lista: string[]; tarjeta: string[] }, ansiosa: boolean) {
-  const foto = m.foto
-    ? el('img', { src: m.foto, alt: `Foto de ${m.nombre}`, width: 480, height: 480, loading: ansiosa ? 'eager' : 'lazy', decoding: 'async' })
-    : silueta();
+  // sin foto, la imagen de la web oficial (como MedicoCard.astro); alt vacío porque el nombre va al lado
+  const foto = el('img', { src: m.foto || SIN_FOTO, alt: m.foto ? `Foto de ${m.nombre}` : '', width: 480, height: 480, loading: ansiosa ? 'eager' : 'lazy', decoding: 'async' });
   const lugar = lugarDe(m);
   const cuerpo = el('div', { className: 'medico__body' },
     el('h3', { className: 'medico__nombre', textContent: m.nombre }),
