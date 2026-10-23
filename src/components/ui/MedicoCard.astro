@@ -30,11 +30,16 @@ const busca = clave([m.nombre, ...m.especialidades.map((e) => e.nombre)].join(' 
   .medico__foto { aspect-ratio: 1; background: var(--navy); display: grid; place-items: center; overflow: hidden; }
   .medico__foto img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease-out); }
   .medico:hover .medico__foto img { transform: scale(1.05); }
-  .medico__ini { font-family: var(--font-head); font-weight: 600; font-size: 3rem; color: #fff; letter-spacing: .02em; }
-  .medico__body { padding: 1.1rem 1.2rem 1.3rem; display: grid; gap: .55rem; align-content: start; }
-  .medico__nombre { font-size: 1.05rem; }
+  /* sin foto: iniciales sobre un degradado claro de marca (el navy plano parecía un hueco entre los retratos) */
+  .medico__foto:has(.medico__ini) { background: linear-gradient(135deg, #e6edfb, #cfdcf6); }
+  .medico__ini { font-family: var(--font-head); font-weight: 600; font-size: 3rem; color: var(--navy); letter-spacing: .02em; }
+  /* el teléfono va al pie de la ficha: en una fila de fichas todos quedan a la misma altura */
+  .medico__body { padding: 1.1rem 1.2rem 1.3rem; display: flex; flex-direction: column; align-items: flex-start; gap: .55rem; }
+  .medico__tel { margin-top: auto; }
+  /* en las tarjetas angostas (dos por fila en el teléfono) las palabras largas se parten con guion en vez de salirse */
+  .medico__nombre { font-size: 1.05rem; hyphens: auto; overflow-wrap: break-word; }
   .medico__esps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
-  .medico__esps .pill { font-size: .8rem; }
+  .medico__esps .pill { font-size: .8rem; max-width: 100%; hyphens: auto; overflow-wrap: anywhere; }
   .medico__dato, .medico__tel { display: inline-flex; align-items: center; gap: .4rem; font-size: .88rem; }
   .medico__tel { color: var(--blue); font-weight: 600; justify-self: start; }
   .medico__tel:hover { text-decoration: underline; }

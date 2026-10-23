@@ -19,6 +19,7 @@ html:not(.js) .js-solo { display: none; }
 /* Botones de los bloques azules */
 .t .t-grande { border-radius: 34px; min-height: 68px; padding: 1rem 2rem; font-size: 1.15rem; line-height: 1.25; white-space: normal; text-align: center; max-width: 100%; }
 .t .t-grande svg { width: 28px; height: 28px; }
+@media (max-width: 420px) { .t .t-grande { padding-inline: 1.25rem; font-size: 1.05rem; gap: .6rem; } } /* «Entrar a la videollamada» en un renglón */
 .t .t-borde { border-color: rgba(255, 255, 255, .6); color: #fff; background: transparent; }
 .t .t-borde:hover { background: rgba(255, 255, 255, .14); border-color: #fff; }
 .t-azul .btn--white { color: var(--blue); }

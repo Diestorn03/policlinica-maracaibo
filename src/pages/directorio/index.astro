@@ -101,6 +101,7 @@ const pisos = (['pb', '1', '2', '3', 's'] as const).map((id) => ({ ...PISOS.find
   .campo { display: grid; gap: .35rem; }
   .campo span { font-size: .9375rem; font-weight: 600; color: var(--navy); }
   .campo :is(.input, .select) { height: 52px; }
+  .filtros__form .btn { height: 52px; min-height: 52px; padding-block: 0; } /* a la altura de los campos */
   .resultados { background: var(--mist); padding-block: clamp(1.75rem, 4vw, 3rem) clamp(3rem, 7vw, 5.5rem); }
   .cuenta { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; margin-bottom: 1.4rem; font-weight: 600; color: var(--navy); }
   .cuenta .link { display: inline-flex; align-items: center; min-height: 44px; }
@@ -108,9 +109,8 @@ const pisos = (['pb', '1', '2', '3', 's'] as const).map((id) => ({ ...PISOS.find
   .lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(212px, 1fr)); gap: 1.25rem; }
   .lista > li { display: grid; content-visibility: auto; contain-intrinsic-size: auto 22rem; }
   .lista > li[hidden], .vacio[hidden], .cuenta .link[hidden] { display: none; }
-  /* tamaño de toque de los enlaces de la ficha compartida */
-  .lista :global(.medico__esps a), .lista :global(.medico__tel) { min-height: 44px; display: inline-flex; align-items: center; }
-  .lista :global(.medico__esps) { gap: 0 .35rem; }
+  /* el tamaño de toque de los rótulos y el teléfono lo da la ficha (::after de 44 px): así los rótulos apilados no se pegan */
+  .lista :global(.medico__esps) { gap: .35rem; }
   /* sin efecto al pasar el ratón sobre cada ficha, y rótulos de especialidad como las losas del resto del sitio (la píldora es solo para botones) */
   .lista :global(.medico) { transition: none; }
   .lista :global(.medico:hover) { box-shadow: none; border-color: var(--line); }

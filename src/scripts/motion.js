@@ -102,7 +102,8 @@ function initSplits() {
     const delay = +(el.dataset.delay || 0);
     if (mode === 'chars') gsap.from(targets, { yPercent: 100, opacity: 0, duration: 0.7, ease: 'power3.out', stagger: 0.02, delay, scrollTrigger: trig });
     else if (mode === 'words') gsap.from(targets, { y: '0.8em', opacity: 0, duration: 0.8, ease: 'power4.out', stagger: 0.045, delay, scrollTrigger: trig });
-    else gsap.from(targets, { yPercent: 110, duration: 0.95, ease: 'power4.out', stagger: 0.1, delay, scrollTrigger: trig });
+    // al terminar se deshace la división: la máscara de cada línea recortaba los trazos bajo la línea (g, y, p) y algunos acentos
+    else gsap.from(targets, { yPercent: 110, duration: 0.95, ease: 'power4.out', stagger: 0.1, delay, scrollTrigger: trig, onComplete: () => split.revert() });
   });
 }
 

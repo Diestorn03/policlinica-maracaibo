@@ -10,7 +10,7 @@ import { DEMO, u } from '../lib/entorno';
   <div class="wrap">
     <div class="footer__grid">
       <div>
-        <Image class="footer__logo" src={logo} alt={clinica.nombre} height={44} />
+        <Image class="footer__logo" src={logo} alt={clinica.nombre} height={44} densities={[1, 2]} />
         <p style="margin-top:1.2rem;max-width:34ch">Desde {clinica.desde} cuidando la salud de Maracaibo. {clinica.lema}.</p>
         <div class="socials">
           <a href={clinica.instagram.href} target="_blank" rel="noopener" aria-label={`Instagram ${clinica.instagram.texto}`}><Icon name="instagram" /></a>
