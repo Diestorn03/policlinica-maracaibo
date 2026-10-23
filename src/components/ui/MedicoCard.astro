@@ -1,10 +1,9 @@
 ---
-// Tarjeta de médico (directorio y portada). Sin foto: silueta neutra (SinFoto.astro).
+// Tarjeta de médico (directorio y portada). Sin foto: la imagen de la web oficial (SIN_FOTO, el logo de la clínica).
 // data-clave y data-esp sirven al filtro del navegador (directorio estático en la demo).
 import Icon from './Icon.astro';
-import SinFoto from './SinFoto.astro';
 import { u } from '../../lib/entorno';
-import { telHref } from '../../lib/sitio';
+import { SIN_FOTO, telHref } from '../../lib/sitio';
 import { clave, type Medico } from '../../lib/db';
 
 interface Props { medico: Medico; lazy?: boolean }
@@ -13,9 +12,7 @@ const busca = clave([m.nombre, ...m.especialidades.map((e) => e.nombre)].join(' 
 ---
 <article class="medico" data-clave={busca} data-esp={m.especialidades.map((e) => e.slug).join(' ')}>
   <div class="medico__foto">
-    {m.foto
-      ? <img src={u(m.foto)} alt={`Foto de ${m.nombre}`} width="480" height="480" loading={lazy ? 'lazy' : 'eager'} decoding="async" />
-      : <SinFoto class="medico__sin" />}
+    <img src={u(m.foto || SIN_FOTO)} alt={m.foto ? `Foto de ${m.nombre}` : ''} width="480" height="480" loading={lazy ? 'lazy' : 'eager'} decoding="async" />
   </div>
   <div class="medico__body">
     <h3 class="medico__nombre">{m.nombre}</h3>
@@ -32,8 +29,6 @@ const busca = clave([m.nombre, ...m.especialidades.map((e) => e.nombre)].join(' 
   .medico__foto img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease-out); }
   .medico:hover .medico__foto img { transform: scale(1.05); }
   /* sin foto: silueta clara sobre el mismo fondo gris azulado de los retratos de estudio */
-  .medico__foto:has(.medico__sin) { background: linear-gradient(180deg, #eef2fb, #d8e2f5); }
-  .medico__foto :global(.medico__sin) { width: 74%; align-self: end; color: #bccae6; }
   /* el teléfono va al pie de la ficha: en una fila de fichas todos quedan a la misma altura */
   .medico__body { padding: 1.1rem 1.2rem 1.3rem; display: flex; flex-direction: column; align-items: flex-start; gap: .55rem; }
   .medico__tel { margin-top: auto; }
