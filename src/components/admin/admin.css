@@ -1,7 +1,7 @@
 /* Administración: hojas planas sobre el fondo lavanda de los paneles, tablas con líneas, sin tarjetas ni píldoras salvo botones.
    Solo azules y blancos; el rojo queda para los avisos de error. Se apoya en privado.css (.panel .table .table-wrap .form-grid). */
 .adm { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; align-content: start; } /* minmax(0…): una celda larga no ensancha la página, la tabla se desplaza dentro de su marco */
-.adm-cab h1 { font-size: clamp(1.8rem, 1.2rem + 1.8vw, 2.5rem); letter-spacing: -.04em; line-height: 1.05; }
+.adm-cab h1 { letter-spacing: -.04em; line-height: 1.05; }
 .adm-cab p { margin-top: .5rem; max-width: 62ch; }
 .adm .panel { box-shadow: none; }
 .adm .panel + .panel { margin-top: 0; }

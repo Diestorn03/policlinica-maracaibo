@@ -18,7 +18,7 @@
 .panel + .panel { margin-top: 1.5rem; }
 .panel__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
 .panel__head h2 { font-size: 1.25rem; }
-.app h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
+:where(.app) h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); } /* :where sin peso: gana el h1 propio de cada página aunque su CSS llegue antes (así llega en los marcos de PHP) */
 
 .tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
 .tabs a { padding: .6rem 1rem; border-radius: 999px; font-family: var(--font-head); font-weight: 700; font-size: .88rem; color: var(--navy); background: #fff; border: 1px solid var(--line); }
