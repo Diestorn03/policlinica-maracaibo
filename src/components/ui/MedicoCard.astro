@@ -28,7 +28,6 @@ const busca = clave([m.nombre, ...m.especialidades.map((e) => e.nombre)].join(' 
   .medico__foto { aspect-ratio: 1; background: var(--navy); display: grid; place-items: center; overflow: hidden; }
   .medico__foto img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease-out); }
   .medico:hover .medico__foto img { transform: scale(1.05); }
-  /* sin foto: silueta clara sobre el mismo fondo gris azulado de los retratos de estudio */
   /* el teléfono va al pie de la ficha: en una fila de fichas todos quedan a la misma altura */
   .medico__body { padding: 1.1rem 1.2rem 1.3rem; display: flex; flex-direction: column; align-items: flex-start; gap: .55rem; }
   .medico__tel { margin-top: auto; }
