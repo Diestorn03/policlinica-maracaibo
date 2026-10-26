@@ -91,25 +91,19 @@ function especialidades(d: Datos) {
   const actualSin = sinUl ? [...sinUl.children].map((li) => ({ n: (li as HTMLElement).dataset.n ?? '', t: '' })) : [];
   const nuevoSin = sinDatos.map((e) => ({ n: clave(e.nombre), t: '' }));
   if (huella(actualCon) === huella(nuevoCon) && huella(actualSin) === huella(nuevoSin)) return;
-  // el mismo índice A–Z del HTML estático: una letra con sus tarjetas (iconos copiados de las que ya están)
+  // las mismas tarjetas iguales del HTML estático, en una sola cuadrícula (iconos copiados de las que ya están)
   const cids = cidsDe(con);
   const iconos = { n: con.querySelector('.esp__n svg'), ir: con.querySelector('.esp__ir svg') };
-  const letras = new Map<string, Esp[]>();
-  for (const e of conDatos) { const l = clave(e.nombre).charAt(0).toUpperCase(); letras.set(l, [...(letras.get(l) ?? []), e]); }
-  con.replaceChildren(...[...letras].map(([letra, items]) => {
-    const ul = el('ul', { className: 'esp' }, ...items.map((e) => {
-      const ir = el('span', { className: 'esp__ir' }, ...(iconos.ir ? [iconos.ir.cloneNode(true)] : []));
-      ir.setAttribute('aria-hidden', 'true');
-      const li = el('li', {}, el('a', { href: `/directorio/?esp=${encodeURIComponent(e.slug)}` },
-        el('span', { className: 'esp__nombre', textContent: e.nombre }),
-        el('span', { className: 'esp__n' }, ...(iconos.n ? [iconos.n.cloneNode(true)] : []), medicosTxt(e.total)),
-        ir));
-      li.dataset.n = clave(e.nombre);
-      return li;
-    }));
-    const grupo = el('div', { className: 'letra' }, el('h3', { className: 'letra__t', textContent: letra }), ul);
-    marcar(grupo, cids);
-    return grupo;
+  con.replaceChildren(...conDatos.map((e) => {
+    const ir = el('span', { className: 'esp__ir' }, ...(iconos.ir ? [iconos.ir.cloneNode(true)] : []));
+    ir.setAttribute('aria-hidden', 'true');
+    const li = el('li', {}, el('a', { href: `/directorio/?esp=${encodeURIComponent(e.slug)}` },
+      el('span', { className: 'esp__nombre', textContent: e.nombre }),
+      el('span', { className: 'esp__n' }, ...(iconos.n ? [iconos.n.cloneNode(true)] : []), medicosTxt(e.total)),
+      ir));
+    li.dataset.n = clave(e.nombre);
+    marcar(li, cids);
+    return li;
   }));
   if (sinUl) {
     const cidsSin = cidsDe(sinUl);
