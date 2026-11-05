@@ -31,8 +31,19 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
         <h1 class="t-titulo">Sala de espera</h1>
         <p class="medico__estado"><b data-contador>{DEMO ? 'Cargando…' : enEspera(n)}</b> <span class="js-solo">Actualizado a las <time data-actualizado>--</time></span></p>
       </div>
-      <button type="button" class="btn btn--outline btn--sm js-solo" aria-pressed="false" data-sonido><span data-sonido-txt>Sonido de aviso: apagado</span></button>
+      <div class="medico__avisos js-solo">
+        <button type="button" class="btn btn--primary btn--sm" aria-describedby="avisos-estado" data-avisos>Activar avisos</button>
+        <p id="avisos-estado" role="status" data-avisos-estado>Actívalos para que este equipo suene y deje una notificación cuando llegue un paciente.</p>
+      </div>
     </header>
+
+    <div class="t-aviso medico__llegada" data-llegada hidden>
+      <p><span class="medico__punto" aria-hidden="true"></span><span data-llegada-txt></span></p>
+      <div class="medico__llegada-acciones">
+        <button type="button" class="btn btn--primary btn--sm" data-llegada-ver>Ver en la cola</button>
+        <button type="button" class="btn btn--outline btn--sm" data-llegada-ok>Entendido</button>
+      </div>
+    </div>
 
     <p class="sr-only" role="status" aria-live="polite" data-anuncio></p>
     <p class="t-aviso" role="status" data-sin-conexion hidden>Sin conexión. Seguimos intentando…</p>
@@ -73,39 +84,27 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
   <script>
     import { cola } from '../../scripts/api.js';
     import { sondear, errorDeUrl } from '../../components/tele/tele.js';
+    import { alarmaDeLlegadas, type Llegada } from '../../components/tele/alarma.ts';
     import { esperando } from '../../lib/sitio.ts';
     import { aFecha } from '../../lib/tele.ts';
 
     const raiz = document.querySelector<HTMLElement>('[data-cola]');
     if (raiz) {
       const $ = <T extends HTMLElement = HTMLElement>(s: string, r: ParentNode = raiz) => r.querySelector<T>(s)!;
-      const guardado = (k: string, v?: string) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch {} return null; };
       const base = document.title;
       const cuerpo = $('[data-filas]'), lista = $('[data-curso]');
       const plFila = $<HTMLTemplateElement>('#pl-fila'), plCurso = $<HTMLTemplateElement>('#pl-curso');
       const filas = new Map<string, HTMLElement>(), cards = new Map<string, HTMLElement>();
       const atendiendo = new URLSearchParams(location.search).get('atendiendo') ?? '';
-      let primera = true, enfocado = false, audio: AudioContext | null = null, sonido = guardado('pm-aviso') === '1';
+      let primera = true, enfocado = false;
       cuerpo.querySelectorAll<HTMLElement>('tr[data-id]').forEach((tr) => filas.set(tr.dataset.id!, tr));
       lista.querySelectorAll<HTMLElement>('li[data-id]').forEach((li) => cards.set(li.dataset.id!, li));
       const poner = (el: ParentNode, campo: string, v: string) => { const n = el.querySelector(`[data-campo="${campo}"]`); if (n) n.textContent = v; };
 
       errorDeUrl($('[data-error]'));
 
-      // Sonido de aviso (apagado por defecto): un tono corto cuando llega alguien, una vez que el usuario tocó la página
-      const btnSonido = $('[data-sonido]');
-      const pintarSonido = () => { btnSonido.setAttribute('aria-pressed', String(sonido)); $('[data-sonido-txt]').textContent = `Sonido de aviso: ${sonido ? 'encendido' : 'apagado'}`; };
-      const abrirAudio = () => { if (sonido && !audio) audio = new AudioContext(); };
-      const tono = () => {
-        if (!sonido || !audio) return;
-        const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
-        o.frequency.value = 880; g.gain.setValueAtTime(.15, t); g.gain.exponentialRampToValueAtTime(.001, t + .25);
-        o.connect(g).connect(audio.destination); o.start(t); o.stop(t + .25);
-      };
-      pintarSonido();
-      addEventListener('pointerdown', abrirAudio, { once: true });
-      addEventListener('keydown', abrirAudio, { once: true });
-      btnSonido.addEventListener('click', () => { sonido = !sonido; guardado('pm-aviso', sonido ? '1' : '0'); pintarSonido(); abrirAudio(); audio?.resume(); tono(); });
+      // Alarma de 2 s, notificación que se queda y pantalla encendida cuando llega alguien (ver alarma.ts)
+      const alarma = alarmaDeLlegadas(raiz);
 
       // El reloj de cada fila (cada segundo) y su aviso de espera larga
       const reloj = () => {
@@ -129,7 +128,7 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
 
       function reconciliar(datos: { espera: any[]; enCurso: any[] }) {
         // --- cola
-        const llegaron: string[] = [];
+        const llegaron: Llegada[] = [];
         const ids = new Set(datos.espera.map((c) => String(c.id)));
         for (const [id, tr] of filas) if (!ids.has(id)) { tr.remove(); filas.delete(id); }
         datos.espera.forEach((c, i) => {
@@ -141,7 +140,7 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
             poner(tr, 'motivo', c.motivo || 'Sin motivo indicado');
             const b = $<HTMLButtonElement>('button', tr);
             b.value = c.id; b.setAttribute('aria-label', `Atender a ${c.paciente}`);
-            if (!primera) llegaron.push(c.paciente);
+            if (!primera) llegaron.push({ id: String(c.id), nombre: c.paciente });
             filas.set(String(c.id), tr);
           }
           colocar(cuerpo, tr, i);
@@ -149,6 +148,7 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
           poner(tr, 'siguiente', i === 0 ? 'Siguiente' : '');
         });
         reloj();
+        alarma.quedan(ids);
         const n = datos.espera.length;
         $('[data-tabla]').hidden = n === 0;
         $('[data-vacio]').hidden = n > 0;
@@ -180,8 +180,8 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
         $('[data-tomado]').hidden = !actual;
         if (actual && !enfocado) { enfocado = true; $<HTMLElement>('[data-video]', actual).focus(); }
 
-        // --- llegadas nuevas: aviso para lectores de pantalla, título de la pestaña y tono
-        if (llegaron.length) { $('[data-anuncio]').textContent = `Llegó un paciente: ${llegaron.join(', ')}`; tono(); }
+        // --- llegadas nuevas: aviso para lectores de pantalla, título de la pestaña y alarma
+        if (llegaron.length) { $('[data-anuncio]').textContent = `Llegó un paciente: ${llegaron.map((p) => p.nombre).join(', ')}`; alarma.llegaron(llegaron); }
         document.title = n ? `(${n}) Sala de espera` : base;
         $('[data-actualizado]').textContent = new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', hour: 'numeric', minute: '2-digit', second: '2-digit' }).format(new Date());
         primera = false;
@@ -203,8 +203,19 @@ const enEspera = (n: number) => (n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ?
   .medico__estado span { color: var(--navy); font-variant-numeric: tabular-nums; }
   .medico__curso { list-style: none; margin: 0; padding: 0; }
   .medico__form { display: grid; gap: 1.25rem; }
+  .medico__avisos { display: grid; gap: .35rem; justify-items: end; max-width: 25rem; margin-left: auto; }   /* margin: si baja a su propia línea (tablet), sigue a la derecha */
+  .medico__avisos p { font-size: .875rem; color: var(--muted); text-align: right; }
+  /* el aviso de llegada: queda a la vista hasta que el médico lo toca (alarma.ts). Doble clase para ganarle a .t-aviso de tele.css llegue en el orden que llegue */
+  .t-aviso.medico__llegada { grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-color: var(--blue); background: #eef4ff; }
+  .medico__llegada p { display: flex; align-items: flex-start; gap: .7rem; }
+  .medico__llegada-acciones { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .medico__punto { flex: none; width: 10px; height: 10px; margin-top: .5em; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 0 rgba(1, 77, 183, .6); animation: latido-azul 1.6s infinite; }
+  @keyframes latido-azul { 70% { box-shadow: 0 0 0 9px rgba(1, 77, 183, 0); } 100% { box-shadow: 0 0 0 0 rgba(1, 77, 183, 0); } }
 
   @media (max-width: 640px) {
     .medico__cab .btn { width: 100%; }
+    .medico__avisos { justify-items: stretch; max-width: none; width: 100%; }
+    .medico__avisos p { text-align: left; }
+    .t-aviso.medico__llegada { grid-template-columns: minmax(0, 1fr); }
   }
 </style>

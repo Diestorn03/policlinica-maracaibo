@@ -24,7 +24,7 @@ const { sala = '', rol } = Astro.props;
         desmontarVideollamada(cambio.target);
         iniciar(cambio.target);
       }
-      cambio.addedNodes.forEach(recorrer);
+      cambio.addedNodes.forEach((n) => { if (n instanceof Element) recorrer(n); });   // los textos (relojes, avisos) no tienen querySelectorAll
       cambio.removedNodes.forEach((n) => { if (n instanceof HTMLElement) n.querySelectorAll<HTMLElement>('[data-video]').forEach(desmontarVideollamada); });
     }
   });
