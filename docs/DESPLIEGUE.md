@@ -37,6 +37,13 @@ Límites que conviene conocer:
 - **Carga.** Cada participante hace una consulta corta cada 1 s mientras se conecta y cada 4 s después; con 50 llamadas simultáneas son unas 25 consultas por segundo a MariaDB, que el hosting aguanta. Más allá de unas cientos de llamadas hay que pensar en otro servidor.
 - **HTTPS obligatorio.** Los navegadores solo dan acceso a cámara y micrófono en sitios con https (el dominio temporal ya lo tiene).
 
+## Avisos al médico
+Cuando entra un paciente a la sala de espera, el panel del médico suena 2 segundos, vibra (Android) y deja un aviso fijo en la página y una notificación del sistema hasta que el médico la toca (`src/components/tele/alarma.ts`, `public/avisos-sw.js`). Se encienden una vez por equipo con «Activar avisos»; el navegador pide permiso para las notificaciones.
+- Con los avisos activados, la pantalla no se apaga sola mientras el panel esté abierto: así la tablet siempre suena.
+- Después de recargar la página hay que tocarla una vez para que el navegador deje sonar la alarma (el panel lo indica).
+- Si el médico bloquea la tablet o cierra el navegador, no suena: para eso harían falta notificaciones push (no incluidas).
+- En iPad no hay notificación del sistema (Safari solo la da a sitios instalados como app); la alarma y el aviso de la página sí funcionan.
+
 ## Problemas comunes
 - **Página en blanco o error 500 al instalar:** revisar los datos de la base en `policlinica-config.php`; el error exacto sale en la respuesta de `/instalar` y en Webuzo → Server Utilities → Error Log.
 - **Las rutas `/acceso/`, `/admin/`… dan 404 de Apache:** falta el `.htaccess` de `public_html` (los archivos que empiezan con punto a veces no se copian) o `mod_rewrite` está apagado en el hosting.

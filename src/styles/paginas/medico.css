@@ -6,7 +6,18 @@
   .medico__estado span { color: var(--navy); font-variant-numeric: tabular-nums; }
   .medico__curso { list-style: none; margin: 0; padding: 0; }
   .medico__form { display: grid; gap: 1.25rem; }
+  .medico__avisos { display: grid; gap: .35rem; justify-items: end; max-width: 25rem; margin-left: auto; }   /* margin: si baja a su propia línea (tablet), sigue a la derecha */
+  .medico__avisos p { font-size: .875rem; color: var(--muted); text-align: right; }
+  /* el aviso de llegada: queda a la vista hasta que el médico lo toca (alarma.ts). Doble clase para ganarle a .t-aviso de tele.css llegue en el orden que llegue */
+  .t-aviso.medico__llegada { grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-color: var(--blue); background: #eef4ff; }
+  .medico__llegada p { display: flex; align-items: flex-start; gap: .7rem; }
+  .medico__llegada-acciones { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .medico__punto { flex: none; width: 10px; height: 10px; margin-top: .5em; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 0 rgba(1, 77, 183, .6); animation: latido-azul 1.6s infinite; }
+  @keyframes latido-azul { 70% { box-shadow: 0 0 0 9px rgba(1, 77, 183, 0); } 100% { box-shadow: 0 0 0 0 rgba(1, 77, 183, 0); } }
 
   @media (max-width: 640px) {
     .medico__cab .btn { width: 100%; }
+    .medico__avisos { justify-items: stretch; max-width: none; width: 100%; }
+    .medico__avisos p { text-align: left; }
+    .t-aviso.medico__llegada { grid-template-columns: minmax(0, 1fr); }
   }

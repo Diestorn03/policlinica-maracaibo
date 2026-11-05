@@ -23,8 +23,19 @@ ob_start();
         <h1 class="t-titulo">Sala de espera</h1>
         <p class="medico__estado"><b data-contador><?= e($enEspera) ?></b> <span class="js-solo">Actualizado a las <time data-actualizado>--</time></span></p>
       </div>
-      <button type="button" class="btn btn--outline btn--sm js-solo" aria-pressed="false" data-sonido><span data-sonido-txt>Sonido de aviso: apagado</span></button>
+      <div class="medico__avisos js-solo">
+        <button type="button" class="btn btn--primary btn--sm" aria-describedby="avisos-estado" data-avisos>Activar avisos</button>
+        <p id="avisos-estado" role="status" data-avisos-estado>Actívalos para que este equipo suene y deje una notificación cuando llegue un paciente.</p>
+      </div>
     </header>
+
+    <div class="t-aviso medico__llegada" data-llegada hidden>
+      <p><span class="medico__punto" aria-hidden="true"></span><span data-llegada-txt></span></p>
+      <div class="medico__llegada-acciones">
+        <button type="button" class="btn btn--primary btn--sm" data-llegada-ver>Ver en la cola</button>
+        <button type="button" class="btn btn--outline btn--sm" data-llegada-ok>Entendido</button>
+      </div>
+    </div>
 
     <p class="sr-only" role="status" aria-live="polite" data-anuncio></p>
     <p class="t-aviso" role="status" data-sin-conexion hidden>Sin conexión. Seguimos intentando…</p>
