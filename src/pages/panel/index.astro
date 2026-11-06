@@ -10,6 +10,7 @@ import Historial from '../../components/tele/Historial.astro';
 import Videollamada from '../../components/tele/Videollamada.astro';
 import { errorConocido, esDeAfiliacion } from '../../components/tele/avisos';
 import '../../components/tele/tele.css';
+import '../../components/tele/documentos.css';
 import { clinica } from '../../data/site';
 import { DEMO, getDB, u, usuarioDe } from '../../lib/entorno';
 import { estado, historial } from '../../lib/tele';
@@ -86,7 +87,7 @@ import '../../styles/paginas/panel.css';
       <ul class="panel__tips">
         <li>Permite el uso de la cámara y el micrófono si tu navegador te lo pide.</li>
         <li>Busca un lugar con buena luz y poco ruido.</li>
-        <li>Ten a mano tus informes o estudios, si los tienes.</li>
+        <li>Si tienes informes o estudios en el teléfono o la computadora, envíalos abajo, en «Documentos para el médico».</li>
       </ul>
       <form method="post" action={u('/api/espera')}>
         <input type="hidden" name="accion" value="cancelar" />
@@ -102,6 +103,25 @@ import '../../styles/paginas/panel.css';
       <p>La videollamada se abrirá automáticamente aquí. Permite el uso de cámara y micrófono cuando tu navegador lo solicite.</p>
       <Videollamada sala={consulta?.sala} rol="cliente" />
     </section>
+
+    <!-- Documentos para el médico: desde la sala de espera hasta que termina la videollamada. Con servidor solo existen en la versión PHP
+         (php/app/pages/panel.php pinta este mismo bloque); en la demo los simula el navegador -->
+    {DEMO && (
+      <section class="t-hoja t-docs" aria-labelledby="t-docs" data-docs hidden>
+        <h2 id="t-docs">Documentos para el médico</h2>
+        <p>¿Tienes informes o estudios en el teléfono o la computadora? Envíalos aquí y el médico que te atienda podrá descargarlos. PDF, Word o fotos (JPG o PNG), hasta 10&nbsp;MB cada uno.</p>
+        <form class="t-docs__form" method="post" action={u('/api/archivos')} enctype="multipart/form-data" data-docs-form data-max={10 * 1048576}>
+          <div class="t-campo">
+            <label for="doc-archivo">Documento</label>
+            <input class="input" id="doc-archivo" type="file" name="archivo" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" />
+          </div>
+          <button class="btn btn--primary" type="submit">Enviar al médico</button>
+        </form>
+        <p class="t-docs__estado" role="status" data-docs-estado></p>
+        <ul class="t-docs__lista" data-docs-lista></ul>
+        <p class="t-docs__vacio" data-docs-vacio>Todavía no has enviado documentos.</p>
+      </section>
+    )}
 
     {afiliacion && <p class="panel__afiliacion">{afiliacion}{dias != null && dias <= 30 && <> <a class="link" href={waHref('Renovar mi afiliación')} target="_blank" rel="noopener">Renovar por WhatsApp</a></>}</p>}
 

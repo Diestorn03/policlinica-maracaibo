@@ -4,10 +4,11 @@
 // Las reglas «un cliente, una consulta activa» y «un médico, una videollamada a la vez» las garantizan los índices únicos del esquema.
 declare(strict_types=1);
 
-/** Saca de la cola a quien cerró la página (5 min sin latido) y cierra consultas olvidadas (4 h). */
+/** Saca de la cola a quien cerró la página (5 min sin latido) y cierra consultas olvidadas (4 h); los documentos de las canceladas se borran. */
 function _limpiarConsultas(): void {
     ejecutar("UPDATE consultas SET estado = 'cancelada', finalizada = UTC_TIMESTAMP() WHERE estado = 'espera' AND visto < UTC_TIMESTAMP() - INTERVAL 5 MINUTE");
     ejecutar("UPDATE consultas SET estado = 'cancelada', finalizada = UTC_TIMESTAMP() WHERE estado = 'atendiendo' AND atendida < UTC_TIMESTAMP() - INTERVAL 4 HOUR");
+    _limpiarArchivos();
 }
 
 /** El cliente entra a la sala. Error en texto si su afiliación venció. Si ya estaba en la sala, no duplica. */
@@ -25,7 +26,7 @@ function entrar(int $clienteId, string $motivo = ''): ?string {
 }
 
 /** Latido + estado de la consulta activa del cliente (null si no tiene):
- *  ['id','estado','sala','creada','atendida','medico','posicion'] */
+ *  ['id','estado','sala','creada','atendida','medico','posicion','archivos'] (archivos: los documentos que envió, ver lib/archivos.php) */
 function estado(int $clienteId): ?array {
     _limpiarConsultas();
     ejecutar("UPDATE consultas SET visto = UTC_TIMESTAMP() WHERE cliente_id = ? AND estado = 'espera'", [$clienteId]);
@@ -36,24 +37,28 @@ function estado(int $clienteId): ?array {
     if (!$r) return null;
     $r['id'] = (int) $r['id'];
     $r['posicion'] = (int) $r['posicion'];
+    $r['archivos'] = archivosDe([$r['id']])[$r['id']];
     return $r;
 }
 
 function cancelar(int $clienteId): void {
     ejecutar("UPDATE consultas SET estado = 'cancelada', finalizada = UTC_TIMESTAMP() WHERE cliente_id = ? AND estado = 'espera'", [$clienteId]);
+    _limpiarArchivos();
 }
 
 /** Lo que ve el médico: la cola en orden de llegada y sus consultas en curso.
- *  Cada fila: id, motivo, creada, paciente, edad (y sala en `enCurso`). */
+ *  Cada fila: id, motivo, creada, paciente, edad (y sala y archivos en `enCurso`). */
 function cola(int $medicoId): array {
     _limpiarConsultas();
     $q = fn(string $donde, array $p = []): array => filas("SELECT c.id, c.motivo, c.creada, c.sala, u.nombre AS paciente, u.nacimiento
         FROM consultas c JOIN usuarios u ON u.id = c.cliente_id WHERE $donde ORDER BY c.id", $p);
     $fila = fn(array $r, bool $conSala): array => ['id' => (int) $r['id'], 'motivo' => $r['motivo'], 'creada' => $r['creada'], 'paciente' => $r['paciente'], 'edad' => edad($r['nacimiento'])]
         + ($conSala ? ['sala' => $r['sala']] : []);
+    $enCurso = array_map(fn(array $r) => $fila($r, true), $q("c.estado = 'atendiendo' AND c.medico_id = ?", [$medicoId]));
+    $docs = archivosDe(array_column($enCurso, 'id'));
     return [
         'espera' => array_map(fn(array $r) => $fila($r, false), $q("c.estado = 'espera'")),
-        'enCurso' => array_map(fn(array $r) => $fila($r, true), $q("c.estado = 'atendiendo' AND c.medico_id = ?", [$medicoId])),
+        'enCurso' => array_map(fn(array $c) => $c + ['archivos' => $docs[$c['id']]], $enCurso),
     ];
 }
 
@@ -90,11 +95,13 @@ function finalizar(int $consultaId, int $medicoId, string $diagnostico): ?string
 }
 
 /** Historial (últimas 50): del cliente, del médico, o de toda la clínica para el admin. $f = ['clienteId' => n, 'medicoId' => n].
- *  Cada fila: id, estado, motivo, diagnostico, creada, atendida, finalizada, paciente, medico. */
+ *  Cada fila: id, estado, motivo, diagnostico, creada, atendida, finalizada, paciente, medico, archivos. */
 function historial(array $f = []): array {
     $cliente = (int) ($f['clienteId'] ?? 0);
     $medico = (int) ($f['medicoId'] ?? 0);
-    return array_map(fn(array $r) => ['id' => (int) $r['id']] + $r, filas("SELECT c.id, c.estado, c.motivo, c.diagnostico, c.creada, c.atendida, c.finalizada, p.nombre AS paciente, m.nombre AS medico
+    $filas = array_map(fn(array $r) => ['id' => (int) $r['id']] + $r, filas("SELECT c.id, c.estado, c.motivo, c.diagnostico, c.creada, c.atendida, c.finalizada, p.nombre AS paciente, m.nombre AS medico
         FROM consultas c JOIN usuarios p ON p.id = c.cliente_id LEFT JOIN usuarios m ON m.id = c.medico_id
         WHERE (? = 0 OR c.cliente_id = ?) AND (? = 0 OR c.medico_id = ?) ORDER BY c.id DESC LIMIT 50", [$cliente, $cliente, $medico, $medico]));
+    $docs = archivosDe(array_column($filas, 'id'));
+    return array_map(fn(array $r) => $r + ['archivos' => $docs[$r['id']]], $filas);
 }

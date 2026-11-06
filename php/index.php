@@ -25,6 +25,7 @@ $tabla = [
     '/api/cola' => 'api/cola.php',
     '/api/senal' => 'api/senal.php',
     '/api/directorio' => 'api/directorio.php',
+    '/api/archivos' => 'api/archivos.php',
     '/instalar' => 'pages/instalar.php',
 ];
 
@@ -36,6 +37,11 @@ if (isset($tabla[$ruta])) {
 if (preg_match('#^/fotos/(\d+)$#', $ruta, $m)) {
     $_GET['id'] = $m[1];
     require __DIR__ . '/app/api/foto.php';
+    exit;
+}
+if (preg_match('#^/api/archivos/(\d+)$#', $ruta, $m)) {
+    $_GET['id'] = $m[1];
+    require __DIR__ . '/app/api/archivos.php';
     exit;
 }
 

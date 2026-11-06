@@ -44,6 +44,12 @@ Cuando entra un paciente a la sala de espera, el panel del médico suena 2 segun
 - Si el médico bloquea la tablet o cierra el navegador, no suena: para eso harían falta notificaciones push (no incluidas).
 - En iPad no hay notificación del sistema (Safari solo la da a sitios instalados como app); la alarma y el aviso de la página sí funcionan.
 
+## Documentos de la consulta
+Desde que entra a la sala de espera hasta que termina la videollamada, el paciente puede enviar informes o estudios (PDF, Word o fotos JPG/PNG) en «Documentos para el médico», y el médico que lo atiende los descarga desde la consulta en curso y después desde su historial (`php/app/lib/archivos.php`). Nadie más puede bajarlos.
+- **Límites:** 10 MB por archivo y 10 por consulta. PHP o MariaDB pueden imponer uno menor: el panel del paciente dice el límite real («hasta X MB cada uno»). `public_html/.user.ini` lo sube a 10 MB donde PHP lo lee (PHP-FPM, LiteSpeed); si el panel muestra menos, se cambia en Webuzo → PHP (`upload_max_filesize` 10M, `post_max_size` 12M).
+- **Se guardan en la base**, como las fotos de los médicos (la tabla `archivos` llega con la migración `004_archivos.sql`: al actualizar, abrir `/instalar?token=…` una vez). La copia de seguridad de la base los incluye.
+- **Privacidad:** si el paciente sale de la sala o la consulta se cancela, sus documentos se borran. El tipo se comprueba por el contenido del archivo, no por la extensión.
+
 ## Problemas comunes
 - **Página en blanco o error 500 al instalar:** revisar los datos de la base en `policlinica-config.php`; el error exacto sale en la respuesta de `/instalar` y en Webuzo → Server Utilities → Error Log.
 - **Las rutas `/acceso/`, `/admin/`… dan 404 de Apache:** falta el `.htaccess` de `public_html` (los archivos que empiezan con punto a veces no se copian) o `mod_rewrite` está apagado en el hosting.

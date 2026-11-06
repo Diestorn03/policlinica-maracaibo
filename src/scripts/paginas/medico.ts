@@ -2,6 +2,7 @@
   import { cola } from '../api.js';
   import { sondear, errorDeUrl } from '../../components/tele/tele.js';
   import { alarmaDeLlegadas, type Llegada } from '../../components/tele/alarma.ts';
+  import { descargasDemo, pintarDocumentos } from '../../components/tele/documentos.ts';
   import { esperando } from '../../lib/sitio.ts';
   import { aFecha } from '../../lib/tele.ts';
 
@@ -22,6 +23,7 @@
 
     // Alarma de 2 s, notificación que se queda y pantalla encendida cuando llega alguien (ver alarma.ts)
     const alarma = alarmaDeLlegadas(raiz);
+    descargasDemo(lista);
 
     // El reloj de cada fila (cada segundo) y su aviso de espera larga
     const reloj = () => {
@@ -72,10 +74,12 @@
       $('[data-contador]').textContent = n === 0 ? 'Nadie en espera' : `${n} ${n === 1 ? 'paciente' : 'pacientes'} en espera`;
 
       // --- en curso
+      const docsNuevos: string[] = [];
       const idsCurso = new Set(datos.enCurso.map((c) => String(c.id)));
       for (const [id, li] of cards) if (!idsCurso.has(id)) { li.remove(); cards.delete(id); }
       datos.enCurso.forEach((c, i) => {
         let li = cards.get(String(c.id));
+        const recien = !li;
         if (!li) {
           li = crear(plCurso, c);
           poner(li, 'edad', c.edad == null ? 'Edad sin registrar' : `${c.edad} años`);
@@ -88,6 +92,13 @@
           cards.set(String(c.id), li);
         }
         colocar(lista, li, i);
+        // documentos que envía el paciente: los nuevos se resaltan y se anuncian (no los que ya traía al abrir la tarjeta)
+        const caja = li.querySelector<HTMLElement>('[data-docs]');
+        const nuevos = caja ? pintarDocumentos(caja, c.archivos ?? [], 'medico') : [];
+        if (!recien && nuevos.length) {
+          docsNuevos.push(`${c.paciente} envió ${nuevos.length === 1 ? 'un documento' : `${nuevos.length} documentos`}`);
+          for (const n of nuevos) n.animate([{ backgroundColor: 'rgba(255, 255, 255, .28)' }, { backgroundColor: 'transparent' }], { duration: 2500, easing: 'ease-out' });
+        }
       });
       $('[data-curso-sec]').hidden = datos.enCurso.length === 0;
 
@@ -99,6 +110,7 @@
 
       // --- llegadas nuevas: aviso para lectores de pantalla, título de la pestaña y alarma
       if (llegaron.length) { $('[data-anuncio]').textContent = `Llegó un paciente: ${llegaron.map((p) => p.nombre).join(', ')}`; alarma.llegaron(llegaron); }
+      else if (docsNuevos.length) $('[data-anuncio]').textContent = `${docsNuevos.join('. ')}.`;
       document.title = n ? `(${n}) Sala de espera` : base;
       $('[data-actualizado]').textContent = new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', hour: 'numeric', minute: '2-digit', second: '2-digit' }).format(new Date());
       primera = false;

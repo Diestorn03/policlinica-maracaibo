@@ -10,6 +10,14 @@ const CONOCIDOS: (string | RegExp)[] = [
   'No está atendiendo esta consulta o ya fue finalizada.',
   'El médico ya está atendiendo otra consulta.',
   'Ese paciente ya fue tomado por otro médico o salió de la sala.',
+  // documentos de la consulta (php/app/lib/archivos.php)
+  'Entra a la sala de espera para enviar documentos.',
+  'El archivo está vacío.',
+  'Solo se pueden enviar PDF, Word (.doc o .docx) o fotos JPG o PNG.',
+  'Ese documento ya no está.',
+  'Elige un archivo para enviar.',
+  'No se pudo recibir el archivo. Inténtalo de nuevo.',
+  /^(El archivo pesa más de \d+(,\d)? [MK]B|Ya enviaste \d+ documentos en esta consulta)\.$/,
 ];
 
 /** El texto a mostrar para un ?error=… ('' si no hay ninguno). */

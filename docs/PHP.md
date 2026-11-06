@@ -65,6 +65,13 @@ Al guardar con `clave` se usa `hashClave()` de auth.php. Campos de usuario: `id,
 `senalSondear(string $sala, string $rol, string $sesion, int $desde): array` (registra presencia, avisa `presente` a los dos lados cuando uno entra o cambia de sesión, devuelve `[['id','tipo','datos'], …]` con `id > $desde`) ·
 `senalEnviar(string $sala, string $rol, string $tipo, mixed $datos): bool`.
 
+**lib/archivos.php** (documentos de la consulta; solo existe en PHP, la demo los simula en src/scripts/api.js):
+`guardarArchivo(int $clienteId, string $nombre, string $datos): ?string` (a su consulta activa; tipo por la firma del archivo: PDF, Word, JPG o PNG) ·
+`quitarArchivo(int $clienteId, int $archivoId): bool` (solo con la consulta activa) · `archivosDe(array $consultaIds): array` (`[id => [['id','nombre','tamano','subido'], …]]`, sin el contenido) ·
+`archivoPara(int $archivoId, array $yo): ?array` (`nombre, tipo, datos` si es el paciente de la consulta o el médico que la atiende o atendió) ·
+`archivoMaxBytes(): int` (10 MB o lo que dejen PHP y MariaDB) · `tipoArchivo()`, `nombreArchivo()`, `tamanoTexto()`, `bytesIni()`.
+`estado()`, `cola()` (en `enCurso`) e `historial()` traen `archivos`; al cancelarse una consulta, `_limpiarArchivos()` borra sus documentos.
+
 **auth.php** (ya escrito): `ROLES`, `inicioDe($rol)`, `hashClave()`, `verificarClave()`, `abrirSesion($u)`, `cerrarSesion()`, `usuarioActual()`, `exigir($roles, $api = false)`, `permitirIntento($ip)`, `ipCliente()`.
 
 ## API (app/api/*.php) — mismos contratos que src/server/api/*.ts
@@ -76,6 +83,8 @@ Al guardar con `clave` se usa `hashClave()` de auth.php. Campos de usuario: `id,
 * `GET /api/senal?sala=…&sesion=…&desde=N` (roles médico y cliente) → `{"mensajes": [...]}` o `{"fin": true}` si la consulta ya no está en curso. `POST` JSON `{sala, tipo, datos}` con `tipo` en `oferta|respuesta|ice|salir` → 204.
 * `GET /api/directorio` (público, con ETag): `{"especialidades": [{id,slug,nombre,total}], "medicos": [{id,nombre,telefono,consultorio,piso,consultorios,foto,especialidades:[{id,slug,nombre}]}]}`.
 * `GET /fotos/<id>`: la foto subida desde el admin, con `Cache-Control: public, max-age=31536000, immutable`.
+* `POST /api/archivos` (rol cliente): `archivo` (multipart) lo agrega a su consulta activa · `accion=quitar` + `id` lo quita. Con `Accept: application/json` responde `{archivos}` o `{error, archivos}` (400): el panel envía por fetch y no recarga, así la videollamada no se corta. Sin JS vuelve a `/panel/?docs=<error>`.
+* `GET /api/archivos/<id>` (el paciente de la consulta o su médico; si no, 404; sin sesión, 401): descarga con `Content-Disposition: attachment`.
 
 ## Pruebas locales (Docker: MariaDB 11.8 + PHP 8.5)
 

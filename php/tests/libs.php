@@ -36,7 +36,7 @@ function coincide(string $patron, mixed $texto, string $msg = ''): void {
 }
 function utc(string $s): DateTimeImmutable { return new DateTimeImmutable($s, new DateTimeZone('UTC')); }
 
-igual(migrar(), ['001_schema.sql', '002_seed.sql', '003_pisos.sql'], 'la base limpia aplica las tres migraciones');
+igual(migrar(), ['001_schema.sql', '002_seed.sql', '003_pisos.sql', '004_archivos.sql'], 'la base limpia aplica las cuatro migraciones');
 igual(migrar(), [], 'migrar de nuevo no repite nada');
 
 // ════════════════════════ sitio.php ════════════════════════
@@ -375,10 +375,48 @@ igual(entrar($cli, 'Dolor de cabeza'), null);
 igual(entrar($cli, 'otra vez'), null, 'reentrar no duplica');
 igual((int) valor('SELECT COUNT(*) FROM consultas WHERE cliente_id = ?', [$cli]), 1);
 $enEspera = estado($cli);
-igual(array_keys($enEspera), ['id', 'estado', 'sala', 'creada', 'atendida', 'medico', 'posicion']);
+igual(array_keys($enEspera), ['id', 'estado', 'sala', 'creada', 'atendida', 'medico', 'posicion', 'archivos']);
 igual($enEspera['estado'], 'espera');
 igual($enEspera['posicion'], 1);
 igual(estado($cli2), null);
+
+// ════════ documentos de la consulta (archivos.php) ════════
+$pdf = "%PDF-1.4\n" . str_repeat('x', 2000);
+$png = "\x89PNG\r\n\x1A\n" . str_repeat("\0", 100);
+$docx = "PK\x03\x04" . str_repeat("\0", 26) . 'word/document.xml' . str_repeat("\0", 50);
+$ole = "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1" . str_repeat("\0", 50);
+igual([tipoArchivo($pdf, 'informe.PDF'), tipoArchivo("basura\r\n" . $pdf, 'x.pdf'), tipoArchivo($png, 'foto.png'), tipoArchivo("\xFF\xD8\xFF\xE0JFIF", 'foto.jpeg')], ['pdf', 'pdf', 'png', 'jpg']);
+igual([tipoArchivo($docx, 'informe.docx'), tipoArchivo($ole, 'viejo.doc')], ['docx', 'doc']);
+igual([tipoArchivo($docx, 'planilla.xlsx'), tipoArchivo("PK\x03\x04xl/workbook.xml", 'trampa.docx'), tipoArchivo($ole, 'hoja.xls')], [null, null, null], 'Word se confirma por la extensión y por dentro');
+igual([tipoArchivo('<?php echo 1;', 'informe.pdf'), tipoArchivo('MZ', 'programa.exe')], [null, null], 'la extensión sola no alcanza');
+igual(nombreArchivo('C:\\fakepath\\Informe médico.final.PDF', 'pdf'), 'Informe médico.final.pdf');
+igual(nombreArchivo("../../etc/pass\0wd", 'pdf'), 'pass wd.pdf', 'sin carpetas ni caracteres de control');
+igual([nombreArchivo('.pdf', 'pdf'), nombreArchivo('foto.jpeg', 'jpg')], ['documento.pdf', 'foto.jpg']);
+igual(mb_strlen(nombreArchivo(str_repeat('á', 300) . '.pdf', 'pdf')), 124, 'cabe en la columna');
+igual([tamanoTexto(1048576), tamanoTexto(1310720), tamanoTexto(10485760), tamanoTexto(358400), tamanoTexto(10)], ['1 MB', '1,3 MB', '10 MB', '350 KB', '1 KB']);
+igual([bytesIni('2M'), bytesIni('512k'), bytesIni('1G'), bytesIni('0'), bytesIni('300')], [2097152, 524288, 1073741824, 0, 300]);
+afirmar(archivoMaxBytes() > 0 && archivoMaxBytes() <= ARCHIVO_TOPE, 'el límite real nunca pasa del de la clínica');
+igual(guardarArchivo($cli2, 'x.pdf', $pdf), 'Entra a la sala de espera para enviar documentos.', 'sin consulta activa no se envía');
+igual(guardarArchivo($cli, 'x.pdf', ''), 'El archivo está vacío.');
+coincide('/^Solo se pueden enviar/', guardarArchivo($cli, 'virus.exe', 'MZ'));
+coincide('/^El archivo pesa más de [\d,]+ [MK]B\.$/u', guardarArchivo($cli, 'enorme.pdf', '%PDF-' . str_repeat('x', archivoMaxBytes())));
+igual([guardarArchivo($cli, 'Informe.pdf', $pdf), guardarArchivo($cli, 'foto.png', $png)], [null, null]);
+$docsEspera = estado($cli)['archivos'];
+igual(array_column($docsEspera, 'nombre'), ['Informe.pdf', 'foto.png'], 'el paciente los ve en la sala de espera');
+igual(array_keys($docsEspera[0]), ['id', 'nombre', 'tamano', 'subido']);
+igual($docsEspera[0]['tamano'], strlen($pdf));
+$bajado = archivoPara($docsEspera[1]['id'], ['id' => $cli, 'rol' => 'cliente']);
+igual([$bajado['nombre'], $bajado['tipo'], $bajado['datos'] === $png], ['foto.png', 'image/png', true], 'el binario vuelve intacto');
+igual(archivoPara($docsEspera[0]['id'], ['id' => $cli2, 'rol' => 'cliente']), null, 'otro paciente no lo ve');
+igual(archivoPara($docsEspera[0]['id'], ['id' => $doc, 'rol' => 'medico']), null, 'el médico lo ve solo cuando atiende la consulta');
+igual(archivoPara($docsEspera[0]['id'], ['id' => $admin, 'rol' => 'admin']), null);
+igual(archivoPara(999999, ['id' => $cli, 'rol' => 'cliente']), null);
+for ($i = 3; $i <= ARCHIVOS_POR_CONSULTA; $i++) igual(guardarArchivo($cli, "anexo-$i.pdf", $pdf), null);
+igual(guardarArchivo($cli, 'uno-mas.pdf', $pdf), 'Ya enviaste ' . ARCHIVOS_POR_CONSULTA . ' documentos en esta consulta.');
+$lista = estado($cli)['archivos'];
+$ultimo = $lista[array_key_last($lista)]['id'];
+igual([quitarArchivo($cli2, $ultimo), quitarArchivo($cli, $ultimo), quitarArchivo($cli, $ultimo)], [false, true, false], 'solo el dueño lo quita, una vez');
+igual(count(estado($cli)['archivos']), ARCHIVOS_POR_CONSULTA - 1);
 $colaDoc = cola($doc);
 igual(count($colaDoc['espera']), 1);
 igual([$colaDoc['espera'][0]['paciente'], $colaDoc['espera'][0]['edad'], $colaDoc['espera'][0]['motivo']], ['Pedro Paciente', edad('1950-03-01'), 'Dolor de cabeza']);
@@ -391,7 +429,11 @@ $atendido = estado($cli);
 igual([$atendido['estado'], $atendido['sala'], $atendido['medico']], ['atendiendo', $sala, 'Dra. Ana Médica']);
 afirmar(!array_key_exists('enlace', $atendido), 'la API no expone enlaces de videollamada');
 igual(cola($doc)['enCurso'][0]['sala'], $sala);
-igual(array_keys(cola($doc)['enCurso'][0]), ['id', 'motivo', 'creada', 'paciente', 'edad', 'sala']);
+igual(array_keys(cola($doc)['enCurso'][0]), ['id', 'motivo', 'creada', 'paciente', 'edad', 'sala', 'archivos']);
+igual(array_column(cola($doc)['enCurso'][0]['archivos'], 'nombre')[0], 'Informe.pdf', 'el médico ve los documentos en la consulta en curso');
+igual(archivoPara($docsEspera[0]['id'], ['id' => $doc, 'rol' => 'medico'])['datos'] ?? null, $pdf, 'y los descarga');
+igual(archivoPara($docsEspera[0]['id'], ['id' => $admin, 'rol' => 'medico']), null, 'otro médico no');
+igual(guardarArchivo($cli, 'durante-la-llamada.pdf', $pdf), null, 'también se envían durante la videollamada');
 igual(cola($admin)['enCurso'], [], 'la videollamada en curso es solo del médico que la tomó');
 // Sala de la videollamada: solo la ven el médico y el paciente de la consulta en curso
 igual([salaDe($sala, $cli), salaDe($sala, $doc), salaDe($sala, $admin), salaDe($sala, $cli2)], ['cliente', 'medico', null, null]);
@@ -423,8 +465,11 @@ igual(salaDe($sala, $cli), null, 'terminada la consulta, la sala ya no sirve');
 coincide('/No está atendiendo/', finalizar($enEspera['id'], $doc, 'Otra vez'), 'no se finaliza dos veces');
 $pasada = historial(['clienteId' => $cli])[0];
 igual([$pasada['estado'], $pasada['medico'], $pasada['paciente'], $pasada['diagnostico']], ['finalizada', 'Dra. Ana Médica', 'Pedro Paciente', "Migraña\nsin aura."]);
-igual(array_keys($pasada), ['id', 'estado', 'motivo', 'diagnostico', 'creada', 'atendida', 'finalizada', 'paciente', 'medico']);
+igual(array_keys($pasada), ['id', 'estado', 'motivo', 'diagnostico', 'creada', 'atendida', 'finalizada', 'paciente', 'medico', 'archivos']);
 igual(historial(['medicoId' => $doc])[0]['diagnostico'], "Migraña\nsin aura.");
+igual(count(historial(['medicoId' => $doc])[0]['archivos']), ARCHIVOS_POR_CONSULTA, 'los documentos quedan en el historial del médico');
+afirmar(archivoPara($docsEspera[0]['id'], ['id' => $doc, 'rol' => 'medico']) !== null, 'y los sigue descargando');
+igual(quitarArchivo($cli, $docsEspera[0]['id']), false, 'terminada la consulta, el paciente ya no los quita');
 igual(array_values(array_filter(historial(), fn($c) => $c['id'] === $enEspera['id']))[0]['diagnostico'], "Migraña\nsin aura.", 'el administrador ve el diagnóstico');
 igual(array_column(historial(['clienteId' => $cli2]), 'estado'), ['cancelada']);
 // Una llamada abandonada no puede terminar como consulta finalizada sin diagnóstico.
@@ -437,13 +482,17 @@ $cierreAutomatico = historial(['clienteId' => $cli])[0];
 igual([$cierreAutomatico['estado'], $cierreAutomatico['diagnostico']], ['cancelada', ''], 'el cierre automático no inventa un diagnóstico');
 // quien cierra la página sale de la cola a los 5 minutos
 entrar($cli, '');
+igual(guardarArchivo($cli, 'abandonado.pdf', $pdf), null);
 ejecutar("UPDATE consultas SET visto = UTC_TIMESTAMP() - INTERVAL 6 MINUTE WHERE estado = 'espera'");
 igual(count(cola($doc)['espera']), 0);
+igual((int) valor("SELECT COUNT(*) FROM archivos WHERE nombre = 'abandonado.pdf'"), 0, 'si se va de la sala sin que lo atiendan, sus documentos se borran');
 igual(historial(['clienteId' => $cli])[0]['estado'], 'cancelada');
 // cancelar
 entrar($cli, '');
+igual(guardarArchivo($cli, 'cancelado.pdf', $pdf), null);
 cancelar($cli);
 igual([estado($cli), historial(['clienteId' => $cli])[0]['estado']], [null, 'cancelada']);
+igual((int) valor("SELECT COUNT(*) FROM archivos WHERE nombre = 'cancelado.pdf'"), 0, 'al salir de la sala, sus documentos se borran');
 // latido: estado() renueva `visto` y mantiene a quien sigue en la página
 entrar($cli, '');
 ejecutar('UPDATE consultas SET visto = UTC_TIMESTAMP() - INTERVAL 4 MINUTE WHERE cliente_id = ? AND estado = \'espera\'', [$cli]);

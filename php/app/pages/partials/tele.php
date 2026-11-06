@@ -19,8 +19,15 @@ function teleErrorConocido(?string $v): string {
         'No está atendiendo esta consulta o ya fue finalizada.',
         'El médico ya está atendiendo otra consulta.',
         'Ese paciente ya fue tomado por otro médico o salió de la sala.',
+        'Entra a la sala de espera para enviar documentos.',
+        'El archivo está vacío.',
+        'Solo se pueden enviar PDF, Word (.doc o .docx) o fotos JPG o PNG.',
+        'Ese documento ya no está.',
+        'Elige un archivo para enviar.',
+        'No se pudo recibir el archivo. Inténtalo de nuevo.',
     ];
     if (in_array($v, $conocidos, true) || preg_match('/^Tu afiliación venció el \d{2}\/\d{2}\/\d{4}\. Escríbenos para renovarla\.$/u', $v)) return $v;
+    if (preg_match('/^(El archivo pesa más de \d+(,\d)? [MK]B|Ya enviaste \d+ documentos en esta consulta)\.$/u', $v)) return $v;
     return 'No se pudo completar la acción. Inténtalo de nuevo.';
 }
 
@@ -66,6 +73,19 @@ function teleVideollamada(string $sala, string $rol): string {
         . '</div>';
 }
 
+/** Los documentos de una consulta (lib/archivos.php). 'cliente': los que envió, con «Quitar»; 'medico': para descargar.
+ *  src/components/tele/documentos.ts rehace la lista con este mismo marcado en cada sondeo. */
+function teleDocumentos(array $archivos, string $rol): string {
+    $h = '<ul class="t-docs__lista" data-docs-lista>';
+    foreach ($archivos as $a) {
+        $h .= '<li data-id="' . e($a['id']) . '"><a href="' . e(u('/api/archivos/' . $a['id'])) . '" download>' . e($a['nombre']) . '</a> <small>' . e(tamanoTexto((int) $a['tamano'])) . '</small>'
+            . ($rol === 'cliente' ? '<button type="button" class="t-docs__quitar" data-quitar aria-label="' . e('Quitar ' . $a['nombre']) . '">Quitar</button>' : '')
+            . '</li>';
+    }
+    return $h . '</ul><p class="t-docs__vacio" data-docs-vacio' . teleOculto((bool) $archivos) . '>'
+        . ($rol === 'cliente' ? 'Todavía no has enviado documentos.' : 'El paciente no ha enviado documentos.') . '</p>';
+}
+
 /** Una consulta en curso del médico. Sin $c es la plantilla que clona el script (<template id="pl-curso">). */
 function teleEnCurso(?array $c = null, bool $actual = false): string {
     return '<li class="t-encurso"' . ($c ? ' data-id="' . e($c['id']) . '"' : '') . ($actual ? ' aria-current="true"' : '') . '>'
@@ -75,6 +95,7 @@ function teleEnCurso(?array $c = null, bool $actual = false): string {
         . '<p>Motivo: <span data-campo="motivo">' . ($c ? e(($c['motivo'] ?? '') ?: 'sin motivo indicado') : '') . '</span></p>'
         . '</div>'
         . teleVideollamada($c['sala'] ?? '', 'medico')
+        . '<div class="t-docs t-docs--medico" data-docs><h4 class="t-docs__t">Documentos del paciente</h4>' . teleDocumentos($c['archivos'] ?? [], 'medico') . '</div>'
         . '<form class="t-finalizar" method="post" action="' . e(u('/api/cola')) . '">'
         . '<input type="hidden" name="accion" value="finalizar">'
         . '<input type="hidden" name="consulta"' . ($c ? ' value="' . e($c['id']) . '"' : '') . '>'
@@ -94,7 +115,7 @@ function teleHistorial(array $items, string $rol): string {
         return $h . '<p class="t-vacio">' . ($cliente ? 'Todavía no tienes consultas por videollamada. Cuando las tengas, aparecerán aquí.' : 'Todavía no has atendido consultas.') . '</p></section>';
     }
     $h .= '<table class="t-tabla"><caption class="sr-only">' . ($cliente ? 'Tus consultas por videollamada' : 'Consultas que has atendido por videollamada') . '</caption>'
-        . '<thead><tr><th scope="col">Fecha</th><th scope="col">Hora</th><th scope="col">' . $quien . '</th><th scope="col">Diagnóstico</th><th scope="col">Duración</th><th scope="col">Estado</th></tr></thead><tbody>';
+        . '<thead><tr><th scope="col">Fecha</th><th scope="col">Hora</th><th scope="col">' . $quien . '</th><th scope="col">Diagnóstico</th>' . ($cliente ? '' : '<th scope="col">Documentos</th>') . '<th scope="col">Duración</th><th scope="col">Estado</th></tr></thead><tbody>';
     foreach ($filas as $i) {
         $min = $i['atendida'] ? duracion($i['atendida'], $i['finalizada']) : null;
         $diagnostico = $i['diagnostico'] !== '' ? $i['diagnostico'] : ($i['estado'] === 'finalizada' ? 'Sin diagnóstico registrado' : '—');
@@ -104,6 +125,7 @@ function teleHistorial(array $items, string $rol): string {
             . '<td data-etiqueta="Hora">' . e(fechaCaracas($i['creada'], 'hora')) . '</td>'
             . '<td data-etiqueta="' . $quien . '">' . e($otro) . '</td>'
             . '<td data-etiqueta="Diagnóstico">' . e($diagnostico) . '</td>'
+            . ($cliente ? '' : '<td data-etiqueta="Documentos">' . (($i['archivos'] ?? []) ? implode('<br>', array_map(fn(array $a) => '<a class="link" href="' . e(u('/api/archivos/' . $a['id'])) . '" download>' . e($a['nombre']) . '</a>', $i['archivos'])) : '—') . '</td>')
             . '<td data-etiqueta="Duración">' . ($min === null ? '—' : $min . ' min') . '</td>'
             . '<td data-etiqueta="Estado">' . ($i['estado'] === 'finalizada' ? 'Finalizada' : 'Sin atender') . '</td>'
             . '</tr>';

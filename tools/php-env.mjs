@@ -57,7 +57,7 @@ if (cmd === 'up') {
   }
   dockerOut('exec', 'pm-maria', 'mariadb', '-uroot', '-proot', '-e', `CREATE DATABASE IF NOT EXISTS ${BASE} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
   dockerOut('rm', '-f', WEB);
-  docker('run', '-d', '--name', WEB, '--network', 'pmnet', '-p', `${PUERTO}:8081`, ...entorno(BASE), '-e', 'PM_ADMIN_CORREO=admin@prueba.test', '-e', 'PM_ADMIN_CLAVE=Prueba-local-123', '-e', 'PHP_CLI_SERVER_WORKERS=4', '-v', `${TRABAJO}/site:/site`, 'pm-php', 'php', '-S', '0.0.0.0:8081', '-t', '/site', '/site/dev-router.php');
+  docker('run', '-d', '--name', WEB, '--network', 'pmnet', '-p', `${PUERTO}:8081`, ...entorno(BASE), '-e', 'PM_ADMIN_CORREO=admin@prueba.test', '-e', 'PM_ADMIN_CLAVE=Prueba-local-123', '-e', 'PHP_CLI_SERVER_WORKERS=4', '-v', `${TRABAJO}/site:/site`, 'pm-php', 'php', '-d', 'upload_max_filesize=10M', '-d', 'post_max_size=12M', '-S', '0.0.0.0:8081', '-t', '/site', '/site/dev-router.php');   // los límites de php/.user.ini (el servidor integrado no lo lee)
   console.log(`Sitio en http://localhost:${PUERTO} (instalar una vez: /instalar?token=token-de-prueba; admin admin@prueba.test / Prueba-local-123)`);
 } else if (cmd === 'apache') {
   // el paquete (node tools/empaquetar-php.mjs) servido por Apache + mod_php con su .htaccess, como en el hosting

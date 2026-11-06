@@ -1,6 +1,7 @@
 // Script de la página «panel», extraído de src/pages/panel/index.astro para compartirlo con el marco de la versión PHP (src/shell/).
   import { espera } from '../api.js';
   import { sondear, errorDeUrl } from '../../components/tele/tele.js';
+  import { descargasDemo, envioDeDocumentos, pintarDocumentos } from '../../components/tele/documentos.ts';
   import { esperando } from '../../lib/sitio.ts';
   import { aFecha } from '../../lib/tele.ts';
 
@@ -12,6 +13,10 @@
     let actual = raiz.dataset.actual!;
     let posicion = Number($('[data-posicion]').textContent) || 0;
     let candado: WakeLockSentinel | null = null;
+
+    // Documentos para el médico (solo con la versión PHP o en la demo): se envían sin recargar, así la videollamada no se corta
+    const docs = raiz.querySelector<HTMLElement>('[data-docs]');
+    if (docs) { envioDeDocumentos(docs); descargasDemo(docs); }
 
     // ?error=… y ?fin=…: el servidor ya los pinta; en la demo (página estática) los pone el navegador
     const textoError = errorDeUrl($('[data-error]'));
@@ -46,6 +51,7 @@
         if (actual !== 'inicio') location.replace(`${location.pathname}?fin=${actual === 'atiende' ? 'termino' : 'fuera'}`);
         return;
       }
+      if (docs) { docs.hidden = false; pintarDocumentos(docs, c.archivos ?? [], 'cliente'); }
       if (c.estado === 'espera') {
         const antes = Math.max(0, c.posicion - 1);
         $('[data-posicion]').textContent = c.posicion;

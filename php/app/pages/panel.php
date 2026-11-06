@@ -11,6 +11,7 @@ $pasadas = historial(['clienteId' => $yo['id']]);
 $ficha = usuario($yo['id']);
 $error = teleErrorConocido(is_string($_GET['error'] ?? null) ? $_GET['error'] : null);
 $fin = is_string($_GET['fin'] ?? null) ? $_GET['fin'] : null;
+$avisoDocs = teleErrorConocido(is_string($_GET['docs'] ?? null) ? $_GET['docs'] : null);   // el envío de un documento sin JS
 $inicial = !$consulta ? 'inicio' : ($consulta['estado'] === 'espera' ? 'espera' : 'atiende');
 $primer = preg_split('/\s+/u', trim($yo['nombre']))[0] ?? '';
 
@@ -78,7 +79,7 @@ ob_start();
       <ul class="panel__tips">
         <li>Permite el uso de la cámara y el micrófono si tu navegador te lo pide.</li>
         <li>Busca un lugar con buena luz y poco ruido.</li>
-        <li>Ten a mano tus informes o estudios, si los tienes.</li>
+        <li>Si tienes informes o estudios en el teléfono o la computadora, envíalos abajo, en «Documentos para el médico».</li>
       </ul>
       <form method="post" action="<?= e(u('/api/espera')) ?>">
         <input type="hidden" name="accion" value="cancelar">
@@ -93,6 +94,22 @@ ob_start();
       <h1 class="t-titulo" id="t-atiende" tabindex="-1"><span data-medico><?= e(($consulta['medico'] ?? '') ?: 'Un médico') ?></span> te está esperando</h1>
       <p>La videollamada se abrirá automáticamente aquí. Permite el uso de cámara y micrófono cuando tu navegador lo solicite.</p>
       <?= teleVideollamada((string) ($consulta['sala'] ?? ''), 'cliente') ?>
+
+    </section>
+
+    <!-- Documentos para el médico: desde la sala de espera hasta que termina la videollamada (lib/archivos.php) -->
+    <section class="t-hoja t-docs" aria-labelledby="t-docs" data-docs<?= teleOculto($inicial === 'inicio') ?>>
+      <h2 id="t-docs">Documentos para el médico</h2>
+      <p>¿Tienes informes o estudios en el teléfono o la computadora? Envíalos aquí y el médico que te atienda podrá descargarlos. PDF, Word o fotos (JPG o PNG), hasta <?= e(str_replace(' ', "\u{00A0}", tamanoTexto(archivoMaxBytes()))) ?> cada uno.</p>
+      <form class="t-docs__form" method="post" action="<?= e(u('/api/archivos')) ?>" enctype="multipart/form-data" data-docs-form data-max="<?= archivoMaxBytes() ?>">
+        <div class="t-campo">
+          <label for="doc-archivo">Documento</label>
+          <input class="input" id="doc-archivo" type="file" name="archivo" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png">
+        </div>
+        <button class="btn btn--primary" type="submit">Enviar al médico</button>
+      </form>
+      <p class="t-docs__estado" role="status" data-docs-estado><?= e($avisoDocs) ?></p>
+      <?= teleDocumentos($consulta['archivos'] ?? [], 'cliente') ?>
 
     </section>
 
