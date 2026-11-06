@@ -15,10 +15,11 @@ $etag = '"' . md5($cuerpo) . '"';
 
 header('Cache-Control: no-cache');
 header('ETag: ' . $etag);
-// If-None-Match puede traer varios valores y el prefijo W/ (los proxies lo añaden al comprimir)
+// If-None-Match puede traer varios valores, el prefijo W/ de los proxies y el sufijo -gzip que Apache (mod_deflate) le pone al
+// comprimir: sin quitarlo nunca coincidía y cada visita bajaba el directorio entero
 foreach (explode(',', $_SERVER['HTTP_IF_NONE_MATCH'] ?? '') as $visto) {
     $visto = trim($visto);
-    if ($visto === '*' || preg_replace('/^W\//', '', $visto) === $etag) {
+    if ($visto === '*' || preg_replace('/^W\/|-(?:gzip|br|deflate)(?="$)/', '', $visto) === $etag) {
         http_response_code(304);
         exit;
     }

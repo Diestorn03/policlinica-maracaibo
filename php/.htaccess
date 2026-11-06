@@ -5,6 +5,11 @@ AddDefaultCharset utf-8
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
+# siempre por https: la sesión, la cámara, el micrófono y las notificaciones solo funcionan ahí (localhost queda para las pruebas)
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:\d+)?$
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 # el código y el marco de las páginas nunca se sirven directamente
 RewriteRule ^app(/|$) - [F,L]
 RewriteCond %{REQUEST_FILENAME} !-f

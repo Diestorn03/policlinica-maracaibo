@@ -71,10 +71,12 @@ function directorio(d: Datos) {
   // opciones de los desplegables con las cuentas de la base
   const esp = form.elements.namedItem('esp') as HTMLSelectElement;
   const piso = form.elements.namedItem('piso') as HTMLSelectElement;
+  const elegido = [esp.value, piso.value];   // lo que pidió la URL (?esp= desde Especialidades): rehacer las opciones lo borraba
   esp.replaceChildren(el('option', { value: '', textContent: 'Todas' }), ...d.especialidades.map((e) => el('option', { value: e.slug, textContent: `${e.nombre} (${e.total})` })));
   const total = (id: string) => d.medicos.filter((m) => pisoDe(m) === id).length;
   const pisos = ['pb', '1', '2', '3', 's'].map((id) => PISOS.find((p) => p.id === id)!);
   piso.replaceChildren(el('option', { value: '', textContent: 'Todos' }), ...pisos.map((p) => el('option', { value: p.id, textContent: `${p.nombre} (${total(p.id)})` })));
+  [esp.value, piso.value] = elegido;   // si ya no existe en la base, el desplegable queda en «Todas» (filtro.ts lo valida)
   document.dispatchEvent(new CustomEvent('pm:datos'));
 }
 
@@ -128,6 +130,10 @@ function cifras(d: Datos) {
     if (e.dataset.count !== undefined) e.dataset.count = v; // el contador de la portada termina en este valor
     e.textContent = v;
   });
+  // «Nosotros» trae las cifras dentro del texto del encabezado (sin marca): se corrigen por su forma
+  const lead = document.querySelector('.page-hero .lead');
+  const forma = /^\d+ médicos en \d+ especialidades/;
+  if (lead && forma.test(lead.textContent ?? '')) lead.textContent = (lead.textContent ?? '').replace(forma, `${n.medicos} médicos en ${n.conMedicos} especialidades`);
 }
 
 async function hidratar() {

@@ -84,7 +84,7 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
           ))}
           <div class="cruz__sello" aria-hidden="true"><b>{anos()}</b><span>años</span></div>
         </div>
-        <figcaption aria-live="polite">Algunos de nuestros {res.medicos} médicos</figcaption>
+        <figcaption aria-live="polite">Algunos de nuestros <span data-vivo-n="medicos">{res.medicos}</span> médicos</figcaption>
       </figure>
     </div>
   </section>
@@ -296,13 +296,13 @@ const mapa = 'https://maps.google.com/maps?q=Policl%C3%ADnica%20Maracaibo%2C%20A
       .to(tiles.filter((t) => t.dataset.anillo === '1'), { xPercent: 0, yPercent: 0, scale: 1, opacity: 1, duration: 0.9 * k, ease: 'power4.out', stagger: 0.04 }, 0.3 * k)
       .to(tiles.filter((t) => t.dataset.anillo === '2'), { xPercent: 0, yPercent: 0, scale: 1, opacity: 1, duration: 1 * k, ease: 'power4.out', stagger: 0.04 }, 0.5 * k));
     // al pasar o enfocar una cara, el pie dice quién es
-    const original = nota.textContent;
+    const original = [...nota.childNodes];   // los mismos nodos: la cifra en vivo (vivo.ts) sigue al día después de pasar por una cara
     tiles.forEach((t) => {
       const ver = () => (nota.textContent = t.dataset.quien!);
       t.addEventListener('pointerenter', ver);
       t.addEventListener('focus', ver);
-      t.addEventListener('pointerleave', () => (nota.textContent = original));
-      t.addEventListener('blur', () => (nota.textContent = original));
+      t.addEventListener('pointerleave', () => nota.replaceChildren(...original));
+      t.addEventListener('blur', () => nota.replaceChildren(...original));
     });
   }
 
