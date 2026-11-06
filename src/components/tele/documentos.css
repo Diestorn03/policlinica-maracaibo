@@ -1,0 +1,32 @@
+/* Documentos de la consulta (documentos.ts y teleDocumentos() de php/app/pages/partials/tele.php).
+   En el panel del paciente es una hoja blanca bajo el bloque azul; en la consulta en curso del médico va sobre el azul. */
+.t-docs { display: grid; gap: 1rem; }
+.t-docs > p { max-width: 62ch; }
+.t-docs__form { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem 1rem; }
+.t-docs__form .t-campo { flex: 1 1 20rem; min-width: 0; }
+.t-docs__form .input { padding-block: .55rem; }
+.t-docs__form .input::file-selector-button { margin-right: .8rem; padding: .45rem 1rem; border: 1.5px solid var(--blue); border-radius: 999px; background: #fff; color: var(--blue); font: 600 .875rem var(--font-head); cursor: pointer; }
+.t-docs__estado { font-weight: 600; color: var(--navy); }
+.t-docs__estado:empty { display: none; }
+.t-docs__lista { list-style: none; margin: 0; padding: 0; }
+.t-docs__lista li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .75rem; padding-block: .75rem; border-top: 1px solid var(--line); }
+.t-docs__lista li:last-child { border-bottom: 1px solid var(--line); }
+.t-docs__lista a { font-weight: 600; color: var(--blue); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.t-docs__lista small { color: var(--muted); white-space: nowrap; }
+.t-docs__quitar { margin-left: auto; padding: .3rem .2rem; border: 0; background: none; color: var(--red); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.t-docs__quitar:disabled { opacity: .5; cursor: progress; }
+.t-docs__vacio { color: var(--muted); }
+
+/* en la consulta en curso del médico: ocupa todo el ancho de la tarjeta y se lee sobre el azul */
+.t-docs--medico { flex: 1 1 100%; gap: .6rem; }
+.t-docs__t { font-size: 1.05rem; font-weight: 600; color: #fff; }
+.t-azul .t-docs__lista li { border-color: rgba(255, 255, 255, .22); }
+.t-azul .t-docs__lista a { color: #fff; }
+.t-azul .t-docs__lista small, .t-azul .t-docs__vacio { color: #dfe8fb; }
+
+/* historial del médico (versión PHP): la columna «Documentos» quita espacio, y «Finalizada» o la duración no deben partirse */
+.t-tabla td:is([data-etiqueta='Duración'], [data-etiqueta='Estado']) { white-space: nowrap; }
+
+@media (max-width: 640px) {
+  .t-docs__form .btn { width: 100%; }
+}

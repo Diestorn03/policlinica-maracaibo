@@ -1,6 +1,7 @@
 ---
 // Una consulta en curso del médico. La sala Jitsi se monta automáticamente dentro de la tarjeta; no hay URL visible.
-import { u } from '../../lib/entorno';
+// Los documentos del paciente solo existen en la versión PHP (teleEnCurso() pinta este mismo bloque) y en la demo, simulados.
+import { DEMO, u } from '../../lib/entorno';
 import Videollamada from './Videollamada.astro';
 
 interface Props { c?: { id: number; paciente: string; edad: number | null; motivo: string; sala: string }; actual?: boolean }
@@ -13,6 +14,7 @@ const { c, actual = false } = Astro.props;
     <p>Motivo: <span data-campo="motivo">{c ? c.motivo || 'sin motivo indicado' : ''}</span></p>
   </div>
   <Videollamada sala={c?.sala} rol="medico" />
+  {DEMO && <div class="t-docs t-docs--medico" data-docs><h4 class="t-docs__t">Documentos del paciente</h4><ul class="t-docs__lista" data-docs-lista></ul><p class="t-docs__vacio" data-docs-vacio>El paciente no ha enviado documentos.</p></div>}
   <form class="t-finalizar" method="post" action={u('/api/cola')}>
     <input type="hidden" name="accion" value="finalizar" />
     <input type="hidden" name="consulta" value={c?.id} />
