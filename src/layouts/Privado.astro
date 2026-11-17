@@ -24,6 +24,9 @@ const { titulo, zona, usuario } = Astro.props;
     <title>{titulo} | {clinica.nombre}</title>
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#014db7" />
+    <link rel="manifest" href={u('/manifest.webmanifest')} />
+    <link rel="apple-touch-icon" href={u('/img/icono-180.png')} />
+    <script>import '../scripts/instalable.ts';</script>
     <link rel="icon" href={u('/favicon.png')} type="image/png" />
     <slot name="head" />
   </head>

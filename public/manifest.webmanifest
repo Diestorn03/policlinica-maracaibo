@@ -1,0 +1,22 @@
+{
+  "name": "Policlínica Maracaibo",
+  "short_name": "Policlínica",
+  "description": "Directorio médico, servicios, emergencias y telemedicina de la Policlínica Maracaibo.",
+  "lang": "es-VE",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#014db7",
+  "categories": ["medical", "health"],
+  "icons": [
+    { "src": "img/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "img/icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Entrar a mi panel", "short_name": "Mi panel", "url": "acceso/" },
+    { "name": "Directorio médico", "short_name": "Directorio", "url": "directorio/" }
+  ]
+}
