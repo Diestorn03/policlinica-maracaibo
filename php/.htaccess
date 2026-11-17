@@ -2,6 +2,8 @@
 Options -Indexes
 DirectoryIndex index.html index.php
 AddDefaultCharset utf-8
+# la app instalable: Chrome lee el manifiesto con su tipo propio
+AddType application/manifest+json .webmanifest
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
